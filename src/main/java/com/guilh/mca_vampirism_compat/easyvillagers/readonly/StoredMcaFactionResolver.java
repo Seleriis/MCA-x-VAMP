@@ -1,0 +1,802 @@
+package com.guilh.mca_vampirism_compat.easyvillagers.readonly;
+
+import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.capability.VampiricVillagerProvider;
+import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
+import com.guilh.mca_vampirism_compat.easyvillagers.McaEvCompatBridge;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.trading.MerchantOffers;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.registries.ForgeRegistries;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringJoiner;
+
+public final class StoredMcaFactionResolver {
+    private static final String TRADER_TILEENTITY_BASE = "de.maxhenkel.easyvillagers.blocks.tileentity.TraderTileentityBase";
+    private static final String AUTO_TRADER_TILEENTITY = "de.maxhenkel.easyvillagers.blocks.tileentity.AutoTraderTileentity";
+    private static final String VILLAGER_TAG = "villager";
+    private static final String MCA_COMPAT_TAG = "mca_easy_villagers_compat";
+    private static final String ENTITY_TYPE_KEY = "EntityType";
+    private static final String MCA_MALE = "mca:male_villager";
+    private static final String MCA_FEMALE = "mca:female_villager";
+    private static final String VAMPIRE_TRAIT_ID = "vampirism_mca_compat:vampire";
+    private static final String HUNTER_TRAIT_ID = "vampirism_mca_compat:hunter";
+    private static final String WEREWOLF_TRAIT_ID = "vampirism_mca_compat:werewolf";
+    private static final String MOD_ID_MARKER = "mca_vampirism_compat";
+    private static final String TRAIT_NAMESPACE_MARKER = "vampirism_mca_compat";
+    private static final int MAX_RECURSION_DEPTH = 12;
+    private static final Map<String, Method> REFLECTED_METHODS = new HashMap<>();
+
+    private StoredMcaFactionResolver() {
+    }
+
+    public static boolean isEasyVillagersDirectTrader(BlockEntity blockEntity) {
+        if (blockEntity == null || isClassOrSuperclass(blockEntity.getClass(), AUTO_TRADER_TILEENTITY)) {
+            return false;
+        }
+        return isClassOrSuperclass(blockEntity.getClass(), TRADER_TILEENTITY_BASE);
+    }
+
+    public static StoredMcaVillagerInfo resolve(BlockEntity blockEntity) {
+        if (!isEasyVillagersDirectTrader(blockEntity)) {
+            return StoredMcaVillagerInfo.unresolved(blockEntity);
+        }
+
+        ItemStack storedStack = getStoredStack(blockEntity);
+        Villager villager = getStoredVillagerEntity(blockEntity);
+        if (storedStack.isEmpty() || villager == null) {
+            return StoredMcaVillagerInfo.unresolved(blockEntity);
+        }
+
+        CompoundTag villagerNbt = getVillagerData(storedStack);
+        String entityTypeId = resolveEntityType(storedStack, villagerNbt);
+        ResourceLocation entityType = safeResourceLocation(entityTypeId);
+        boolean isMca = isMcaVillagerType(entityTypeId);
+        VampireDetection vampireDetection = isMca ? detectVampireData(storedStack, villagerNbt) : VampireDetection.none();
+        boolean isVampire = vampireDetection.isVampire();
+        HunterDetection hunterDetection = !isVampire ? detectHunterData(storedStack, villagerNbt, villager, entityTypeId) : HunterDetection.none();
+        boolean isHunter = !isVampire && hunterDetection.isHunter();
+        WerewolfDetection werewolfDetection = !isVampire && !isHunter ? detectWerewolfData(storedStack, villagerNbt) : WerewolfDetection.none();
+        boolean isWerewolf = !isVampire && !isHunter && werewolfDetection.isWerewolf();
+        logNbtDiagnostics(blockEntity, storedStack, villagerNbt, entityTypeId, vampireDetection, hunterDetection, werewolfDetection);
+        MerchantOffers offers = villager.getOffers();
+
+        return new StoredMcaVillagerInfo(
+                true,
+                isMca,
+                isVampire,
+                isHunter,
+                isWerewolf,
+                vampireDetection.source(),
+                hunterDetection.source(),
+                werewolfDetection.source(),
+                entityType,
+                villagerNbt == null ? null : villagerNbt.copy(),
+                storedStack.copy(),
+                villager,
+                offers,
+                blockEntity
+        );
+    }
+
+    static ItemStack getStoredStack(BlockEntity blockEntity) {
+        try {
+            Method getVillager = findMethod(blockEntity.getClass(), "getVillager");
+            Object result = getVillager.invoke(blockEntity);
+            return result instanceof ItemStack stack ? stack : ItemStack.EMPTY;
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            McaVampirismCompat.debugLog(
+                    "[EASY-VILLAGERS] failed to read stored villager stack block={} error={}",
+                    blockEntity.getClass().getName(),
+                    exception.toString()
+            );
+            return ItemStack.EMPTY;
+        }
+    }
+
+    static Villager getStoredVillagerEntity(BlockEntity blockEntity) {
+        try {
+            Method getVillagerEntity = findMethod(blockEntity.getClass(), "getVillagerEntity");
+            Object result = getVillagerEntity.invoke(blockEntity);
+            return result instanceof Villager villager ? villager : null;
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            McaVampirismCompat.debugLog(
+                    "[EASY-VILLAGERS] failed to read stored villager entity block={} error={}",
+                    blockEntity.getClass().getName(),
+                    exception.toString()
+            );
+            return null;
+        }
+    }
+
+    static VampireDetection detectVampireData(ItemStack storedStack, CompoundTag villagerNbt) {
+        CompoundTag rootTag = storedStack.getTag();
+        if (containsCapabilityMarker(villagerNbt, "villager", 0, null)
+                || containsCapabilityMarker(rootTag, "item", 0, null)) {
+            return new VampireDetection(true, "CAPABILITY");
+        }
+        if (containsTraitMarker(villagerNbt, "villager", 0, null)
+                || containsTraitMarker(rootTag, "item", 0, null)) {
+            return new VampireDetection(true, "TRAIT");
+        }
+        if (containsVampireMarker(villagerNbt, "villager", 0, null)
+                || containsVampireMarker(rootTag, "item", 0, null)) {
+            return new VampireDetection(true, "RECURSIVE");
+        }
+        return VampireDetection.none();
+    }
+
+    static HunterDetection detectHunterData(ItemStack storedStack, CompoundTag villagerNbt, Villager villager, String entityTypeId) {
+        CompoundTag rootTag = storedStack.getTag();
+        if (containsHunterCapabilityMarker(villagerNbt, "villager", 0, null)
+                || containsHunterCapabilityMarker(rootTag, "item", 0, null)) {
+            return new HunterDetection(true, "CAPABILITY");
+        }
+        if (containsHunterTraitMarker(villagerNbt, "villager", 0, null)
+                || containsHunterTraitMarker(rootTag, "item", 0, null)) {
+            return new HunterDetection(true, "TRAIT");
+        }
+        if (containsHunterFlagMarker(villagerNbt, "villager", 0, null)
+                || containsHunterFlagMarker(rootTag, "item", 0, null)) {
+            return new HunterDetection(true, "FLAGS");
+        }
+        String profession = professionId(villager);
+        if (isStrongHunterProfessionMarker(profession)) {
+            McaVampirismCompat.debugLog(
+                    "[EASY-VILLAGERS] stored hunter candidate reason=PROFESSION_HUNTER_MASTER profession={}",
+                    profession
+            );
+            return new HunterDetection(true, "PROFESSION_HUNTER_MASTER");
+        }
+        if (isStrongHunterProfessionMarker(entityTypeId)
+                || containsHunterProfessionMarker(villagerNbt, "villager", 0, null)
+                || containsHunterProfessionMarker(rootTag, "item", 0, null)) {
+            McaVampirismCompat.debugLog(
+                    "[EASY-VILLAGERS] stored hunter candidate reason=NBT_HUNTER_MASTER entityType={}",
+                    entityTypeId
+            );
+            return new HunterDetection(true, "NBT_HUNTER_MASTER");
+        }
+        return HunterDetection.none();
+    }
+
+    static WerewolfDetection detectWerewolfData(ItemStack storedStack, CompoundTag villagerNbt) {
+        CompoundTag rootTag = storedStack.getTag();
+        if (containsWerewolfCapabilityMarker(villagerNbt, "villager", 0, null)
+                || containsWerewolfCapabilityMarker(rootTag, "item", 0, null)) {
+            return new WerewolfDetection(true, "CAPABILITY");
+        }
+        if (containsWerewolfTraitMarker(villagerNbt, "villager", 0, null)
+                || containsWerewolfTraitMarker(rootTag, "item", 0, null)) {
+            return new WerewolfDetection(true, "TRAIT");
+        }
+        if (containsWerewolfMarker(villagerNbt, "villager", 0, null)
+                || containsWerewolfMarker(rootTag, "item", 0, null)) {
+            return new WerewolfDetection(true, "RECURSIVE");
+        }
+        return WerewolfDetection.none();
+    }
+
+    static CompoundTag getVillagerData(ItemStack stack) {
+        return stack.getTagElement(VILLAGER_TAG);
+    }
+
+    static String resolveEntityType(ItemStack stack, CompoundTag villagerNbt) {
+        String delegatedTypeId = McaEvCompatBridge.getStoredMcaEntityTypeIdReadOnly(stack);
+        if (delegatedTypeId != null && !delegatedTypeId.isBlank()) {
+            return delegatedTypeId;
+        }
+        if (villagerNbt != null && villagerNbt.contains("id")) {
+            return villagerNbt.getString("id");
+        }
+        CompoundTag compatTag = stack.getTagElement(MCA_COMPAT_TAG);
+        if (compatTag != null && compatTag.contains(ENTITY_TYPE_KEY)) {
+            return compatTag.getString(ENTITY_TYPE_KEY);
+        }
+        return "";
+    }
+
+    static boolean isMcaVillagerType(String entityTypeId) {
+        return MCA_MALE.equals(entityTypeId) || MCA_FEMALE.equals(entityTypeId);
+    }
+
+    private static boolean containsCapabilityMarker(Tag tag, String path, int depth, List<String> candidates) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH) {
+            return false;
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                Tag child = compoundTag.get(key);
+                String childPath = path + "." + key;
+                if (VampiricVillagerProvider.ID.toString().equals(key) && child instanceof CompoundTag capabilityTag) {
+                    addCandidate(candidates, childPath, child);
+                    if (capabilityTag.getBoolean("Converted") || capabilityTag.getBoolean("converted")
+                            || capabilityTag.getBoolean("VampireAppearanceApplied")) {
+                        return true;
+                    }
+                }
+                if (containsCapabilityMarker(child, childPath, depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        } else if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                if (containsCapabilityMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsTraitMarker(Tag tag, String path, int depth, List<String> candidates) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH) {
+            return false;
+        }
+        String lowerValue = tag.getAsString().toLowerCase(Locale.ROOT);
+        if (lowerValue.contains(VAMPIRE_TRAIT_ID)
+                || lowerValue.contains(TRAIT_NAMESPACE_MARKER) && lowerValue.contains("vampire")) {
+            addCandidate(candidates, path, tag);
+            return true;
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                if (containsTraitMarker(compoundTag.get(key), path + "." + key, depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        } else if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                if (containsTraitMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsHunterCapabilityMarker(Tag tag, String path, int depth, List<String> candidates) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH) {
+            return false;
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                Tag child = compoundTag.get(key);
+                String childPath = path + "." + key;
+                if (VampiricVillagerProvider.ID.toString().equals(key) && child instanceof CompoundTag capabilityTag) {
+                    addCandidate(candidates, childPath, child);
+                    if (capabilityTag.getBoolean("HunterAligned")
+                            || capabilityTag.getBoolean("HunterTraitApplied")
+                            || capabilityTag.getBoolean("HunterVillageApplied")) {
+                        return true;
+                    }
+                }
+                if (containsHunterCapabilityMarker(child, childPath, depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        } else if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                if (containsHunterCapabilityMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsHunterTraitMarker(Tag tag, String path, int depth, List<String> candidates) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH) {
+            return false;
+        }
+        String lowerValue = tag.getAsString().toLowerCase(Locale.ROOT);
+        if (lowerValue.contains(HUNTER_TRAIT_ID)
+                || lowerValue.contains(TRAIT_NAMESPACE_MARKER) && lowerValue.contains("hunter")) {
+            addCandidate(candidates, path, tag);
+            return true;
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                if (containsHunterTraitMarker(compoundTag.get(key), path + "." + key, depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        } else if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                if (containsHunterTraitMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsHunterFlagMarker(Tag tag, String path, int depth, List<String> candidates) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH) {
+            return false;
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                Tag child = compoundTag.get(key);
+                String childPath = path + "." + key;
+                String lowerKey = key.toLowerCase(Locale.ROOT);
+                String childValue = child == null ? "" : child.getAsString().toLowerCase(Locale.ROOT);
+                if (isExplicitTrueHunterFlag(lowerKey, childValue)) {
+                    addCandidate(candidates, childPath, child);
+                    return true;
+                }
+                if (containsHunterFlagMarker(child, childPath, depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        } else if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                if (containsHunterFlagMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsHunterProfessionMarker(Tag tag, String path, int depth, List<String> candidates) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH) {
+            return false;
+        }
+        String lowerValue = tag.getAsString().toLowerCase(Locale.ROOT);
+        String lowerPath = path.toLowerCase(Locale.ROOT);
+        if (isStrongHunterProfessionMarker(lowerValue) || isStrongHunterProfessionMarker(lowerPath)) {
+            addCandidate(candidates, path, tag);
+            return true;
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                if (containsHunterProfessionMarker(compoundTag.get(key), path + "." + key, depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        } else if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                if (containsHunterProfessionMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsWerewolfCapabilityMarker(Tag tag, String path, int depth, List<String> candidates) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH) {
+            return false;
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                Tag child = compoundTag.get(key);
+                String childPath = path + "." + key;
+                if (VampiricVillagerProvider.ID.toString().equals(key) && child instanceof CompoundTag capabilityTag) {
+                    addCandidate(candidates, childPath, child);
+                    if (capabilityTag.getBoolean("WerewolfConverted")
+                            || capabilityTag.getBoolean("WerewolfAppearanceApplied")
+                            || capabilityTag.getBoolean("WerewolfPartialForm")) {
+                        return true;
+                    }
+                }
+                if (containsWerewolfCapabilityMarker(child, childPath, depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        } else if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                if (containsWerewolfCapabilityMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsWerewolfTraitMarker(Tag tag, String path, int depth, List<String> candidates) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH) {
+            return false;
+        }
+        String lowerValue = tag.getAsString().toLowerCase(Locale.ROOT);
+        if (lowerValue.contains(WEREWOLF_TRAIT_ID)
+                || lowerValue.contains(TRAIT_NAMESPACE_MARKER) && lowerValue.contains("werewolf")) {
+            addCandidate(candidates, path, tag);
+            return true;
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                if (containsWerewolfTraitMarker(compoundTag.get(key), path + "." + key, depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        } else if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                if (containsWerewolfTraitMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsWerewolfMarker(Tag tag, String path, int depth, List<String> candidates) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH) {
+            return false;
+        }
+        String lowerValue = tag.getAsString().toLowerCase(Locale.ROOT);
+        String lowerPath = path.toLowerCase(Locale.ROOT);
+        if (lowerPath.contains("werewolf") || lowerPath.contains("lupus") || lowerValue.contains("werewolf") || lowerValue.contains("lupus")) {
+            addCandidate(candidates, path, tag);
+        }
+        if (lowerValue.contains(WEREWOLF_TRAIT_ID)
+                || lowerValue.contains(TRAIT_NAMESPACE_MARKER) && lowerValue.contains("werewolf")) {
+            return true;
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                Tag child = compoundTag.get(key);
+                String lowerKey = key.toLowerCase(Locale.ROOT);
+                String childValue = child == null ? "" : child.getAsString().toLowerCase(Locale.ROOT);
+                if (isExplicitTrueWerewolfFlag(lowerKey, childValue)) {
+                    addCandidate(candidates, path + "." + key, child);
+                    return true;
+                }
+                if (containsWerewolfMarker(child, path + "." + key, depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        } else if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                if (containsWerewolfMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsVampireMarker(Tag tag, String path, int depth, List<String> candidates) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH) {
+            return false;
+        }
+
+        String value = tag.getAsString();
+        String lowerValue = value.toLowerCase(Locale.ROOT);
+        String lowerPath = path.toLowerCase(Locale.ROOT);
+        if (isInterestingCandidate(lowerPath, lowerValue)) {
+            addCandidate(candidates, path, tag);
+        }
+        if (lowerValue.contains(VAMPIRE_TRAIT_ID)
+                || lowerValue.contains(TRAIT_NAMESPACE_MARKER) && lowerValue.contains("vampire")) {
+            return true;
+        }
+
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                Tag child = compoundTag.get(key);
+                String childPath = path + "." + key;
+                String lowerKey = key.toLowerCase(Locale.ROOT);
+                String childValue = child == null ? "" : child.getAsString().toLowerCase(Locale.ROOT);
+                if (isInterestingCandidate(lowerKey, childValue) || isInterestingCandidate(childPath.toLowerCase(Locale.ROOT), childValue)) {
+                    addCandidate(candidates, childPath, child);
+                }
+
+                if (isExplicitTrueVampireFlag(lowerKey, childValue)) {
+                    return true;
+                }
+                if (VampiricVillagerProvider.ID.toString().equals(key) && child instanceof CompoundTag capabilityTag) {
+                    if (capabilityTag.getBoolean("Converted") || capabilityTag.getBoolean("converted")
+                            || capabilityTag.getBoolean("VampireAppearanceApplied")) {
+                        return true;
+                    }
+                }
+                if (containsVampireMarker(child, childPath, depth + 1, candidates)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                if (containsVampireMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean isExplicitTrueVampireFlag(String lowerKey, String lowerValue) {
+        boolean vampireKey = lowerKey.contains("converted")
+                || lowerKey.equals("vampire")
+                || lowerKey.equals("isvampire")
+                || lowerKey.equals("mcavampire")
+                || lowerKey.contains("vampireappearanceapplied");
+        return vampireKey && isTrueLike(lowerValue);
+    }
+
+    private static boolean isExplicitTrueHunterFlag(String lowerKey, String lowerValue) {
+        boolean hunterKey = lowerKey.equals("hunteraligned")
+                || lowerKey.equals("huntertraitapplied")
+                || lowerKey.equals("huntervillageapplied")
+                || lowerKey.contains("hunteraligned")
+                || lowerKey.contains("huntertraitapplied")
+                || lowerKey.contains("huntervillage");
+        return hunterKey && isTrueLike(lowerValue);
+    }
+
+    private static boolean isExplicitTrueWerewolfFlag(String lowerKey, String lowerValue) {
+        boolean werewolfKey = lowerKey.equals("werewolfconverted")
+                || lowerKey.equals("werewolfappearanceapplied")
+                || lowerKey.equals("werewolfpartialform")
+                || lowerKey.equals("werewolftraitapplied")
+                || lowerKey.contains("werewolfconverted")
+                || lowerKey.contains("werewolfappearance")
+                || lowerKey.contains("werewolfpartial");
+        return werewolfKey && isTrueLike(lowerValue);
+    }
+
+    private static boolean isStrongHunterProfessionMarker(String value) {
+        if (value == null) {
+            return false;
+        }
+        String normalized = value.toLowerCase(Locale.ROOT)
+                .replace('-', '_')
+                .replace(' ', '_');
+        return normalized.contains("hunter_master")
+                || normalized.contains("hunter_trainer")
+                || normalized.contains("hunter_expert")
+                || normalized.contains("advanced_hunter")
+                || normalized.contains("vampirism:hunter");
+    }
+
+    private static String professionId(Villager villager) {
+        if (villager == null) {
+            return "";
+        }
+        ResourceLocation key = ForgeRegistries.VILLAGER_PROFESSIONS.getKey(villager.getVillagerData().getProfession());
+        return key == null ? "" : key.toString();
+    }
+
+    private static boolean isTrueLike(String lowerValue) {
+        return "true".equals(lowerValue)
+                || "1".equals(lowerValue)
+                || "1b".equals(lowerValue)
+                || "1s".equals(lowerValue)
+                || "1i".equals(lowerValue);
+    }
+
+    private static boolean isInterestingCandidate(String lowerPathOrKey, String lowerValue) {
+        return lowerPathOrKey.contains("vampire")
+                || lowerPathOrKey.contains("vampir")
+                || lowerPathOrKey.contains("converted")
+                || lowerPathOrKey.contains("trait")
+                || lowerPathOrKey.contains("hunter")
+                || lowerPathOrKey.contains("werewolf")
+                || lowerPathOrKey.contains("lupus")
+                || lowerPathOrKey.contains("aggressive")
+                || lowerPathOrKey.contains("master")
+                || lowerPathOrKey.contains("faction")
+                || lowerPathOrKey.contains("profession")
+                || lowerPathOrKey.contains("village")
+                || lowerPathOrKey.contains(MOD_ID_MARKER)
+                || lowerPathOrKey.contains(TRAIT_NAMESPACE_MARKER)
+                || lowerValue.contains("vampire")
+                || lowerValue.contains("vampir")
+                || lowerValue.contains("converted")
+                || lowerValue.contains("trait")
+                || lowerValue.contains("hunter")
+                || lowerValue.contains("werewolf")
+                || lowerValue.contains("lupus")
+                || lowerValue.contains("aggressive")
+                || lowerValue.contains("master")
+                || lowerValue.contains("faction")
+                || lowerValue.contains("profession")
+                || lowerValue.contains("village")
+                || lowerValue.contains(MOD_ID_MARKER)
+                || lowerValue.contains(TRAIT_NAMESPACE_MARKER);
+    }
+
+    private static void addCandidate(List<String> candidates, String path, Tag tag) {
+        if (candidates == null || candidates.size() >= 32) {
+            return;
+        }
+        candidates.add(path + "=" + summarizeTag(tag));
+    }
+
+    private static String summarizeTag(Tag tag) {
+        if (tag == null) {
+            return "null";
+        }
+        String value;
+        if (tag instanceof CompoundTag compoundTag) {
+            value = "Compound" + compoundTag.getAllKeys();
+        } else if (tag instanceof ListTag listTag) {
+            value = "List(size=" + listTag.size() + ")";
+        } else {
+            value = tag.getAsString();
+        }
+        return value.length() > 180 ? value.substring(0, 180) + "..." : value;
+    }
+
+    private static void logNbtDiagnostics(BlockEntity blockEntity, ItemStack storedStack, CompoundTag villagerNbt,
+                                          String entityTypeId, VampireDetection vampireDetection,
+                                          HunterDetection hunterDetection, WerewolfDetection werewolfDetection) {
+        if (!McaVampirismCompatConfig.enableVerboseNbtDebugLogs()) {
+            return;
+        }
+        CompoundTag rootTag = storedStack.getTag();
+        List<String> candidates = new ArrayList<>();
+        containsCapabilityMarker(villagerNbt, "villager", 0, candidates);
+        containsCapabilityMarker(rootTag, "item", 0, candidates);
+        containsTraitMarker(villagerNbt, "villager", 0, candidates);
+        containsTraitMarker(rootTag, "item", 0, candidates);
+        containsVampireMarker(villagerNbt, "villager", 0, candidates);
+        containsVampireMarker(rootTag, "item", 0, candidates);
+        containsHunterCapabilityMarker(villagerNbt, "villager", 0, candidates);
+        containsHunterCapabilityMarker(rootTag, "item", 0, candidates);
+        containsHunterTraitMarker(villagerNbt, "villager", 0, candidates);
+        containsHunterTraitMarker(rootTag, "item", 0, candidates);
+        containsHunterFlagMarker(villagerNbt, "villager", 0, candidates);
+        containsHunterFlagMarker(rootTag, "item", 0, candidates);
+        containsHunterProfessionMarker(villagerNbt, "villager", 0, candidates);
+        containsHunterProfessionMarker(rootTag, "item", 0, candidates);
+        containsWerewolfCapabilityMarker(villagerNbt, "villager", 0, candidates);
+        containsWerewolfCapabilityMarker(rootTag, "item", 0, candidates);
+        containsWerewolfTraitMarker(villagerNbt, "villager", 0, candidates);
+        containsWerewolfTraitMarker(rootTag, "item", 0, candidates);
+        containsWerewolfMarker(villagerNbt, "villager", 0, candidates);
+        containsWerewolfMarker(rootTag, "item", 0, candidates);
+
+        McaVampirismCompat.debugLog(
+                "[EASY-VILLAGERS][NBT] block={} item={} id={} isVampire={} isHunter={} isWerewolf={}",
+                blockEntity.getClass().getName(),
+                storedStack.getItem(),
+                entityTypeId,
+                vampireDetection.isVampire(),
+                hunterDetection.isHunter(),
+                werewolfDetection.isWerewolf()
+        );
+        McaVampirismCompat.debugLog(
+                "[EASY-VILLAGERS][NBT] rootKeys={} hasVillager={} hasLowerVillager={} hasCompatTag={}",
+                keys(rootTag),
+                rootTag != null && rootTag.contains("Villager"),
+                rootTag != null && rootTag.contains(VILLAGER_TAG),
+                rootTag != null && rootTag.contains(MCA_COMPAT_TAG)
+        );
+        McaVampirismCompat.debugLog(
+                "[EASY-VILLAGERS][NBT] villagerKeys={} forgeCapsKeys={} traitsKeys={}",
+                keys(villagerNbt),
+                keys(childCompound(villagerNbt, "ForgeCaps")),
+                traitKeys(villagerNbt)
+        );
+        McaVampirismCompat.debugLog(
+                "[EASY-VILLAGERS][NBT] vampireCandidates={}",
+                candidates
+        );
+    }
+
+    private static CompoundTag childCompound(CompoundTag tag, String key) {
+        if (tag == null || !tag.contains(key) || !(tag.get(key) instanceof CompoundTag child)) {
+            return null;
+        }
+        return child;
+    }
+
+    private static String keys(CompoundTag tag) {
+        if (tag == null) {
+            return "[]";
+        }
+        Set<String> keys = tag.getAllKeys();
+        if (keys.isEmpty()) {
+            return "[]";
+        }
+        StringJoiner joiner = new StringJoiner(",", "[", "]");
+        for (String key : keys) {
+            joiner.add(key);
+        }
+        return joiner.toString();
+    }
+
+    private static String traitKeys(CompoundTag tag) {
+        if (tag == null) {
+            return "[]";
+        }
+        List<String> paths = new ArrayList<>();
+        collectTraitPaths(tag, "villager", 0, paths);
+        return paths.toString();
+    }
+
+    private static void collectTraitPaths(Tag tag, String path, int depth, List<String> paths) {
+        if (tag == null || depth > MAX_RECURSION_DEPTH || paths.size() >= 16) {
+            return;
+        }
+        if (path.toLowerCase(Locale.ROOT).contains("trait")) {
+            paths.add(path + "=" + summarizeTag(tag));
+        }
+        if (tag instanceof CompoundTag compoundTag) {
+            for (String key : compoundTag.getAllKeys()) {
+                collectTraitPaths(compoundTag.get(key), path + "." + key, depth + 1, paths);
+            }
+        } else if (tag instanceof ListTag listTag) {
+            for (int i = 0; i < listTag.size(); i++) {
+                collectTraitPaths(listTag.get(i), path + "[" + i + "]", depth + 1, paths);
+            }
+        }
+    }
+
+    private static ResourceLocation safeResourceLocation(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return new ResourceLocation(value);
+        } catch (RuntimeException ignored) {
+            return null;
+        }
+    }
+
+    private static Method findMethod(Class<?> type, String name) throws NoSuchMethodException {
+        String key = type.getName() + "#" + name;
+        Method cached = REFLECTED_METHODS.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        Class<?> cursor = type;
+        while (cursor != null) {
+            try {
+                Method method = cursor.getDeclaredMethod(name);
+                method.setAccessible(true);
+                REFLECTED_METHODS.put(key, method);
+                return method;
+            } catch (NoSuchMethodException ignored) {
+                cursor = cursor.getSuperclass();
+            }
+        }
+        throw new NoSuchMethodException(name);
+    }
+
+    private static boolean isClassOrSuperclass(Class<?> type, String className) {
+        Class<?> cursor = type;
+        while (cursor != null) {
+            if (className.equals(cursor.getName())) {
+                return true;
+            }
+            cursor = cursor.getSuperclass();
+        }
+        return false;
+    }
+
+    private record VampireDetection(boolean isVampire, String source) {
+        private static VampireDetection none() {
+            return new VampireDetection(false, "NONE");
+        }
+    }
+
+    private record HunterDetection(boolean isHunter, String source) {
+        private static HunterDetection none() {
+            return new HunterDetection(false, "NONE");
+        }
+    }
+
+    private record WerewolfDetection(boolean isWerewolf, String source) {
+        private static WerewolfDetection none() {
+            return new WerewolfDetection(false, "NONE");
+        }
+    }
+}

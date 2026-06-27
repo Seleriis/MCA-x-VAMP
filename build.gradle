@@ -1,0 +1,67 @@
+plugins {
+    id 'net.minecraftforge.gradle' version '6.0.53'
+    id 'org.spongepowered.mixin' version '0.7.38'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_archive_base}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+repositories {
+    flatDir {
+        dirs 'local-mods'
+    }
+}
+
+mixin {
+    config "${mod_id}.mixins.json"
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
+    compileOnly fg.deobf('local:Vampirism:1.20.1-1.10.15')
+    compileOnly fg.deobf('local:minecraft-comes-alive:7.6.16+1.20.1-universal')
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+processResources {
+    inputs.property 'mod_id', mod_id
+    inputs.property 'mod_name', mod_name
+    inputs.property 'mod_version', mod_version
+    inputs.property 'minecraft_version', minecraft_version
+    inputs.property 'forge_version', forge_version
+
+    filesMatching('META-INF/mods.toml') {
+        expand project.properties
+    }
+}
+
+jar.finalizedBy('reobfJar')

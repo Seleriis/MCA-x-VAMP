@@ -1,0 +1,27 @@
+# Gradle and build output
+.gradle/
+.gradle-*/
+build/
+run/
+out/
+bin/
+
+# Local assistant/editor metadata
+.agents/
+.codex/
+
+# Local mod jars and investigation artifacts
+local-mods/
+reobf-libs/
+cp-test/
+
+# Generated/local files
+*.log
+*.tmp
+*.bak
+*.old
+*.class
+
+# Built jars and third-party jars
+*.jar
+!gradle/wrapper/gradle-wrapper.jar

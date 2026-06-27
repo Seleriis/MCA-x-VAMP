@@ -1,0 +1,26 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.guilh.mca_vampirism_compat.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "AggressiveVillagerEntityMCAMixin",
+    "DialoguesMixin",
+    "EasyVillagersPickupMixin",
+    "ExtendedCreatureMixin",
+    "McaEvCompatCaptureMixin",
+    "TotemBlockEntityMixin",
+    "VampirePlayerMixin",
+    "VampirismIntegrationsMCAEventHandlerMixin",
+    "VillagerBrainMixin",
+    "VillagerCommandHandlerMixin",
+    "VillagerEntityMCAMixin",
+    "VillagerEntityMCATradeMixin"
+  ],
+  "client": [
+    "client.McaFaceLayerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
