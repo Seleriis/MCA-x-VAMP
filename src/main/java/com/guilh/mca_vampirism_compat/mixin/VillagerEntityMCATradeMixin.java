@@ -4,7 +4,7 @@ import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.service.McaTradeContextService;
 import com.guilh.mca_vampirism_compat.service.McaVampireCureService;
 import com.guilh.mca_vampirism_compat.trade.McaFactionTradeService;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = VillagerEntityMCA.class, remap = false)
 public abstract class VillagerEntityMCATradeMixin {
-    @Inject(method = "m_6071_", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "mobInteract", at = @At("HEAD"), cancellable = true)
     private void mcaVampirismCompat$diagnoseMobInteract(Player player, InteractionHand hand,
                                                         CallbackInfoReturnable<InteractionResult> cir) {
         VillagerEntityMCA villager = (VillagerEntityMCA) (Object) this;
@@ -32,14 +32,22 @@ public abstract class VillagerEntityMCATradeMixin {
     }
 
     @Inject(method = "copiedBeginTradeWith", at = @At("HEAD"), cancellable = true)
-    private void mcaVampirismCompat$blockFactionTrade(Player player, CallbackInfo ci) {
+    private void mcaVampirismCompat$handleAuthoritativeFactionTrade(Player player, CallbackInfo ci) {
         VillagerEntityMCA villager = (VillagerEntityMCA) (Object) this;
         if (McaTradeContextService.isRecentMcaTradeContext(player, villager)) {
             McaVampirismCompat.debugLog(
                     "[MCA-INTERACTION] copiedBeginTradeWith from MCA trade option"
             );
+        } else {
+            McaVampirismCompat.debugLog(
+                    "[MCA-INTERACTION] copiedBeginTradeWith from direct MCA interaction"
+            );
         }
-        if (McaFactionTradeService.onTradeAttempt(player, villager, "copiedBeginTradeWith HEAD")) {
+        // This is the final server-side entry used by both MCA's dialogue
+        // command and its direct right-click trade path. Always replace the
+        // original screen for faction villagers here: requiring a dialogue
+        // context allowed direct trades to bypass both blocking and prices.
+        if (McaFactionTradeService.onMcaTradeOptionSelected(player, villager)) {
             ci.cancel();
         }
     }

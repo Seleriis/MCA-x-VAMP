@@ -4,22 +4,24 @@ import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
+import com.guilh.mca_vampirism_compat.util.VampirismEffectCompat;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class McaHunterBloodService {
-    private static final ResourceLocation VAMPIRISM_POISON_ID = new ResourceLocation("vampirism", "poison");
-    private static final ResourceLocation VANILLA_POISON_ID = new ResourceLocation("minecraft", "poison");
+    private static final ResourceLocation VAMPIRISM_POISON_ID = ResourceLocation.fromNamespaceAndPath("vampirism", "poison");
+    private static final ResourceLocation VANILLA_POISON_ID = ResourceLocation.fromNamespaceAndPath("minecraft", "poison");
     private static final long BLOCK_LOG_COOLDOWN_TICKS = 100L;
     private static final Map<UUID, Long> LAST_BLOCK_LOG_TICKS = new ConcurrentHashMap<>();
 
@@ -49,7 +51,7 @@ public final class McaHunterBloodService {
             return false;
         }
 
-        MobEffect effect = resolveToxicantEffect();
+        Holder<MobEffect> effect = resolveToxicantEffect();
         if (effect == null) {
             return false;
         }
@@ -63,7 +65,7 @@ public final class McaHunterBloodService {
             return false;
         }
 
-        ResourceLocation effectId = ForgeRegistries.MOB_EFFECTS.getKey(effect);
+        ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect.value());
         McaVampirismCompat.debugLog(
                 "[HUNTER-BLOOD] poisonous blood target={} reason=MCA_HUNTER_ALIGNED",
                 target == null ? null : target.getUUID()
@@ -101,17 +103,17 @@ public final class McaHunterBloodService {
         if (target == null || target.level().isClientSide || !isHunterVampirismImmune(target)) {
             return;
         }
-        target.removeEffect(ModEffects.SANGUINARE.get());
-        target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> state.clearInfection());
+        target.removeEffect(VampirismEffectCompat.sanguinare());
+        ModCapabilities.get(target).ifPresent(state -> state.clearInfection());
     }
 
-    private static MobEffect resolveToxicantEffect() {
+    private static Holder<MobEffect> resolveToxicantEffect() {
         try {
-            return ModEffects.POISON.get();
+            return VampirismEffectCompat.holder(ModEffects.POISON.get());
         } catch (RuntimeException | LinkageError ignored) {
-            MobEffect vampirismPoison = ForgeRegistries.MOB_EFFECTS.getValue(VAMPIRISM_POISON_ID);
+            MobEffect vampirismPoison = BuiltInRegistries.MOB_EFFECT.get(VAMPIRISM_POISON_ID);
             if (vampirismPoison != null) {
-                return vampirismPoison;
+                return VampirismEffectCompat.holder(vampirismPoison);
             }
             return McaVampirismCompatConfig.hunterVillagerFallbackToVanillaPoison() ? MobEffects.POISON : null;
         }

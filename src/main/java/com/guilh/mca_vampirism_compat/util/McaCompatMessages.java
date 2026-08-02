@@ -44,6 +44,9 @@ public final class McaCompatMessages {
     public static final String PICKUP_BLOCKED_CURING = "mca_vamp_compat.pickup.blocked.curing";
     public static final String PICKUP_BLOCKED_ENEMY_FACTION = "mca_vamp_compat.pickup.blocked.enemy_faction";
     public static final String PICKUP_BLOCKED_PROTECTED = "mca_vamp_compat.pickup.blocked.protected";
+    public static final String PICKUP_FAILED_INVENTORY_FULL = "mca_vamp_compat.pickup.failed.inventory_full";
+    public static final String PICKUP_FAILED_SLEEPING = "mca_vamp_compat.pickup.failed.sleeping";
+    public static final String PICKUP_FAILED_SNAPSHOT = "mca_vamp_compat.pickup.failed.snapshot";
     public static final String COMMAND_BLOCKED_ENEMY_FACTION = "mca_vamp_compat.command.blocked.enemy_faction";
     public static final String COMMAND_BLOCKED_CURING = "mca_vamp_compat.command.blocked.curing";
     public static final String COMMAND_BLOCKED_OWN_FACTION = "mca_vamp_compat.command.blocked.own_faction";

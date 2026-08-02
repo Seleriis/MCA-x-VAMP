@@ -6,8 +6,9 @@ import com.guilh.mca_vampirism_compat.attribute.McaSpecialVillagerAttributeServi
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.growth.McaVampireGrowthHandler;
 import com.guilh.mca_vampirism_compat.monster.McaSpecialVillagerMonsterIgnoreService;
+import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.effect.MobEffectInstance;
 
 public final class McaSpecialVillagerRuntimeService {
@@ -18,9 +19,11 @@ public final class McaSpecialVillagerRuntimeService {
         if (villager == null || villager.level().isClientSide) {
             return;
         }
+        McaTraitBridge.migrateLegacyTraitIds(villager);
         synchronizeState(villager);
         McaSpecialVillagerAttributeService.applyMovementSpeedForState(villager);
         McaSpecialVillagerCombatService.registerGoalsIfNeeded(villager);
+        McaDefensiveVillagerService.reconcileHunterWeapon(villager);
     }
 
     public static void onTick(VillagerEntityMCA villager) {
@@ -31,7 +34,7 @@ public final class McaSpecialVillagerRuntimeService {
         boolean syncTick = gameTime % 100L == Math.floorMod(villager.getId(), 100);
 
         McaSpecialVillagerType type = McaSpecialVillagerClassifier.classify(villager);
-        boolean hasSanguinare = villager.hasEffect(ModEffects.SANGUINARE.get());
+        boolean hasSanguinare = villager.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
         boolean hasLupusSanguinem = McaWerewolfConversionService.isLupusSanguinemActive(villager);
         if (!requiresRuntimeWork(villager, type, hasSanguinare, hasLupusSanguinem)) {
             if (syncTick) {
@@ -45,6 +48,7 @@ public final class McaSpecialVillagerRuntimeService {
         McaVampireCureService.processCureTick(villager);
         McaWerewolfVillagerService.processWerewolfTick(villager);
         McaVampireGrowthHandler.processGrowth(villager);
+        McaVampireShelterService.process(villager);
         McaVampireSunlightHandler.processSunlightDamage(villager);
 
         if (syncTick) {
@@ -63,6 +67,7 @@ public final class McaSpecialVillagerRuntimeService {
         McaWerewolfVillagerService.ensureWerewolfState(villager);
         McaVillageFactionControlService.syncHunterTraitFromVillageControl(villager);
         McaSpecialStateNormalizer.normalize(villager);
+        McaDefensiveVillagerService.reconcileHunterWeapon(villager);
     }
 
     private static boolean requiresRuntimeWork(VillagerEntityMCA villager, McaSpecialVillagerType type,
@@ -75,7 +80,7 @@ public final class McaSpecialVillagerRuntimeService {
                 && type != McaSpecialVillagerType.UNKNOWN) {
             return true;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(McaSpecialVillagerRuntimeService::hasRelevantState)
                 .orElse(false);
     }
@@ -101,8 +106,8 @@ public final class McaSpecialVillagerRuntimeService {
     }
 
     private static void processVampireInfectionConsistency(VillagerEntityMCA villager) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
-            MobEffectInstance sanguinare = villager.getEffect(ModEffects.SANGUINARE.get());
+        ModCapabilities.get(villager).ifPresent(state -> {
+            MobEffectInstance sanguinare = villager.getEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
             if (sanguinare != null && !McaVampireStateService.isVampire(villager)) {
                 if (McaHunterBloodService.isHunterVampirismImmune(villager)) {
                     McaHunterBloodService.clearHunterInfectionState(villager);

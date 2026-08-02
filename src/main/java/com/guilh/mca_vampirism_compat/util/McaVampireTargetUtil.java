@@ -11,8 +11,8 @@ import com.guilh.mca_vampirism_compat.service.McaHunterAlignmentService;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfStateService;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -73,7 +73,7 @@ public final class McaVampireTargetUtil {
 
     public static boolean isRetaliationTarget(Mob vampire, LivingEntity target) {
         long gameTime = vampire.level().getGameTime();
-        return vampire.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(vampire)
                 .map(state -> state.isRetaliatingAgainst(target.getUUID(), gameTime))
                 .orElse(false);
     }
@@ -124,21 +124,21 @@ public final class McaVampireTargetUtil {
     }
 
     private static boolean canTargetHumanForInfection(LivingEntity target) {
-        if (target.hasEffect(ModEffects.SANGUINARE.get()) || McaVampireBiteService.wasRecentlyBitten(target)) {
+        if (target.hasEffect(VampirismEffectCompat.sanguinare()) || McaVampireBiteService.wasRecentlyBitten(target)) {
             return false;
         }
         if (!McaVampirismCompatConfig.allowChildInfection() && target instanceof VillagerEntityMCA villager
                 && villager.getAgeState() != AgeState.ADULT) {
             return false;
         }
-        return target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(target)
                 .map(state -> !state.isInfected() && !state.isConverted())
                 .orElse(true);
     }
 
     private static boolean canAttackerBite(Mob vampire) {
         long gameTime = vampire.level().getGameTime();
-        return vampire.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(vampire)
                 .map(state -> state.canBite(gameTime, McaVampirismCompatConfig.biteCooldownTicks()))
                 .orElse(false);
     }

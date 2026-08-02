@@ -3,8 +3,8 @@ package com.guilh.mca_vampirism_compat.service;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.AgeState;
 
 public final class McaSpecialVillagerClassifier {
     private McaSpecialVillagerClassifier() {
@@ -41,7 +41,7 @@ public final class McaSpecialVillagerClassifier {
     }
 
     public static McaSpecialVillagerType classifyCure(VillagerEntityMCA villager) {
-        return villager == null ? McaSpecialVillagerType.UNKNOWN : villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return villager == null ? McaSpecialVillagerType.UNKNOWN : ModCapabilities.get(villager)
                 .map(state -> {
                     boolean vampireCure = state.isCuringVampire()
                             || state.getCureStartedTick() >= 0L
@@ -89,10 +89,10 @@ public final class McaSpecialVillagerClassifier {
     }
 
     private static boolean isInfected(VillagerEntityMCA villager) {
-        return villager.hasEffect(ModEffects.SANGUINARE.get())
+        return villager.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())
                 || McaWerewolfConversionService.isLupusSanguinemActive(villager)
                 || McaWerewolfStateService.isWerewolfInfected(villager)
-                || villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+                || ModCapabilities.get(villager)
                 .map(state -> state.isInfected())
                 .orElse(false);
     }

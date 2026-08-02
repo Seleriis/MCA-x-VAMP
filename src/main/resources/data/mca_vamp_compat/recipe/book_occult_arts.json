@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:book"
+    },
+    {
+      "item": "vampirism:vampire_fang"
+    },
+    {
+      "item": "vampirism:garlic"
+    }
+  ],
+  "result": {
+    "id": "mca_vamp_compat:book_occult_arts",
+    "count": 1
+  }
+}

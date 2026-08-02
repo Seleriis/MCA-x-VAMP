@@ -7,8 +7,8 @@ import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.util.McaVampireTargetUtil;
 import com.guilh.mca_vampirism_compat.util.VampirismUtil;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -36,7 +36,7 @@ public final class McaVampireBiteService {
         if (vampire.distanceToSqr(target) > MAX_BITE_DISTANCE_SQR) {
             return false;
         }
-        return vampire.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(vampire)
                 .map(state -> state.canBite(vampire.level().getGameTime(), McaVampirismCompatConfig.biteCooldownTicks()))
                 .orElse(false);
     }
@@ -51,11 +51,11 @@ public final class McaVampireBiteService {
         if (!canBite(vampire, target)) {
             return false;
         }
-        return vampire.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        return ModCapabilities.get(vampire).map(state -> {
             long gameTime = vampire.level().getGameTime();
             state.markBite(gameTime);
             if (McaVampireStateService.isMcaVillager(target)) {
-                target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+                ModCapabilities.get(target)
                         .ifPresent(targetState -> targetState.markBittenByMcaVampire(gameTime));
             }
             applySanguinareInfection(target, vampire);
@@ -73,7 +73,7 @@ public final class McaVampireBiteService {
                 || vampire.distanceToSqr(target) > MAX_BITE_DISTANCE_SQR) {
             return false;
         }
-        return vampire.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        return ModCapabilities.get(vampire).map(state -> {
             long gameTime = vampire.level().getGameTime();
             if (!state.canBite(gameTime, McaVampirismCompatConfig.biteCooldownTicks())) {
                 return false;
@@ -109,8 +109,8 @@ public final class McaVampireBiteService {
         }
         return McaHunterBloodService.isPoisonousBloodTarget(target)
                 || canMcaVillagerReceiveInfection(target)
-                || target.hasEffect(ModEffects.SANGUINARE.get())
-                || target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+                || target.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())
+                || ModCapabilities.get(target)
                 .map(state -> state.isInfected())
                 .orElse(false);
     }
@@ -120,13 +120,13 @@ public final class McaVampireBiteService {
             return false;
         }
         long gameTime = target.level().getGameTime();
-        return target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(target)
                 .map(state -> state.wasRecentlyBitten(gameTime, McaVampirismCompatConfig.recentlyBittenTargetCooldownTicks()))
                 .orElse(false);
     }
 
     public static void recordPlayerConversionBite(Player player, VillagerEntityMCA villager) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.markVampirePlayerConversionBite(player.getUUID(), villager.level().getGameTime()));
         McaVampirismCompat.debugLog("[BITE] conversion bite recorded villager={} player={}", villager.getUUID(), player.getUUID());
     }

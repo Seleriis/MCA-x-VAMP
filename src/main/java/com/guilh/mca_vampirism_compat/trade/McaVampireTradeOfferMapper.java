@@ -63,7 +63,7 @@ public final class McaVampireTradeOfferMapper {
     }
 
     private static MerchantOffer copyOffer(MerchantOffer original) {
-        return new MerchantOffer(original.createTag());
+        return original.copy();
     }
 
     public record MappedOffers(MerchantOffers adjustedOffers, Map<Integer, Integer> adjustedIndexToOriginalIndex) {

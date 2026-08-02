@@ -19,7 +19,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public final class EasyVillagersBlockTradeService {
     private EasyVillagersBlockTradeService() {
@@ -74,7 +74,8 @@ public final class EasyVillagersBlockTradeService {
         }
 
         McaVampirismCompat.debugLog(
-                "[EASY-VILLAGERS] stored villager faction resolved readOnly=true type={} isMca={} isVampire={} isHunter={} isWerewolf={} vampireSource={} hunterSource={} werewolfSource={}",
+                "[EASY-VILLAGERS] stored villager faction resolved readOnly=true stackSource={} type={} isMca={} isVampire={} isHunter={} isWerewolf={} vampireSource={} hunterSource={} werewolfSource={}",
+                info.stackSource(),
                 info.entityType(),
                 info.isMca(),
                 info.isVampire(),
@@ -89,15 +90,6 @@ public final class EasyVillagersBlockTradeService {
                 || (!info.isVampire() && !info.isHunter() && !info.isWerewolf())) {
             return;
         }
-        if (info.offers().isEmpty()) {
-            McaVampirismCompat.debugLog(
-                    "[EASY-VILLAGERS] wrapper skipped reason=NO_OFFERS player={} pos={}",
-                    player.getName().getString(),
-                    blockPos
-            );
-            return;
-        }
-
         boolean hunterTrade = !info.isVampire() && info.isHunter();
         boolean werewolfTrade = !info.isVampire() && !hunterTrade && info.isWerewolf();
         PlayerFaction faction = hunterTrade
@@ -111,6 +103,15 @@ public final class EasyVillagersBlockTradeService {
             logBlockedTrade(player, faction, hunterTrade, werewolfTrade);
             event.setCancellationResult(InteractionResult.SUCCESS);
             event.setCanceled(true);
+            return;
+        }
+
+        if (info.offers().isEmpty()) {
+            McaVampirismCompat.debugLog(
+                    "[EASY-VILLAGERS] wrapper skipped reason=NO_OFFERS player={} pos={}",
+                    player.getName().getString(),
+                    blockPos
+            );
             return;
         }
 
@@ -134,6 +135,76 @@ public final class EasyVillagersBlockTradeService {
         if (player != null) {
             EasyVillagersFactionMerchantSession.closeForPlayer(player.getUUID(), "player logout");
         }
+    }
+
+    /**
+     * Authoritative entry point used by the Easy Villagers tile entity mixin.
+     * Returning true means the original Easy Villagers GUI must not be opened.
+     */
+    public static boolean tryOpenDirectTrader(BlockEntity blockEntity, Player player) {
+        if (blockEntity == null || player == null || player.level().isClientSide
+                || !McaEvCompatBridge.canApplyFactionRulesToStoredVillager()
+                || !StoredMcaFactionResolver.isEasyVillagersDirectTrader(blockEntity)) {
+            return false;
+        }
+        StoredMcaVillagerInfo info = StoredMcaFactionResolver.resolve(blockEntity);
+        if (!info.resolved() || (!info.isVampire() && !info.isHunter() && !info.isWerewolf())) {
+            return false;
+        }
+        McaVampirismCompat.debugLog(
+                "[EASY-VILLAGERS] direct trader faction stackSource={} isMca={} vampire={} hunter={} werewolf={} vampireSource={} hunterSource={} werewolfSource={}",
+                info.stackSource(),
+                info.isMca(),
+                info.isVampire(),
+                info.isHunter(),
+                info.isWerewolf(),
+                info.vampireSource(),
+                info.hunterSource(),
+                info.werewolfSource()
+        );
+
+        boolean hunterTrade = !info.isVampire() && info.isHunter();
+        boolean werewolfTrade = !info.isVampire() && !hunterTrade && info.isWerewolf();
+        PlayerFaction faction = hunterTrade
+                ? McaHunterTradeService.tradeFaction(player)
+                : werewolfTrade
+                ? McaWerewolfTradeService.tradeFaction(player)
+                : McaVampireFactionService.tradeFaction(player);
+        McaVampireFactionService.debugClassification(player, faction, "EASY_VILLAGERS_DIRECT_TRADER");
+
+        if (shouldBlockTrade(player, faction, hunterTrade, werewolfTrade)) {
+            player.displayClientMessage(Component.translatable(
+                    messageFor(player, faction, hunterTrade, werewolfTrade)), true);
+            logBlockedTrade(player, faction, hunterTrade, werewolfTrade);
+            return true;
+        }
+        if (info.offers().isEmpty()) {
+            McaVampirismCompat.debugLog(
+                    "[EASY-VILLAGERS] direct wrapper skipped reason=NO_OFFERS player={} pos={} storedFaction={}",
+                    player.getName().getString(),
+                    blockEntity.getBlockPos(),
+                    hunterTrade ? "HUNTER" : werewolfTrade ? "WEREWOLF" : "VAMPIRE"
+            );
+            return false;
+        }
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return true;
+        }
+
+        McaTradeContextService.markEasyVillagersBlockTrade(serverPlayer, blockEntity.getBlockPos());
+        EasyVillagersFactionMerchantSession session = hunterTrade
+                ? EasyVillagersFactionMerchantSession.createForHunter(serverPlayer, info, faction)
+                : werewolfTrade
+                ? EasyVillagersFactionMerchantSession.createForWerewolf(serverPlayer, info, faction)
+                : EasyVillagersFactionMerchantSession.create(serverPlayer, info, faction);
+        new EasyVillagersFactionMerchant(session).open();
+        McaVampirismCompat.debugLog(
+                "[EASY-VILLAGERS] original trader GUI replaced player={} pos={} storedFaction={}",
+                player.getName().getString(),
+                blockEntity.getBlockPos(),
+                hunterTrade ? "HUNTER" : werewolfTrade ? "WEREWOLF" : "VAMPIRE"
+        );
+        return true;
     }
 
     private static boolean shouldBlockTrade(Player player, PlayerFaction faction, boolean hunterTrade, boolean werewolfTrade) {

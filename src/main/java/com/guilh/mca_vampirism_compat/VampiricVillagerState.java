@@ -1,12 +1,15 @@
 package com.guilh.mca_vampirism_compat;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.common.util.INBTSerializable;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public class VampiricVillagerState {
+public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
     private boolean infected;
     private boolean converted;
     private boolean sanguinareActive;
@@ -35,6 +38,7 @@ public class VampiricVillagerState {
     private boolean werewolfAppearanceApplied;
     private boolean werewolfTraitApplied;
     private boolean werewolfPartialForm;
+    private boolean factionInheritanceProcessed;
     private UUID source;
     private UUID lastAggressorUuid;
     private UUID lastVampirePlayerBiteUuid;
@@ -62,6 +66,11 @@ public class VampiricVillagerState {
     private float originalMelaninGene;
     private float originalHemoglobinGene;
     private float originalFaceGene;
+    private float originalEyeBrightnessGene;
+    private int originalEyeDye = -1;
+    private int originalEyeLeftDye = -1;
+    private int originalSkinDye = 0xFF000000;
+    private int appearanceSnapshotVersion;
     private long cureStartedTick = -1L;
     private long cureFinishTick = -1L;
     private long werewolfCureStartedTick = -1L;
@@ -163,6 +172,22 @@ public class VampiricVillagerState {
         this.sanguinareActive = false;
         this.infectionStartTick = -1L;
         this.source = null;
+    }
+
+    public void markInheritedWerewolf(long gameTime) {
+        clearPendingInfection();
+        finishWerewolfConversion(gameTime);
+        this.werewolfAppearanceApplied = true;
+        this.werewolfTraitApplied = true;
+        this.werewolfPartialForm = true;
+    }
+
+    public boolean isFactionInheritanceProcessed() {
+        return factionInheritanceProcessed;
+    }
+
+    public void markFactionInheritanceProcessed() {
+        this.factionInheritanceProcessed = true;
     }
 
     public void clearInfection() {
@@ -540,6 +565,22 @@ public class VampiricVillagerState {
     }
 
     public void saveOriginalAppearance(float skinGene, float melaninGene, float hemoglobinGene, float faceGene, String customSkin) {
+        saveOriginalAppearance(
+                skinGene,
+                melaninGene,
+                hemoglobinGene,
+                faceGene,
+                customSkin,
+                0.0F,
+                -1,
+                -1,
+                0xFF000000
+        );
+    }
+
+    public void saveOriginalAppearance(float skinGene, float melaninGene, float hemoglobinGene, float faceGene,
+                                       String customSkin, float eyeBrightnessGene, int eyeDye,
+                                       int eyeLeftDye, int skinDye) {
         if (originalAppearanceSaved) {
             return;
         }
@@ -548,7 +589,23 @@ public class VampiricVillagerState {
         this.originalHemoglobinGene = hemoglobinGene;
         this.originalFaceGene = faceGene;
         this.originalCustomSkin = customSkin == null ? "" : customSkin;
+        this.originalEyeBrightnessGene = eyeBrightnessGene;
+        this.originalEyeDye = eyeDye;
+        this.originalEyeLeftDye = eyeLeftDye;
+        this.originalSkinDye = skinDye;
+        this.appearanceSnapshotVersion = 2;
         this.originalAppearanceSaved = true;
+    }
+
+    public void upgradeNativeAppearanceSnapshot(float eyeBrightnessGene, int eyeDye, int eyeLeftDye, int skinDye) {
+        if (!originalAppearanceSaved || appearanceSnapshotVersion >= 2) {
+            return;
+        }
+        this.originalEyeBrightnessGene = eyeBrightnessGene;
+        this.originalEyeDye = eyeDye;
+        this.originalEyeLeftDye = eyeLeftDye;
+        this.originalSkinDye = skinDye;
+        this.appearanceSnapshotVersion = 2;
     }
 
     public boolean isVampireAppearanceApplied() {
@@ -805,11 +862,32 @@ public class VampiricVillagerState {
         return originalFaceGene;
     }
 
+    public float getOriginalEyeBrightnessGene() {
+        return originalEyeBrightnessGene;
+    }
+
+    public int getOriginalEyeDye() {
+        return originalEyeDye;
+    }
+
+    public int getOriginalEyeLeftDye() {
+        return originalEyeLeftDye;
+    }
+
+    public int getOriginalSkinDye() {
+        return originalSkinDye;
+    }
+
+    public int getAppearanceSnapshotVersion() {
+        return appearanceSnapshotVersion;
+    }
+
     public String getOriginalCustomSkin() {
         return originalCustomSkin;
     }
 
-    public CompoundTag serializeNBT() {
+    @Override
+    public CompoundTag serializeNBT(HolderLookup.Provider registries) {
         CompoundTag tag = new CompoundTag();
         tag.putBoolean("Infected", infected);
         tag.putBoolean("Converted", converted);
@@ -835,6 +913,7 @@ public class VampiricVillagerState {
         tag.putBoolean("WerewolfAppearanceApplied", werewolfAppearanceApplied);
         tag.putBoolean("WerewolfTraitApplied", werewolfTraitApplied);
         tag.putBoolean("WerewolfPartialForm", werewolfPartialForm);
+        tag.putBoolean("FactionInheritanceProcessed", factionInheritanceProcessed);
         tag.putLong("HunterAlignmentUntilTick", hunterAlignmentUntilTick);
         tag.putBoolean("WasBittenByVampirePlayer", wasBittenByVampirePlayer);
         tag.putBoolean("BiteWasConversionCause", biteWasConversionCause);
@@ -858,6 +937,11 @@ public class VampiricVillagerState {
         tag.putFloat("OriginalMelaninGene", originalMelaninGene);
         tag.putFloat("OriginalHemoglobinGene", originalHemoglobinGene);
         tag.putFloat("OriginalFaceGene", originalFaceGene);
+        tag.putFloat("OriginalEyeBrightnessGene", originalEyeBrightnessGene);
+        tag.putInt("OriginalEyeDye", originalEyeDye);
+        tag.putInt("OriginalEyeLeftDye", originalEyeLeftDye);
+        tag.putInt("OriginalSkinDye", originalSkinDye);
+        tag.putInt("AppearanceSnapshotVersion", appearanceSnapshotVersion);
         tag.putLong("CureStartedTick", cureStartedTick);
         tag.putLong("CureFinishTick", cureFinishTick);
         tag.putLong("WerewolfCureStartedTick", werewolfCureStartedTick);
@@ -894,13 +978,20 @@ public class VampiricVillagerState {
         if (werewolfSourceUuid != null) {
             tag.putUUID("WerewolfSourceUuid", werewolfSourceUuid);
         }
-        if (originalMainHandItemSaved) {
-            tag.put("OriginalMainHandItem", originalMainHandItem.save(new CompoundTag()));
+        /*
+         * An empty hand is a meaningful saved value: defensive villagers must
+         * put their temporary weapon away again. ItemStack.save, however,
+         * rejects ItemStack.EMPTY in 1.21.1, so preserve the boolean marker and
+         * omit only the optional item payload.
+         */
+        if (originalMainHandItemSaved && !originalMainHandItem.isEmpty()) {
+            tag.put("OriginalMainHandItem", originalMainHandItem.save(registries));
         }
         return tag;
     }
 
-    public void deserializeNBT(CompoundTag tag) {
+    @Override
+    public void deserializeNBT(HolderLookup.Provider registries, CompoundTag tag) {
         infected = tag.getBoolean("Infected");
         converted = tag.getBoolean("Converted");
         sanguinareActive = tag.getBoolean("SanguinareActive");
@@ -929,6 +1020,7 @@ public class VampiricVillagerState {
         werewolfAppearanceApplied = tag.getBoolean("WerewolfAppearanceApplied");
         werewolfTraitApplied = tag.getBoolean("WerewolfTraitApplied");
         werewolfPartialForm = tag.getBoolean("WerewolfPartialForm");
+        factionInheritanceProcessed = tag.getBoolean("FactionInheritanceProcessed");
         hunterAlignmentUntilTick = tag.contains("HunterAlignmentUntilTick") ? tag.getLong("HunterAlignmentUntilTick") : Long.MIN_VALUE;
         wasBittenByVampirePlayer = tag.getBoolean("WasBittenByVampirePlayer");
         biteWasConversionCause = tag.getBoolean("BiteWasConversionCause");
@@ -952,6 +1044,13 @@ public class VampiricVillagerState {
         originalMelaninGene = tag.contains("OriginalMelaninGene") ? tag.getFloat("OriginalMelaninGene") : 0.0F;
         originalHemoglobinGene = tag.contains("OriginalHemoglobinGene") ? tag.getFloat("OriginalHemoglobinGene") : 0.0F;
         originalFaceGene = tag.contains("OriginalFaceGene") ? tag.getFloat("OriginalFaceGene") : 0.0F;
+        originalEyeBrightnessGene = tag.contains("OriginalEyeBrightnessGene") ? tag.getFloat("OriginalEyeBrightnessGene") : 0.0F;
+        originalEyeDye = tag.contains("OriginalEyeDye") ? tag.getInt("OriginalEyeDye") : -1;
+        originalEyeLeftDye = tag.contains("OriginalEyeLeftDye") ? tag.getInt("OriginalEyeLeftDye") : -1;
+        originalSkinDye = tag.contains("OriginalSkinDye") ? tag.getInt("OriginalSkinDye") : 0xFF000000;
+        appearanceSnapshotVersion = tag.contains("AppearanceSnapshotVersion")
+                ? tag.getInt("AppearanceSnapshotVersion")
+                : originalAppearanceSaved ? 1 : 0;
         cureStartedTick = tag.contains("CureStartedTick") ? tag.getLong("CureStartedTick") : -1L;
         cureFinishTick = tag.contains("CureFinishTick") ? tag.getLong("CureFinishTick") : -1L;
         werewolfCureStartedTick = tag.contains("WerewolfCureStartedTick") ? tag.getLong("WerewolfCureStartedTick") : -1L;
@@ -980,7 +1079,14 @@ public class VampiricVillagerState {
         cureInitiatorUuid = tag.hasUUID("CureInitiatorUuid") ? tag.getUUID("CureInitiatorUuid") : null;
         werewolfCureInitiatorUuid = tag.hasUUID("WerewolfCureInitiatorUuid") ? tag.getUUID("WerewolfCureInitiatorUuid") : null;
         werewolfSourceUuid = tag.hasUUID("WerewolfSourceUuid") ? tag.getUUID("WerewolfSourceUuid") : null;
-        originalMainHandItem = tag.contains("OriginalMainHandItem") ? ItemStack.of(tag.getCompound("OriginalMainHandItem")) : ItemStack.EMPTY;
+        CompoundTag originalMainHandTag = tag.contains("OriginalMainHandItem", Tag.TAG_COMPOUND)
+                ? tag.getCompound("OriginalMainHandItem")
+                : null;
+        originalMainHandItem = originalMainHandTag != null
+                && !originalMainHandTag.isEmpty()
+                && originalMainHandTag.contains("id")
+                ? ItemStack.parseOptional(registries, originalMainHandTag)
+                : ItemStack.EMPTY;
         aiGoalsAdded = false;
         defensiveGoalsAdded = false;
         hunterAiGoalsAdded = false;

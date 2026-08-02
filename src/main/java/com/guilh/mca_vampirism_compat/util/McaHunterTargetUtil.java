@@ -11,8 +11,8 @@ import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.service.McaVillageFactionControlService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfStateService;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -128,7 +128,7 @@ public final class McaHunterTargetUtil {
             McaCommandRespectService.logRejectedTarget(hunter, attacker);
             return;
         }
-        hunter.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(hunter)
                 .ifPresent(state -> state.markRetaliation(
                         attacker.getUUID(),
                         hunter.level().getGameTime(),
@@ -183,7 +183,7 @@ public final class McaHunterTargetUtil {
 
     private static boolean isRetaliatingAgainst(VillagerEntityMCA hunter, LivingEntity target) {
         long gameTime = hunter.level().getGameTime();
-        return hunter.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(hunter)
                 .map(state -> state.isRetaliatingAgainst(target.getUUID(), gameTime))
                 .orElse(false);
     }

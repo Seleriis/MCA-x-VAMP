@@ -3,8 +3,8 @@ package com.guilh.mca_vampirism_compat.growth;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.world.entity.LivingEntity;
 
 public final class McaVampireGrowthHandler {
@@ -20,7 +20,7 @@ public final class McaVampireGrowthHandler {
             return;
         }
 
-        entity.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(entity).ifPresent(state -> {
             long gameTime = entity.level().getGameTime();
             long interval = McaVampirismCompatConfig.growthProcessIntervalTicks();
             if (!state.canProcessGrowth(gameTime, interval)) {

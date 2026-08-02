@@ -1,9 +1,11 @@
 package com.guilh.mca_vampirism_compat.easyvillagers;
 
 import com.guilh.mca_vampirism_compat.service.McaTradeContextService;
+import com.guilh.mca_vampirism_compat.trade.EntityBackedMerchant;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MerchantMenu;
@@ -14,7 +16,7 @@ import net.minecraft.world.item.trading.MerchantOffers;
 
 import java.util.OptionalInt;
 
-public final class EasyVillagersFactionMerchant implements Merchant {
+public final class EasyVillagersFactionMerchant implements Merchant, EntityBackedMerchant {
     private final EasyVillagersFactionMerchantSession session;
     private Player tradingPlayer;
 
@@ -39,8 +41,9 @@ public final class EasyVillagersFactionMerchant implements Merchant {
                     showProgressBar(),
                     canRestock()
             );
+            session.sendCycleState(containerId.getAsInt());
         } else {
-            session.close("openMenu failed");
+            setTradingPlayer(null);
         }
     }
 
@@ -86,7 +89,7 @@ public final class EasyVillagersFactionMerchant implements Merchant {
 
     @Override
     public void overrideXp(int xp) {
-        session.storedVillager().overrideXp(xp);
+        session.overrideXp(xp);
     }
 
     @Override
@@ -107,6 +110,11 @@ public final class EasyVillagersFactionMerchant implements Merchant {
     @Override
     public boolean isClientSide() {
         return session.storedVillager().level().isClientSide;
+    }
+
+    @Override
+    public Villager mcaVampCompat$getTradeSoundEntity() {
+        return session.storedVillager();
     }
 
     private MerchantMenu createMenu(int containerId, Inventory inventory) {

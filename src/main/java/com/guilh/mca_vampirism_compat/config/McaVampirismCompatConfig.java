@@ -1,357 +1,315 @@
 package com.guilh.mca_vampirism_compat.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public final class McaVampirismCompatConfig {
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec SPEC;
 
-    private static final ForgeConfigSpec.IntValue PLAYER_SANGUINARE_DURATION_TICKS;
-    private static final ForgeConfigSpec.IntValue VAMPIRE_VILLAGER_SANGUINARE_DURATION_TICKS;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_MCA_VILLAGER_INFECTION;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_CHILD_INFECTION;
+    private static final ModConfigSpec.IntValue PLAYER_SANGUINARE_DURATION_TICKS;
+    private static final ModConfigSpec.IntValue VAMPIRE_VILLAGER_SANGUINARE_DURATION_TICKS;
+    private static final ModConfigSpec.BooleanValue ALLOW_MCA_VILLAGER_INFECTION;
+    private static final ModConfigSpec.BooleanValue ALLOW_CHILD_INFECTION;
 
-    private static final ForgeConfigSpec.IntValue BITE_COOLDOWN_TICKS;
-    private static final ForgeConfigSpec.DoubleValue NIGHT_ATTACK_CHANCE;
-    private static final ForgeConfigSpec.DoubleValue CONVERSION_CHANCE_ON_BITE;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_AVOID_SUN;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_BURN_IN_SUN;
-    private static final ForgeConfigSpec.BooleanValue NON_LETHAL_BITE_AGAINST_VILLAGERS;
-    private static final ForgeConfigSpec.DoubleValue VILLAGER_BITE_DAMAGE;
-    private static final ForgeConfigSpec.IntValue RECENTLY_BITTEN_TARGET_COOLDOWN_TICKS;
-    private static final ForgeConfigSpec.BooleanValue BLOOD_DRAIN_STOPS_COMBAT;
-    private static final ForgeConfigSpec.BooleanValue PREVENT_VAMPIRES_BITING_VAMPIRES;
-    private static final ForgeConfigSpec.BooleanValue PREVENT_VAMPIRES_BITING_MCA_VAMPIRES;
-    private static final ForgeConfigSpec.BooleanValue SHOW_ALREADY_VAMPIRE_BITE_MESSAGE;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_NEUTRAL_TO_HUMANS_DURING_DAY;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_INFECT_HUMANS_AT_NIGHT;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_USE_NON_LETHAL_BITE_ON_HUMANS;
-    private static final ForgeConfigSpec.IntValue RETALIATION_MEMORY_TICKS;
-    private static final ForgeConfigSpec.BooleanValue ATTACK_ONLY_TRANSFORMED_WEREWOLVES;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_PLAYER_BITE_DEALS_DAMAGE_TO_MCA_VILLAGERS;
-    private static final ForgeConfigSpec.DoubleValue VAMPIRE_PLAYER_BITE_DAMAGE_TO_MCA_VILLAGERS;
+    private static final ModConfigSpec.IntValue BITE_COOLDOWN_TICKS;
+    private static final ModConfigSpec.DoubleValue NIGHT_ATTACK_CHANCE;
+    private static final ModConfigSpec.DoubleValue CONVERSION_CHANCE_ON_BITE;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_AVOID_SUN;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_BURN_IN_SUN;
+    private static final ModConfigSpec.BooleanValue NON_LETHAL_BITE_AGAINST_VILLAGERS;
+    private static final ModConfigSpec.DoubleValue VILLAGER_BITE_DAMAGE;
+    private static final ModConfigSpec.IntValue RECENTLY_BITTEN_TARGET_COOLDOWN_TICKS;
+    private static final ModConfigSpec.BooleanValue BLOOD_DRAIN_STOPS_COMBAT;
+    private static final ModConfigSpec.BooleanValue PREVENT_VAMPIRES_BITING_VAMPIRES;
+    private static final ModConfigSpec.BooleanValue PREVENT_VAMPIRES_BITING_MCA_VAMPIRES;
+    private static final ModConfigSpec.BooleanValue SHOW_ALREADY_VAMPIRE_BITE_MESSAGE;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_INFECT_HUMANS_AT_NIGHT;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_USE_NON_LETHAL_BITE_ON_HUMANS;
+    private static final ModConfigSpec.IntValue RETALIATION_MEMORY_TICKS;
+    private static final ModConfigSpec.BooleanValue ATTACK_ONLY_TRANSFORMED_WEREWOLVES;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_PLAYER_BITE_DEALS_DAMAGE_TO_MCA_VILLAGERS;
+    private static final ModConfigSpec.DoubleValue VAMPIRE_PLAYER_BITE_DAMAGE_TO_MCA_VILLAGERS;
 
-    private static final ForgeConfigSpec.DoubleValue MAX_HEALTH_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue ATTACK_DAMAGE_BONUS;
-    private static final ForgeConfigSpec.DoubleValue ARMOR_BONUS;
-    private static final ForgeConfigSpec.DoubleValue FOLLOW_RANGE_BONUS;
-    private static final ForgeConfigSpec.BooleanValue APPLY_COMBAT_ATTRIBUTES_ONLY_TO_ADULTS;
-    private static final ForgeConfigSpec.DoubleValue VAMPIRE_VILLAGER_MOVEMENT_SPEED_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_MOVEMENT_SPEED_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_MOVEMENT_SPEED_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue DEFENSIVE_VILLAGER_MOVEMENT_SPEED_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue CURING_VILLAGER_MOVEMENT_SPEED_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue SPECIAL_VILLAGER_MAX_NAVIGATION_SPEED;
-    private static final ForgeConfigSpec.DoubleValue SPECIAL_VILLAGER_MELEE_GOAL_SPEED;
-    private static final ForgeConfigSpec.DoubleValue SPECIAL_VILLAGER_CHASE_GOAL_SPEED;
+    private static final ModConfigSpec.DoubleValue MAX_HEALTH_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue ATTACK_DAMAGE_BONUS;
+    private static final ModConfigSpec.DoubleValue ARMOR_BONUS;
+    private static final ModConfigSpec.DoubleValue FOLLOW_RANGE_BONUS;
+    private static final ModConfigSpec.BooleanValue APPLY_COMBAT_ATTRIBUTES_ONLY_TO_ADULTS;
+    private static final ModConfigSpec.DoubleValue VAMPIRE_VILLAGER_MOVEMENT_SPEED_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_MOVEMENT_SPEED_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_MOVEMENT_SPEED_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue DEFENSIVE_VILLAGER_MOVEMENT_SPEED_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue CURING_VILLAGER_MOVEMENT_SPEED_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue SPECIAL_VILLAGER_MAX_NAVIGATION_SPEED;
+    private static final ModConfigSpec.DoubleValue SPECIAL_VILLAGER_MELEE_GOAL_SPEED;
+    private static final ModConfigSpec.DoubleValue SPECIAL_VILLAGER_CHASE_GOAL_SPEED;
 
-    private static final ForgeConfigSpec.DoubleValue HUMAN_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.BooleanValue BLOCK_WEREWOLF_INTERACTIONS;
-    private static final ForgeConfigSpec.BooleanValue BLOCK_HUNTER_INTERACTIONS;
+    private static final ModConfigSpec.DoubleValue HUMAN_SOCIAL_PENALTY;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_SOCIAL_PENALTY;
+    private static final ModConfigSpec.DoubleValue HUNTER_SOCIAL_PENALTY;
+    private static final ModConfigSpec.BooleanValue BLOCK_WEREWOLF_INTERACTIONS;
+    private static final ModConfigSpec.BooleanValue BLOCK_HUNTER_INTERACTIONS;
 
-    private static final ForgeConfigSpec.BooleanValue MONSTERS_IGNORE_MCA_VAMPIRE_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue CANCEL_MONSTER_DAMAGE_TO_MCA_VAMPIRE_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue SUPPRESS_MCA_VAMPIRE_VILLAGER_ZOMBIE_PANIC;
-    private static final ForgeConfigSpec.BooleanValue SUPPRESS_MCA_VAMPIRE_VILLAGER_FEAR_DIALOGUE;
-    private static final ForgeConfigSpec.BooleanValue MONSTERS_IGNORE_SPECIAL_MCA_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue SPECIAL_MCA_VILLAGERS_IGNORE_COMMON_MONSTERS;
-    private static final ForgeConfigSpec.BooleanValue SUPPRESS_SPECIAL_MCA_VILLAGER_MONSTER_PANIC;
-    private static final ForgeConfigSpec.BooleanValue SUPPRESS_SPECIAL_MCA_VILLAGER_FEAR_DIALOGUE;
-    private static final ForgeConfigSpec.BooleanValue CANCEL_MONSTER_DAMAGE_TO_SPECIAL_MCA_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue INFECTED_MCA_VILLAGERS_COUNT_AS_SPECIAL_FOR_MONSTER_IGNORE;
-    private static final ForgeConfigSpec.BooleanValue SPECIAL_MCA_GUARDS_DEFEND_AGAINST_HOSTILE_MOBS;
-    private static final ForgeConfigSpec.BooleanValue SPECIAL_MCA_GUARDS_STILL_SUPPRESS_PANIC;
-    private static final ForgeConfigSpec.BooleanValue SPECIAL_MCA_GUARDS_ATTACK_CREEPERS;
+    private static final ModConfigSpec.BooleanValue MONSTERS_IGNORE_MCA_VAMPIRE_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue CANCEL_MONSTER_DAMAGE_TO_MCA_VAMPIRE_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue SUPPRESS_MCA_VAMPIRE_VILLAGER_ZOMBIE_PANIC;
+    private static final ModConfigSpec.BooleanValue SUPPRESS_MCA_VAMPIRE_VILLAGER_FEAR_DIALOGUE;
+    private static final ModConfigSpec.BooleanValue MONSTERS_IGNORE_SPECIAL_MCA_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue SPECIAL_MCA_VILLAGERS_IGNORE_COMMON_MONSTERS;
+    private static final ModConfigSpec.BooleanValue SUPPRESS_SPECIAL_MCA_VILLAGER_MONSTER_PANIC;
+    private static final ModConfigSpec.BooleanValue SUPPRESS_SPECIAL_MCA_VILLAGER_FEAR_DIALOGUE;
+    private static final ModConfigSpec.BooleanValue CANCEL_MONSTER_DAMAGE_TO_SPECIAL_MCA_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue INFECTED_MCA_VILLAGERS_COUNT_AS_SPECIAL_FOR_MONSTER_IGNORE;
+    private static final ModConfigSpec.BooleanValue SPECIAL_MCA_GUARDS_DEFEND_AGAINST_HOSTILE_MOBS;
+    private static final ModConfigSpec.BooleanValue SPECIAL_MCA_GUARDS_STILL_SUPPRESS_PANIC;
+    private static final ModConfigSpec.BooleanValue SPECIAL_MCA_GUARDS_ATTACK_CREEPERS;
 
-    private static final ForgeConfigSpec.BooleanValue PREVENT_AGGRESSIVE_VILLAGER_REPLACEMENT_FOR_MCA_VAMPIRES;
-    private static final ForgeConfigSpec.BooleanValue PREVENT_AGGRESSIVE_VILLAGER_REPLACEMENT_FOR_ALL_MCA_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue PREVENT_AGGRESSIVE_VILLAGER_REPLACEMENT_FOR_MCA_VAMPIRES;
+    private static final ModConfigSpec.BooleanValue PREVENT_AGGRESSIVE_VILLAGER_REPLACEMENT_FOR_ALL_MCA_VILLAGERS;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_MCA_VILLAGER_DEFENSE_AGAINST_VAMPIRES;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_TEMPORARY_DEFENSIVE_MODE;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_MODE_ONLY_IN_HUNTER_VILLAGES;
-    private static final ForgeConfigSpec.IntValue VAMPIRE_THREAT_ALERT_RADIUS;
-    private static final ForgeConfigSpec.IntValue VAMPIRE_THREAT_WINDOW_TICKS;
-    private static final ForgeConfigSpec.IntValue VAMPIRE_THREAT_COUNT_TO_TRIGGER_DEFENSE;
-    private static final ForgeConfigSpec.IntValue DEFENSIVE_MODE_DURATION_TICKS;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_CAN_ATTACK_VAMPIRE_PLAYERS;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_CAN_ATTACK_MCA_VAMPIRE_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_WARN_INSTEAD_OF_ATTACK_MCA_VAMPIRES;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_ATTACK_ONLY_IF_THREAT_NEARBY;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_USE_WEAPONS_VISUALLY;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_MODE_GRANTS_HUNTER_TRAIT;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_MODE_USES_PITCHFORK;
-    private static final ForgeConfigSpec.ConfigValue<String> DEFENSIVE_VILLAGER_WEAPON_TYPE;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_GET_HUNTER_TRAIT;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_HUNTER_TRAIT_IS_TEMPORARY;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_ARE_HUNTER_ALIGNED;
-    private static final ForgeConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_COUNT_AS_HUNTERS_FOR_VAMPIRE_AI;
+    private static final ModConfigSpec.BooleanValue ENABLE_MCA_VILLAGER_DEFENSE_AGAINST_VAMPIRES;
+    private static final ModConfigSpec.BooleanValue ENABLE_TEMPORARY_DEFENSIVE_MODE;
+    private static final ModConfigSpec.BooleanValue DEFENSIVE_MODE_ONLY_IN_HUNTER_VILLAGES;
+    private static final ModConfigSpec.IntValue VAMPIRE_THREAT_ALERT_RADIUS;
+    private static final ModConfigSpec.IntValue VAMPIRE_THREAT_WINDOW_TICKS;
+    private static final ModConfigSpec.IntValue VAMPIRE_THREAT_COUNT_TO_TRIGGER_DEFENSE;
+    private static final ModConfigSpec.IntValue DEFENSIVE_MODE_DURATION_TICKS;
+    private static final ModConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_CAN_ATTACK_VAMPIRE_PLAYERS;
+    private static final ModConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_CAN_ATTACK_MCA_VAMPIRE_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_WARN_INSTEAD_OF_ATTACK_MCA_VAMPIRES;
+    private static final ModConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_ATTACK_ONLY_IF_THREAT_NEARBY;
+    private static final ModConfigSpec.BooleanValue DEFENSIVE_MODE_GRANTS_HUNTER_TRAIT;
+    private static final ModConfigSpec.BooleanValue DEFENSIVE_MODE_USES_PITCHFORK;
+    private static final ModConfigSpec.ConfigValue<String> DEFENSIVE_VILLAGER_WEAPON_TYPE;
+    private static final ModConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_HUNTER_TRAIT_IS_TEMPORARY;
+    private static final ModConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_ARE_HUNTER_ALIGNED;
+    private static final ModConfigSpec.BooleanValue DEFENSIVE_VILLAGERS_COUNT_AS_HUNTERS_FOR_VAMPIRE_AI;
 
-    private static final ForgeConfigSpec.DoubleValue HUMAN_TRADE_PRICE_MULTIPLIER;
-    private static final ForgeConfigSpec.BooleanValue BLOCK_WEREWOLF_TRADING;
-    private static final ForgeConfigSpec.BooleanValue BLOCK_HUNTER_TRADING;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_TRADE_ONLY_WITH_VAMPIRES;
-    private static final ForgeConfigSpec.BooleanValue CLEAR_VAMPIRE_BITE_REPUTATION_PENALTY_ON_CONVERSION;
-    private static final ForgeConfigSpec.BooleanValue NEUTRALIZE_CONVERSION_BITE_PENALTY_FOR_VAMPIRES;
-    private static final ForgeConfigSpec.BooleanValue CONVERTED_BY_PLAYER_GETS_FRIENDLY_TRADE;
-    private static final ForgeConfigSpec.DoubleValue VAMPIRE_PLAYER_TRADE_DISCOUNT;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_TRADE_PRICE_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_TRADE_PRICE_MULTIPLIER;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_TREAT_VAMPIRES_AS_ALLIES;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_TREAT_HUMANS_AS_NEUTRAL;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_TREAT_HUNTERS_AS_ENEMIES;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_TREAT_TRANSFORMED_WEREWOLVES_AS_ENEMIES;
-    private static final ForgeConfigSpec.BooleanValue NEUTRALIZE_ALL_POSITIVE_REPUTATION_FOR_VAMPIRE_PLAYERS_WITH_MCA_VAMPIRES;
+    private static final ModConfigSpec.DoubleValue HUMAN_TRADE_PRICE_MULTIPLIER;
+    private static final ModConfigSpec.BooleanValue BLOCK_WEREWOLF_TRADING;
+    private static final ModConfigSpec.BooleanValue BLOCK_HUNTER_TRADING;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_TRADE_ONLY_WITH_VAMPIRES;
+    private static final ModConfigSpec.BooleanValue CLEAR_VAMPIRE_BITE_REPUTATION_PENALTY_ON_CONVERSION;
+    private static final ModConfigSpec.BooleanValue NEUTRALIZE_CONVERSION_BITE_PENALTY_FOR_VAMPIRES;
+    private static final ModConfigSpec.DoubleValue VAMPIRE_PLAYER_TRADE_DISCOUNT;
+    private static final ModConfigSpec.DoubleValue HUNTER_TRADE_PRICE_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_TRADE_PRICE_MULTIPLIER;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_TREAT_VAMPIRES_AS_ALLIES;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_TREAT_HUNTERS_AS_ENEMIES;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_TREAT_TRANSFORMED_WEREWOLVES_AS_ENEMIES;
 
-    private static final ForgeConfigSpec.BooleanValue RESPECT_VAMPIRE_DISGUISE_FOR_MCA_INTERACTIONS;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_DISGUISE_SUPPRESSES_VAMPIRE_TRADE_DISCOUNT;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_DISGUISE_USES_HUMAN_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_DISGUISE_PREVENTS_HUNTER_AUTO_AGGRO;
-    private static final ForgeConfigSpec.BooleanValue INFECTIOUS_BITE_OVERRIDES_CONVERSION_CHANCE;
-    private static final ForgeConfigSpec.BooleanValue INFECTIOUS_BITE_STILL_USES_CONFIGURED_DURATION;
+    private static final ModConfigSpec.BooleanValue RESPECT_VAMPIRE_DISGUISE_FOR_MCA_INTERACTIONS;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_DISGUISE_SUPPRESSES_VAMPIRE_TRADE_DISCOUNT;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_DISGUISE_USES_HUMAN_SOCIAL_PENALTY;
+    private static final ModConfigSpec.BooleanValue INFECTIOUS_BITE_OVERRIDES_CONVERSION_CHANCE;
+    private static final ModConfigSpec.BooleanValue INFECTIOUS_BITE_STILL_USES_CONFIGURED_DURATION;
 
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_CAN_DETECT_VAMPIRE_DISGUISE;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_IMMUNE_TO_VAMPIRISM;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_HAVE_POISONOUS_BLOOD;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_APPLY_TOXICANT_TO_VAMPIRE_BITERS;
-    private static final ForgeConfigSpec.IntValue HUNTER_VILLAGER_TOXICANT_DURATION_TICKS;
-    private static final ForgeConfigSpec.IntValue HUNTER_VILLAGER_TOXICANT_AMPLIFIER;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGER_FALLBACK_TO_VANILLA_POISON;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_IMMUNE_TO_WEREWOLF_TRANSFORMATION;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_VAMPIRE_PLAYERS;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_MCA_VAMPIRE_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_TRANSFORMED_WEREWOLVES;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_VAMPIRE_MOBS;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_ONLY_WHILE_DEFENSIVE;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_IGNORE_VAMPIRE_DISGUISE;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_ATTACK_DAMAGE;
-    private static final ForgeConfigSpec.IntValue HUNTER_VILLAGER_ATTACK_COOLDOWN_TICKS;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_FOLLOW_RANGE;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGE_CONTROL_GRANTS_HUNTER_TRAIT;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_ONLY_FROM_HUNTER_CONTROLLED_VILLAGES;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGER_REMOVE_TRAIT_WHEN_VILLAGE_CONTROL_LOST;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGER_KEEP_MANUAL_HUNTER_TRAIT;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGER_AVOID_DUPLICATE_TOXICANT;
-    private static final ForgeConfigSpec.IntValue HUNTER_VILLAGER_MAX_CHASE_DISTANCE_FROM_VILLAGE;
-    private static final ForgeConfigSpec.IntValue HUNTER_VILLAGER_MAX_CHASE_DISTANCE_FROM_HOME;
-    private static final ForgeConfigSpec.IntValue HUNTER_VILLAGER_TARGET_MEMORY_TICKS;
-    private static final ForgeConfigSpec.IntValue HUNTER_VILLAGER_RETALIATION_MEMORY_TICKS;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGER_PREFER_RECENT_VAMPIRE_AGGRESSORS;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_IMMUNE_TO_VAMPIRISM;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_HAVE_POISONOUS_BLOOD;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_APPLY_TOXICANT_TO_VAMPIRE_BITERS;
+    private static final ModConfigSpec.IntValue HUNTER_VILLAGER_TOXICANT_DURATION_TICKS;
+    private static final ModConfigSpec.IntValue HUNTER_VILLAGER_TOXICANT_AMPLIFIER;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGER_FALLBACK_TO_VANILLA_POISON;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_IMMUNE_TO_WEREWOLF_TRANSFORMATION;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_VAMPIRE_PLAYERS;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_MCA_VAMPIRE_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_TRANSFORMED_WEREWOLVES;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_VAMPIRE_MOBS;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_ONLY_WHILE_DEFENSIVE;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_IGNORE_VAMPIRE_DISGUISE;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_ATTACK_DAMAGE;
+    private static final ModConfigSpec.IntValue HUNTER_VILLAGER_ATTACK_COOLDOWN_TICKS;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_FOLLOW_RANGE;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGE_CONTROL_GRANTS_HUNTER_TRAIT;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_ONLY_FROM_HUNTER_CONTROLLED_VILLAGES;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGER_REMOVE_TRAIT_WHEN_VILLAGE_CONTROL_LOST;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGER_KEEP_MANUAL_HUNTER_TRAIT;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGER_AVOID_DUPLICATE_TOXICANT;
+    private static final ModConfigSpec.IntValue HUNTER_VILLAGER_MAX_CHASE_DISTANCE_FROM_VILLAGE;
+    private static final ModConfigSpec.IntValue HUNTER_VILLAGER_MAX_CHASE_DISTANCE_FROM_HOME;
+    private static final ModConfigSpec.IntValue HUNTER_VILLAGER_RETALIATION_MEMORY_TICKS;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGER_PREFER_RECENT_VAMPIRE_AGGRESSORS;
 
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_TRADE_WITH_HUNTERS;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_TRADE_WITH_HUMANS;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_BLOCK_VAMPIRE_TRADING;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_BLOCK_TRANSFORMED_WEREWOLF_TRADING;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_HUNTER_DISCOUNT;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_HUMAN_PRICE_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_VAMPIRE_PRICE_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_WEREWOLF_PRICE_MULTIPLIER;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGER_DISGUISED_VAMPIRE_CAN_TRADE;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGER_DISGUISED_VAMPIRE_USES_HUMAN_PRICES;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_TRADE_WITH_HUNTERS;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_TRADE_WITH_HUMANS;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_BLOCK_VAMPIRE_TRADING;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_BLOCK_TRANSFORMED_WEREWOLF_TRADING;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_HUNTER_DISCOUNT;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_HUMAN_PRICE_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_VAMPIRE_PRICE_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_WEREWOLF_PRICE_MULTIPLIER;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGER_DISGUISED_VAMPIRE_CAN_TRADE;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGER_DISGUISED_VAMPIRE_USES_HUMAN_PRICES;
 
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_BLOCK_VAMPIRE_ROMANCE;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGERS_BLOCK_TRANSFORMED_WEREWOLF_ROMANCE;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_VAMPIRE_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_WEREWOLF_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_HUMAN_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.DoubleValue HUNTER_VILLAGER_HUNTER_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGER_DISGUISED_VAMPIRE_USES_HUMAN_SOCIAL_RULES;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGER_DISGUISED_VAMPIRE_CAN_ROMANCE;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_BLOCK_VAMPIRE_ROMANCE;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_BLOCK_TRANSFORMED_WEREWOLF_ROMANCE;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_VAMPIRE_SOCIAL_PENALTY;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_WEREWOLF_SOCIAL_PENALTY;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_HUMAN_SOCIAL_PENALTY;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_HUNTER_SOCIAL_PENALTY;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGER_DISGUISED_VAMPIRE_USES_HUMAN_SOCIAL_RULES;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGER_DISGUISED_VAMPIRE_CAN_ROMANCE;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_MCA_VAMPIRE_VILLAGER_CURE;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_MILK_TO_TREAT_MCA_VILLAGER_SANGUINARE;
-    private static final ForgeConfigSpec.BooleanValue MILK_TREATMENT_REMOVES_NEGATIVE_EFFECTS;
-    private static final ForgeConfigSpec.BooleanValue MILK_TREATMENT_CONSUMES_MILK;
-    private static final ForgeConfigSpec.BooleanValue MILK_TREATMENT_RETURNS_BUCKET;
-    private static final ForgeConfigSpec.BooleanValue MILK_TREATMENT_ONLY_BEFORE_CONVERSION;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_CURE_REQUIRES_WEAKNESS;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_CURE_REQUIRES_GOLDEN_APPLE;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_CURE_REQUIRES_GARLIC_INJECTION;
-    private static final ForgeConfigSpec.IntValue VAMPIRE_CURE_REQUIRED_WEAKNESS_DURATION_TICKS;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_CURE_ALLOW_ANY_WEAKNESS_DURATION;
-    private static final ForgeConfigSpec.IntValue VAMPIRE_CURE_INGREDIENT_PROGRESS_EXPIRES_TICKS;
-    private static final ForgeConfigSpec.IntValue VAMPIRE_CURE_DURATION_TICKS;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_CURE_VILLAGER_CANNOT_ATTACK;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_CURE_VILLAGER_CANNOT_TRADE;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_CURE_SHOWS_PARTICLES;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_CURE_APPLIES_WEAKNESS_DURING_PROCESS;
-    private static final ForgeConfigSpec.BooleanValue BLOCK_EASY_VILLAGERS_PICKUP_DURING_VAMPIRE_CURE;
-    private static final ForgeConfigSpec.IntValue POST_CURE_RESYNC_BLOCK_TICKS;
+    private static final ModConfigSpec.BooleanValue ENABLE_MCA_VAMPIRE_VILLAGER_CURE;
+    private static final ModConfigSpec.BooleanValue ALLOW_MILK_TO_TREAT_MCA_VILLAGER_SANGUINARE;
+    private static final ModConfigSpec.BooleanValue MILK_TREATMENT_REMOVES_NEGATIVE_EFFECTS;
+    private static final ModConfigSpec.BooleanValue MILK_TREATMENT_CONSUMES_MILK;
+    private static final ModConfigSpec.BooleanValue MILK_TREATMENT_RETURNS_BUCKET;
+    private static final ModConfigSpec.BooleanValue MILK_TREATMENT_ONLY_BEFORE_CONVERSION;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_CURE_REQUIRES_WEAKNESS;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_CURE_REQUIRES_GOLDEN_APPLE;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_CURE_REQUIRES_GARLIC_INJECTION;
+    private static final ModConfigSpec.IntValue VAMPIRE_CURE_REQUIRED_WEAKNESS_DURATION_TICKS;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_CURE_ALLOW_ANY_WEAKNESS_DURATION;
+    private static final ModConfigSpec.IntValue VAMPIRE_CURE_INGREDIENT_PROGRESS_EXPIRES_TICKS;
+    private static final ModConfigSpec.IntValue VAMPIRE_CURE_DURATION_TICKS;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_CURE_VILLAGER_CANNOT_ATTACK;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_CURE_VILLAGER_CANNOT_TRADE;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_CURE_SHOWS_PARTICLES;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_CURE_APPLIES_WEAKNESS_DURING_PROCESS;
+    private static final ModConfigSpec.IntValue POST_CURE_RESYNC_BLOCK_TICKS;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_FACTION_BASED_PICKUP_RULES;
-    private static final ForgeConfigSpec.BooleanValue BLOCK_PICKUP_OF_CURING_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue HUMANS_CAN_PICKUP_HUMAN_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue HUMANS_CAN_PICKUP_VAMPIRE_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue HUMANS_CAN_PICKUP_HUNTER_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue HUMANS_CAN_PICKUP_WEREWOLF_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue HUNTERS_CAN_PICKUP_HUMAN_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue HUNTERS_CAN_PICKUP_HUNTER_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue HUNTERS_CAN_PICKUP_VAMPIRE_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue HUNTERS_CAN_PICKUP_WEREWOLF_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRES_CAN_PICKUP_HUMAN_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRES_CAN_PICKUP_VAMPIRE_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRES_CAN_PICKUP_HUNTER_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRES_CAN_PICKUP_WEREWOLF_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLVES_CAN_PICKUP_HUMAN_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLVES_CAN_PICKUP_WEREWOLF_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLVES_CAN_PICKUP_VAMPIRE_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLVES_CAN_PICKUP_HUNTER_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue DISGUISE_DOES_NOT_BYPASS_PICKUP_RULES;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_EASY_VILLAGERS_FACTION_RULES;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_EASY_VILLAGERS_FACTION_PICKUP_RULES;
-    private static final ForgeConfigSpec.BooleanValue EASY_VILLAGERS_BLOCK_PICKUP_OF_CURING_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_PICKUP_OF_INFECTED_HUMAN_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue SHOW_PICKUP_BLOCKED_MESSAGE;
-    private static final ForgeConfigSpec.BooleanValue DELEGATE_BASE_EASY_VILLAGERS_COMPAT_TO_MCA_EV_COMPAT;
-    private static final ForgeConfigSpec.BooleanValue USE_LEGACY_EASY_VILLAGERS_PICKUP_HOOKS;
-    private static final ForgeConfigSpec.BooleanValue USE_LEGACY_EASY_VILLAGERS_GUI_HOOKS;
-    private static final ForgeConfigSpec.BooleanValue READ_STORED_VILLAGER_FACTION_DATA_ONLY;
+    private static final ModConfigSpec.BooleanValue ENABLE_EASY_VILLAGERS_FACTION_RULES;
+    private static final ModConfigSpec.BooleanValue ENABLE_EASY_VILLAGERS_FACTION_PICKUP_RULES;
+    private static final ModConfigSpec.BooleanValue EASY_VILLAGERS_BLOCK_PICKUP_OF_CURING_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue ALLOW_PICKUP_OF_INFECTED_HUMAN_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue SHOW_PICKUP_BLOCKED_MESSAGE;
 
-    private static final ForgeConfigSpec.BooleanValue ALLOW_MCA_VILLAGER_WEREWOLF_INFECTION;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_MCA_CHILD_WEREWOLF_INFECTION;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_CONVERSION_CHANCE_ON_BITE;
-    private static final ForgeConfigSpec.IntValue WEREWOLF_VILLAGER_INFECTION_DURATION_TICKS;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGERS_IMMUNE_TO_WEREWOLF_TRANSFORMATION;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_IMMUNE_TO_VAMPIRISM;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_IMMUNE_TO_HUNTER_CONVERSION;
+    private static final ModConfigSpec.BooleanValue ALLOW_MCA_VILLAGER_WEREWOLF_INFECTION;
+    private static final ModConfigSpec.BooleanValue ALLOW_MCA_CHILD_WEREWOLF_INFECTION;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_CONVERSION_CHANCE_ON_BITE;
+    private static final ModConfigSpec.IntValue WEREWOLF_VILLAGER_INFECTION_DURATION_TICKS;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_IMMUNE_TO_WEREWOLF_TRANSFORMATION;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_IMMUNE_TO_VAMPIRISM;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_IMMUNE_TO_HUNTER_CONVERSION;
 
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_APPEARANCE_ENABLED;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_EARS_ENABLED;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_CLAWS_ENABLED;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_EYES_ENABLED;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_KEEPS_ORIGINAL_SKIN_TONE;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_USE_FULL_WEREWOLF_MODEL;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_APPEARANCE_DEBUG;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGER_APPEARANCE_ENABLED;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGER_EARS_ENABLED;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGER_CLAWS_ENABLED;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGER_APPEARANCE_DEBUG;
 
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_TRADE_WITH_WEREWOLVES;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_TRADE_WITH_HUMANS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_BLOCK_VAMPIRE_TRADING;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_BLOCK_HUNTER_TRADING;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_WEREWOLF_DISCOUNT;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_HUMAN_PRICE_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_VAMPIRE_PRICE_MULTIPLIER;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_HUNTER_PRICE_MULTIPLIER;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_DISGUISED_VAMPIRE_USES_HUMAN_PRICES;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_DISGUISED_VAMPIRE_CAN_TRADE;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_TRADE_WITH_WEREWOLVES;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_TRADE_WITH_HUMANS;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_BLOCK_VAMPIRE_TRADING;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_BLOCK_HUNTER_TRADING;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_WEREWOLF_DISCOUNT;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_HUMAN_PRICE_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_VAMPIRE_PRICE_MULTIPLIER;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_HUNTER_PRICE_MULTIPLIER;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGER_DISGUISED_VAMPIRE_USES_HUMAN_PRICES;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGER_DISGUISED_VAMPIRE_CAN_TRADE;
 
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_BLOCK_VAMPIRE_ROMANCE;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_BLOCK_HUNTER_ROMANCE;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_VAMPIRE_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_HUNTER_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_HUMAN_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_WEREWOLF_SOCIAL_PENALTY;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_DISGUISED_VAMPIRE_USES_HUMAN_SOCIAL_RULES;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGER_DISGUISED_VAMPIRE_CAN_ROMANCE;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_BLOCK_VAMPIRE_ROMANCE;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_BLOCK_HUNTER_ROMANCE;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_VAMPIRE_SOCIAL_PENALTY;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_HUNTER_SOCIAL_PENALTY;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_HUMAN_SOCIAL_PENALTY;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_WEREWOLF_SOCIAL_PENALTY;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGER_DISGUISED_VAMPIRE_USES_HUMAN_SOCIAL_RULES;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGER_DISGUISED_VAMPIRE_CAN_ROMANCE;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_MCA_WEREWOLF_VILLAGER_AI;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_VAMPIRE_PLAYERS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_HUNTER_PLAYERS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_VAMPIRE_MOBS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_HUNTER_NPCS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_MCA_VAMPIRE_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_MCA_HUNTER_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_RESPECT_VAMPIRE_DISGUISE;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_ONLY_AT_NIGHT;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_ATTACK_DAMAGE;
-    private static final ForgeConfigSpec.IntValue WEREWOLF_VILLAGER_ATTACK_COOLDOWN_TICKS;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_FOLLOW_RANGE;
-    private static final ForgeConfigSpec.DoubleValue WEREWOLF_VILLAGER_MAX_CHASE_DISTANCE_FROM_HOME;
-    private static final ForgeConfigSpec.IntValue WEREWOLF_VILLAGER_TARGET_MEMORY_TICKS;
+    private static final ModConfigSpec.BooleanValue ENABLE_MCA_WEREWOLF_VILLAGER_AI;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_VAMPIRE_PLAYERS;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_HUNTER_PLAYERS;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_VAMPIRE_MOBS;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_HUNTER_NPCS;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_RESPECT_VAMPIRE_DISGUISE;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_ATTACK_ONLY_AT_NIGHT;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_ATTACK_DAMAGE;
+    private static final ModConfigSpec.IntValue WEREWOLF_VILLAGER_ATTACK_COOLDOWN_TICKS;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_FOLLOW_RANGE;
+    private static final ModConfigSpec.DoubleValue WEREWOLF_VILLAGER_MAX_CHASE_DISTANCE_FROM_HOME;
+    private static final ModConfigSpec.IntValue WEREWOLF_VILLAGER_TARGET_MEMORY_TICKS;
 
-    private static final ForgeConfigSpec.IntValue SPECIAL_VILLAGER_TARGET_SCAN_INTERVAL_TICKS;
-    private static final ForgeConfigSpec.IntValue SPECIAL_VILLAGER_TARGET_MEMORY_TICKS;
-    private static final ForgeConfigSpec.IntValue SPECIAL_VILLAGER_RETALIATION_MEMORY_TICKS;
-    private static final ForgeConfigSpec.IntValue SPECIAL_VILLAGER_MAX_CHASE_DISTANCE;
-    private static final ForgeConfigSpec.IntValue SPECIAL_VILLAGER_ATTACK_COOLDOWN_TICKS;
-    private static final ForgeConfigSpec.IntValue SPECIAL_VILLAGER_COMBAT_REPATH_INTERVAL_TICKS;
-    private static final ForgeConfigSpec.BooleanValue SPECIAL_VILLAGERS_TARGET_FACTION_NPCS;
+    private static final ModConfigSpec.IntValue SPECIAL_VILLAGER_TARGET_SCAN_INTERVAL_TICKS;
+    private static final ModConfigSpec.IntValue SPECIAL_VILLAGER_RETALIATION_MEMORY_TICKS;
+    private static final ModConfigSpec.IntValue SPECIAL_VILLAGER_MAX_CHASE_DISTANCE;
+    private static final ModConfigSpec.IntValue SPECIAL_VILLAGER_ATTACK_COOLDOWN_TICKS;
+    private static final ModConfigSpec.IntValue SPECIAL_VILLAGER_COMBAT_REPATH_INTERVAL_TICKS;
+    private static final ModConfigSpec.BooleanValue SPECIAL_VILLAGERS_TARGET_FACTION_NPCS;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_MCA_WEREWOLF_VILLAGER_CURE;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_CURE_REQUIRES_WEAKNESS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_CURE_REQUIRES_GOLDEN_APPLE;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_CURE_REQUIRES_GARLIC_INJECTION;
-    private static final ForgeConfigSpec.IntValue WEREWOLF_CURE_REQUIRED_WEAKNESS_DURATION_TICKS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_CURE_ALLOW_ANY_WEAKNESS_DURATION;
-    private static final ForgeConfigSpec.IntValue WEREWOLF_CURE_INGREDIENT_PROGRESS_EXPIRES_TICKS;
-    private static final ForgeConfigSpec.IntValue WEREWOLF_CURE_DURATION_TICKS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_CURE_VILLAGER_CANNOT_ATTACK;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_CURE_VILLAGER_CANNOT_TRADE;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_CURE_SHOWS_PARTICLES;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_CURE_APPLIES_WEAKNESS_DURING_PROCESS;
-    private static final ForgeConfigSpec.BooleanValue BLOCK_EASY_VILLAGERS_PICKUP_DURING_WEREWOLF_CURE;
+    private static final ModConfigSpec.BooleanValue ENABLE_MCA_WEREWOLF_VILLAGER_CURE;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_CURE_REQUIRES_WEAKNESS;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_CURE_REQUIRES_GOLDEN_APPLE;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_CURE_REQUIRES_GARLIC_INJECTION;
+    private static final ModConfigSpec.IntValue WEREWOLF_CURE_REQUIRED_WEAKNESS_DURATION_TICKS;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_CURE_ALLOW_ANY_WEAKNESS_DURATION;
+    private static final ModConfigSpec.IntValue WEREWOLF_CURE_INGREDIENT_PROGRESS_EXPIRES_TICKS;
+    private static final ModConfigSpec.IntValue WEREWOLF_CURE_DURATION_TICKS;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_CURE_VILLAGER_CANNOT_ATTACK;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_CURE_VILLAGER_CANNOT_TRADE;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_CURE_SHOWS_PARTICLES;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_CURE_APPLIES_WEAKNESS_DURING_PROCESS;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_MCA_VILLAGE_CAPTURE_INTEGRATION;
-    private static final ForgeConfigSpec.DoubleValue MCA_HUMAN_VILLAGER_DEFENSE_STRENGTH;
-    private static final ForgeConfigSpec.DoubleValue MCA_HUNTER_VILLAGER_DEFENSE_STRENGTH;
-    private static final ForgeConfigSpec.DoubleValue MCA_VAMPIRE_VILLAGER_VAMPIRE_STRENGTH;
-    private static final ForgeConfigSpec.DoubleValue MCA_INFECTED_VILLAGER_DEFENSE_STRENGTH;
-    private static final ForgeConfigSpec.DoubleValue MCA_CURING_VILLAGER_DEFENSE_STRENGTH;
-    private static final ForgeConfigSpec.DoubleValue MCA_CHILD_VILLAGER_DEFENSE_STRENGTH;
-    private static final ForgeConfigSpec.IntValue MCA_VILLAGE_CAPTURE_STRENGTH_RADIUS;
-    private static final ForgeConfigSpec.BooleanValue MCA_VILLAGE_CAPTURE_DEBUG_BREAKDOWN;
-    private static final ForgeConfigSpec.BooleanValue MAKE_AGGRESSIVE_ONLY_CREATES_MCA_HUNTERS_IN_HUNTER_VILLAGES;
-    private static final ForgeConfigSpec.BooleanValue MAKE_AGGRESSIVE_OUTSIDE_HUNTER_VILLAGE_ONLY_BLOCKS_REPLACEMENT;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGE_CAPTURE_INFECTS_MCA_VILLAGERS;
-    private static final ForgeConfigSpec.DoubleValue VAMPIRE_VILLAGE_CAPTURE_INFECTION_CHANCE;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGE_CAPTURE_INFECTS_CHILDREN;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGE_CAPTURE_CAN_INFECT_HUNTER_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGE_CAPTURE_ACCELERATES_EXISTING_SANGUINARE;
-    private static final ForgeConfigSpec.DoubleValue VAMPIRE_VILLAGE_CAPTURE_ACCELERATION_MULTIPLIER;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_VILLAGE_CAPTURE_DOES_NOT_INSTANTLY_CONVERT_MCA_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGE_CAPTURE_GRANTS_HUNTER_TRAIT;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGE_CAPTURE_CURES_MCA_SANGUINARE;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGE_CAPTURE_CURES_MCA_VAMPIRES;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGE_CAPTURE_STARTS_CURE_FOR_MCA_VAMPIRES;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGE_CAPTURE_REMOVES_VAMPIRE_INFLUENCE_FROM_HUMANS;
-    private static final ForgeConfigSpec.BooleanValue WEREWOLF_VILLAGERS_RESIST_VAMPIRE_CAPTURE_INFECTION;
-    private static final ForgeConfigSpec.BooleanValue HUNTER_VILLAGE_DOES_NOT_CONVERT_WEREWOLVES_TO_HUNTERS;
+    private static final ModConfigSpec.BooleanValue ENABLE_MCA_VILLAGE_CAPTURE_INTEGRATION;
+    private static final ModConfigSpec.DoubleValue MCA_HUMAN_VILLAGER_DEFENSE_STRENGTH;
+    private static final ModConfigSpec.DoubleValue MCA_HUNTER_VILLAGER_DEFENSE_STRENGTH;
+    private static final ModConfigSpec.DoubleValue MCA_VAMPIRE_VILLAGER_VAMPIRE_STRENGTH;
+    private static final ModConfigSpec.DoubleValue MCA_INFECTED_VILLAGER_DEFENSE_STRENGTH;
+    private static final ModConfigSpec.DoubleValue MCA_CURING_VILLAGER_DEFENSE_STRENGTH;
+    private static final ModConfigSpec.DoubleValue MCA_CHILD_VILLAGER_DEFENSE_STRENGTH;
+    private static final ModConfigSpec.IntValue MCA_VILLAGE_CAPTURE_STRENGTH_RADIUS;
+    private static final ModConfigSpec.BooleanValue MCA_VILLAGE_CAPTURE_DEBUG_BREAKDOWN;
+    private static final ModConfigSpec.BooleanValue MAKE_AGGRESSIVE_ONLY_CREATES_MCA_HUNTERS_IN_HUNTER_VILLAGES;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGE_CAPTURE_INFECTS_MCA_VILLAGERS;
+    private static final ModConfigSpec.DoubleValue VAMPIRE_VILLAGE_CAPTURE_INFECTION_CHANCE;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGE_CAPTURE_INFECTS_CHILDREN;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGE_CAPTURE_CAN_INFECT_HUNTER_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGE_CAPTURE_ACCELERATES_EXISTING_SANGUINARE;
+    private static final ModConfigSpec.DoubleValue VAMPIRE_VILLAGE_CAPTURE_ACCELERATION_MULTIPLIER;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGE_CAPTURE_DOES_NOT_INSTANTLY_CONVERT_MCA_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGE_CAPTURE_GRANTS_HUNTER_TRAIT;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGE_CAPTURE_CURES_MCA_SANGUINARE;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGE_CAPTURE_CURES_MCA_VAMPIRES;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGE_CAPTURE_STARTS_CURE_FOR_MCA_VAMPIRES;
+    private static final ModConfigSpec.BooleanValue WEREWOLF_VILLAGERS_RESIST_VAMPIRE_CAPTURE_INFECTION;
+    private static final ModConfigSpec.BooleanValue HUNTER_VILLAGE_DOES_NOT_CONVERT_WEREWOLVES_TO_HUNTERS;
 
-    private static final ForgeConfigSpec.DoubleValue TWO_VAMPIRE_PARENTS_INHERITANCE_CHANCE;
-    private static final ForgeConfigSpec.DoubleValue ONE_VAMPIRE_PARENT_INHERITANCE_CHANCE;
-    private static final ForgeConfigSpec.DoubleValue VAMPIRE_BABY_GROWTH_MULTIPLIER;
-    private static final ForgeConfigSpec.IntValue GROWTH_PROCESS_INTERVAL_TICKS;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_VAMPIRE_CHILDREN_GROWTH_BOOST;
+    private static final ModConfigSpec.DoubleValue TWO_VAMPIRE_PARENTS_INHERITANCE_CHANCE;
+    private static final ModConfigSpec.DoubleValue ONE_VAMPIRE_PARENT_INHERITANCE_CHANCE;
+    private static final ModConfigSpec.DoubleValue TWO_WEREWOLF_PARENTS_INHERITANCE_CHANCE;
+    private static final ModConfigSpec.DoubleValue ONE_WEREWOLF_PARENT_INHERITANCE_CHANCE;
+    private static final ModConfigSpec.DoubleValue VAMPIRE_BABY_GROWTH_MULTIPLIER;
+    private static final ModConfigSpec.IntValue GROWTH_PROCESS_INTERVAL_TICKS;
+    private static final ModConfigSpec.BooleanValue ALLOW_VAMPIRE_CHILDREN_GROWTH_BOOST;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_PERSISTENT_VAMPIRE_APPEARANCE;
-    private static final ForgeConfigSpec.BooleanValue PALE_SKIN_ENABLED;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_EYES_ENABLED;
-    private static final ForgeConfigSpec.BooleanValue PRESERVE_ORIGINAL_APPEARANCE_FOR_CURE;
-    private static final ForgeConfigSpec.BooleanValue USE_VAMPIRISM_EYES_FOR_MCA_VAMPIRES;
-    private static final ForgeConfigSpec.IntValue FALLBACK_FEMALE_VAMPIRE_EYE_INDEX;
-    private static final ForgeConfigSpec.IntValue FALLBACK_MALE_VAMPIRE_EYE_INDEX;
-    private static final ForgeConfigSpec.BooleanValue REMOVE_MCA_FACE_FOR_VAMPIRES;
-    private static final ForgeConfigSpec.BooleanValue USE_TRANSPARENT_MCA_FACE_FOR_VAMPIRES;
+    private static final ModConfigSpec.BooleanValue ENABLE_PERSISTENT_VAMPIRE_APPEARANCE;
+    private static final ModConfigSpec.BooleanValue PALE_SKIN_ENABLED;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_EYES_ENABLED;
+    private static final ModConfigSpec.BooleanValue PRESERVE_ORIGINAL_APPEARANCE_FOR_CURE;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_MCA_VAMPIRE_TRAIT;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_MCA_WEREWOLF_TRAIT;
-    private static final ForgeConfigSpec.BooleanValue SYNC_TRAIT_AND_CAPABILITY_ON_LOAD;
-    private static final ForgeConfigSpec.BooleanValue TRAIT_CAN_RESTORE_CAPABILITY;
-    private static final ForgeConfigSpec.BooleanValue VAMPIRE_TRAIT_CONTROLS_INHERITANCE;
-    private static final ForgeConfigSpec.DoubleValue ONE_VAMPIRE_PARENT_TRAIT_INHERITANCE_CHANCE;
-    private static final ForgeConfigSpec.DoubleValue TWO_VAMPIRE_PARENTS_TRAIT_INHERITANCE_CHANCE;
+    private static final ModConfigSpec.BooleanValue ENABLE_MCA_VAMPIRE_TRAIT;
+    private static final ModConfigSpec.BooleanValue ENABLE_MCA_WEREWOLF_TRAIT;
+    private static final ModConfigSpec.BooleanValue SYNC_TRAIT_AND_CAPABILITY_ON_LOAD;
+    private static final ModConfigSpec.BooleanValue ENABLE_LEGACY_103_MIGRATION;
+    private static final ModConfigSpec.BooleanValue TRAIT_CAN_RESTORE_CAPABILITY;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_TRAIT_CONTROLS_INHERITANCE;
+    private static final ModConfigSpec.DoubleValue ONE_VAMPIRE_PARENT_TRAIT_INHERITANCE_CHANCE;
+    private static final ModConfigSpec.DoubleValue TWO_VAMPIRE_PARENTS_TRAIT_INHERITANCE_CHANCE;
 
-    private static final ForgeConfigSpec.BooleanValue RESPECT_MCA_PLAYER_COMMANDS;
-    private static final ForgeConfigSpec.BooleanValue SUPPRESS_AUTONOMOUS_COMBAT_WHILE_FOLLOWING;
-    private static final ForgeConfigSpec.BooleanValue SUPPRESS_AUTONOMOUS_COMBAT_WHILE_STAYING;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_SHORT_RETALIATION_WHILE_FOLLOWING;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_SHORT_RETALIATION_WHILE_STAYING;
-    private static final ForgeConfigSpec.DoubleValue COMMANDED_RETALIATION_MAX_DISTANCE;
-    private static final ForgeConfigSpec.IntValue COMMANDED_RETALIATION_TICKS;
-    private static final ForgeConfigSpec.BooleanValue CLEAR_AUTONOMOUS_TARGET_WHEN_COMMANDED;
+    private static final ModConfigSpec.BooleanValue RESPECT_MCA_PLAYER_COMMANDS;
+    private static final ModConfigSpec.BooleanValue SUPPRESS_AUTONOMOUS_COMBAT_WHILE_FOLLOWING;
+    private static final ModConfigSpec.BooleanValue SUPPRESS_AUTONOMOUS_COMBAT_WHILE_STAYING;
+    private static final ModConfigSpec.BooleanValue ALLOW_SHORT_RETALIATION_WHILE_FOLLOWING;
+    private static final ModConfigSpec.BooleanValue ALLOW_SHORT_RETALIATION_WHILE_STAYING;
+    private static final ModConfigSpec.DoubleValue COMMANDED_RETALIATION_MAX_DISTANCE;
+    private static final ModConfigSpec.IntValue COMMANDED_RETALIATION_TICKS;
+    private static final ModConfigSpec.BooleanValue CLEAR_AUTONOMOUS_TARGET_WHEN_COMMANDED;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_FACTION_COMMAND_RESTRICTIONS;
-    private static final ForgeConfigSpec.BooleanValue SHOW_COMMAND_BLOCKED_MESSAGE;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_SPECIAL_PLAYERS_COMMAND_HUMANS;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_COMMANDS_FOR_INFECTED_HUMANS;
-    private static final ForgeConfigSpec.BooleanValue ALLOW_COMMANDS_FOR_CURING_VILLAGERS;
-    private static final ForgeConfigSpec.BooleanValue BLOCK_UNKNOWN_MCA_COMMANDS_FOR_ENEMY_FACTIONS;
+    private static final ModConfigSpec.BooleanValue ENABLE_FACTION_COMMAND_RESTRICTIONS;
+    private static final ModConfigSpec.BooleanValue SHOW_COMMAND_BLOCKED_MESSAGE;
+    private static final ModConfigSpec.BooleanValue ALLOW_SPECIAL_PLAYERS_COMMAND_HUMANS;
+    private static final ModConfigSpec.BooleanValue ALLOW_COMMANDS_FOR_INFECTED_HUMANS;
+    private static final ModConfigSpec.BooleanValue ALLOW_COMMANDS_FOR_CURING_VILLAGERS;
+    private static final ModConfigSpec.BooleanValue BLOCK_UNKNOWN_MCA_COMMANDS_FOR_ENEMY_FACTIONS;
 
-    private static final ForgeConfigSpec.BooleanValue ENABLE_DEBUG_LOGS;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_VERBOSE_AI_DEBUG_LOGS;
-    private static final ForgeConfigSpec.BooleanValue ENABLE_VERBOSE_NBT_DEBUG_LOGS;
+    private static final ModConfigSpec.BooleanValue GIVE_OCCULT_ARTS_BOOK_ON_SPECIAL_VILLAGE_DISCOVERY;
+
+    private static final ModConfigSpec.BooleanValue ENABLE_DEBUG_LOGS;
+    private static final ModConfigSpec.BooleanValue ENABLE_VERBOSE_AI_DEBUG_LOGS;
+    private static final ModConfigSpec.BooleanValue ENABLE_VERBOSE_NBT_DEBUG_LOGS;
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
         builder.push("vampire");
         builder.comment("Controls Sanguinare duration for MCA villagers infected by vampire players.");
@@ -377,7 +335,6 @@ public final class McaVampirismCompatConfig {
         PREVENT_VAMPIRES_BITING_VAMPIRES = builder.define("preventVampiresBitingVampires", true);
         PREVENT_VAMPIRES_BITING_MCA_VAMPIRES = builder.define("preventVampiresBitingMcaVampires", true);
         SHOW_ALREADY_VAMPIRE_BITE_MESSAGE = builder.define("showAlreadyVampireBiteMessage", true);
-        VAMPIRE_VILLAGERS_NEUTRAL_TO_HUMANS_DURING_DAY = builder.define("vampireVillagersNeutralToHumansDuringDay", true);
         VAMPIRE_VILLAGERS_INFECT_HUMANS_AT_NIGHT = builder.define("vampireVillagersInfectHumansAtNight", true);
         VAMPIRE_VILLAGERS_USE_NON_LETHAL_BITE_ON_HUMANS = builder.define("vampireVillagersUseNonLethalBiteOnHumans", true);
         RETALIATION_MEMORY_TICKS = builder.defineInRange("retaliationMemoryTicks", 2400, 20, 72000);
@@ -456,7 +413,7 @@ public final class McaVampirismCompatConfig {
         builder.pop();
 
         builder.push("hunter");
-        builder.comment("Legacy gate for temporary defense. The final policy below still decides whether defense may become aggressive.");
+        builder.comment("Master gate for temporary village-defense retaliation.");
         ENABLE_MCA_VILLAGER_DEFENSE_AGAINST_VAMPIRES = builder.define("enableMcaVillagerDefenseAgainstVampires", true);
         builder.comment("If true, non-hunter MCA humans may enter temporary defensive retaliation mode. Default false: vampire threats do not create aggressive/hunter-like villagers.");
         ENABLE_TEMPORARY_DEFENSIVE_MODE = builder.define("enableTemporaryDefensiveMode", false);
@@ -470,14 +427,11 @@ public final class McaVampirismCompatConfig {
         DEFENSIVE_VILLAGERS_CAN_ATTACK_MCA_VAMPIRE_VILLAGERS = builder.define("defensiveVillagersCanAttackMcaVampireVillagers", false);
         DEFENSIVE_VILLAGERS_WARN_INSTEAD_OF_ATTACK_MCA_VAMPIRES = builder.define("defensiveVillagersWarnInsteadOfAttackMcaVampires", true);
         DEFENSIVE_VILLAGERS_ATTACK_ONLY_IF_THREAT_NEARBY = builder.define("defensiveVillagersAttackOnlyIfThreatNearby", true);
-        DEFENSIVE_VILLAGERS_USE_WEAPONS_VISUALLY = builder.define("defensiveVillagersUseWeaponsVisually", true);
         builder.comment("If true, temporary defensive mode grants the MCA hunter trait. Default false: real hunter trait comes from hunter-controlled villages or manual traits.");
         DEFENSIVE_MODE_GRANTS_HUNTER_TRAIT = builder.define("defensiveModeGrantsHunterTrait", false);
         builder.comment("If true, temporary defensive mode can visually equip the configured pitchfork/weapon. Default false: only real hunter state equips hunter weapons.");
         DEFENSIVE_MODE_USES_PITCHFORK = builder.define("defensiveModeUsesPitchfork", false);
         DEFENSIVE_VILLAGER_WEAPON_TYPE = builder.define("defensiveVillagerWeaponType", "pitchfork");
-        builder.comment("If true, defensive MCA villagers receive the addon MCA hunter trait while defensive mode is active.");
-        DEFENSIVE_VILLAGERS_GET_HUNTER_TRAIT = builder.define("defensiveVillagersGetHunterTrait", false);
         builder.comment("If true, the addon hunter trait is removed when defensive mode ends.");
         DEFENSIVE_VILLAGERS_HUNTER_TRAIT_IS_TEMPORARY = builder.define("defensiveVillagersHunterTraitIsTemporary", true);
         builder.comment("If true, defensive MCA villagers are treated as hunter-aligned by this addon. Default false: defensive mode is not real hunter state.");
@@ -497,16 +451,12 @@ public final class McaVampirismCompatConfig {
         builder.comment("When safe API is unavailable, this is handled by the addon price bridge instead of editing MCA/vanilla reputation.");
         CLEAR_VAMPIRE_BITE_REPUTATION_PENALTY_ON_CONVERSION = builder.define("clearVampireBiteReputationPenaltyOnConversion", true);
         NEUTRALIZE_CONVERSION_BITE_PENALTY_FOR_VAMPIRES = builder.define("neutralizeConversionBitePenaltyForVampires", true);
-        CONVERTED_BY_PLAYER_GETS_FRIENDLY_TRADE = builder.define("convertedByPlayerGetsFriendlyTrade", true);
         VAMPIRE_PLAYER_TRADE_DISCOUNT = builder.defineInRange("vampirePlayerTradeDiscount", 0.15D, 0.0D, 0.95D);
         HUNTER_TRADE_PRICE_MULTIPLIER = builder.defineInRange("hunterTradePriceMultiplier", 2.0D, 1.0D, 10.0D);
         WEREWOLF_TRADE_PRICE_MULTIPLIER = builder.defineInRange("werewolfTradePriceMultiplier", 1.75D, 1.0D, 10.0D);
         VAMPIRE_VILLAGERS_TREAT_VAMPIRES_AS_ALLIES = builder.define("vampireVillagersTreatVampiresAsAllies", true);
-        builder.comment("Prepared/Future. Humans are currently neutral by default through target/trade logic.");
-        VAMPIRE_VILLAGERS_TREAT_HUMANS_AS_NEUTRAL = builder.define("vampireVillagersTreatHumansAsNeutral", true);
         VAMPIRE_VILLAGERS_TREAT_HUNTERS_AS_ENEMIES = builder.define("vampireVillagersTreatHuntersAsEnemies", true);
         VAMPIRE_VILLAGERS_TREAT_TRANSFORMED_WEREWOLVES_AS_ENEMIES = builder.define("vampireVillagersTreatTransformedWerewolvesAsEnemies", true);
-        NEUTRALIZE_ALL_POSITIVE_REPUTATION_FOR_VAMPIRE_PLAYERS_WITH_MCA_VAMPIRES = builder.define("neutralizeAllPositiveReputationForVampirePlayersWithMcaVampires", true);
         builder.pop();
 
         builder.push("factions");
@@ -516,8 +466,6 @@ public final class McaVampirismCompatConfig {
         VAMPIRE_DISGUISE_SUPPRESSES_VAMPIRE_TRADE_DISCOUNT = builder.define("vampireDisguiseSuppressesVampireTradeDiscount", true);
         builder.comment("If true, disguised vampire players use the human social penalty for MCA vampire villagers.");
         VAMPIRE_DISGUISE_USES_HUMAN_SOCIAL_PENALTY = builder.define("vampireDisguiseUsesHumanSocialPenalty", true);
-        builder.comment("Prepared for MCA hunter villagers. If true, vampire disguise can suppress future hunter auto-aggro.");
-        VAMPIRE_DISGUISE_PREVENTS_HUNTER_AUTO_AGGRO = builder.define("vampireDisguisePreventsHunterAutoAggro", true);
         builder.comment("If true, Vampirism's infect action uses 100% conversion chance for MCA villagers.");
         INFECTIOUS_BITE_OVERRIDES_CONVERSION_CHANCE = builder.define("infectiousBiteOverridesConversionChance", true);
         builder.comment("If true, Vampirism's infect action uses playerSanguinareDurationTicks for MCA villagers.");
@@ -525,8 +473,6 @@ public final class McaVampirismCompatConfig {
         builder.pop();
 
         builder.push("hunter");
-        builder.comment("Prepared for future MCA hunter villagers. If true, hunters may detect vampire disguise.");
-        HUNTER_VILLAGERS_CAN_DETECT_VAMPIRE_DISGUISE = builder.define("hunterVillagersCanDetectVampireDisguise", false);
         HUNTER_VILLAGERS_IMMUNE_TO_VAMPIRISM = builder.define("hunterVillagersImmuneToVampirism", true);
         HUNTER_VILLAGERS_HAVE_POISONOUS_BLOOD = builder.define("hunterVillagersHavePoisonousBlood", true);
         HUNTER_VILLAGERS_APPLY_TOXICANT_TO_VAMPIRE_BITERS = builder.define("hunterVillagersApplyToxicantToVampireBiters", true);
@@ -556,7 +502,6 @@ public final class McaVampirismCompatConfig {
         HUNTER_VILLAGER_AVOID_DUPLICATE_TOXICANT = builder.define("hunterVillagerAvoidDuplicateToxicant", true);
         HUNTER_VILLAGER_MAX_CHASE_DISTANCE_FROM_VILLAGE = builder.defineInRange("hunterVillagerMaxChaseDistanceFromVillage", 32, 8, 256);
         HUNTER_VILLAGER_MAX_CHASE_DISTANCE_FROM_HOME = builder.defineInRange("hunterVillagerMaxChaseDistanceFromHome", 24, 8, 256);
-        HUNTER_VILLAGER_TARGET_MEMORY_TICKS = builder.defineInRange("hunterVillagerTargetMemoryTicks", 200, 20, 72000);
         HUNTER_VILLAGER_RETALIATION_MEMORY_TICKS = builder.defineInRange("hunterVillagerRetaliationMemoryTicks", 600, 20, 72000);
         HUNTER_VILLAGER_PREFER_RECENT_VAMPIRE_AGGRESSORS = builder.define("hunterVillagerPreferRecentVampireAggressors", true);
         builder.pop();
@@ -618,8 +563,6 @@ public final class McaVampirismCompatConfig {
         VAMPIRE_CURE_VILLAGER_CANNOT_TRADE = builder.define("vampireCureVillagerCannotTrade", true);
         VAMPIRE_CURE_SHOWS_PARTICLES = builder.define("vampireCureShowsParticles", true);
         VAMPIRE_CURE_APPLIES_WEAKNESS_DURING_PROCESS = builder.define("vampireCureAppliesWeaknessDuringProcess", true);
-        builder.comment("Legacy value retained for compatibility. Pickup during cure should be enforced by mca-ev-compat via a clean hook.");
-        BLOCK_EASY_VILLAGERS_PICKUP_DURING_VAMPIRE_CURE = builder.define("blockEasyVillagersPickupDuringVampireCure", true);
         builder.comment("Ticks after a completed cure where stale trait/appearance markers cannot restore vampire or werewolf state.");
         POST_CURE_RESYNC_BLOCK_TICKS = builder.defineInRange("postCureResyncBlockTicks", 400, 20, 72000);
         builder.pop();
@@ -635,55 +578,6 @@ public final class McaVampirismCompatConfig {
         ALLOW_PICKUP_OF_INFECTED_HUMAN_VILLAGERS = builder.define("allowPickupOfInfectedHumanVillagers", true);
         builder.comment("If true, players receive a short action-bar message when faction pickup rules deny pickup.");
         SHOW_PICKUP_BLOCKED_MESSAGE = builder.define("showPickupBlockedMessage", true);
-        builder.comment("If true, base MCA/Easy Villagers pickup, restore, render and NBT preservation are delegated to mca-ev-compat.");
-        DELEGATE_BASE_EASY_VILLAGERS_COMPAT_TO_MCA_EV_COMPAT = builder.define("delegateBaseEasyVillagersCompatToMcaEvCompat", true);
-        builder.comment("Legacy direct pickup hooks are disabled by default. Faction pickup policy uses a minimal pre-capture guard and does not capture, restore or edit NBT.");
-        USE_LEGACY_EASY_VILLAGERS_PICKUP_HOOKS = builder.define("useLegacyEasyVillagersPickupHooks", false);
-        builder.comment("Legacy GUI/shift-click hooks are disabled by default because mca-ev-compat owns the base flow.");
-        USE_LEGACY_EASY_VILLAGERS_GUI_HOOKS = builder.define("useLegacyEasyVillagersGuiHooks", false);
-        builder.comment("If true, stored Easy Villagers data is inspected read-only for faction trade decisions.");
-        READ_STORED_VILLAGER_FACTION_DATA_ONLY = builder.define("readStoredVillagerFactionDataOnly", true);
-        builder.pop();
-
-        builder.push("advanced");
-        builder.comment("Legacy option. Use easy_villagers.enableEasyVillagersFactionPickupRules instead.");
-        ENABLE_FACTION_BASED_PICKUP_RULES = builder.define("enableFactionBasedPickupRules", true);
-        builder.comment("Legacy option. Use easy_villagers.blockPickupOfCuringVillagers instead.");
-        BLOCK_PICKUP_OF_CURING_VILLAGERS = builder.define("blockPickupOfCuringVillagers", true);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        HUMANS_CAN_PICKUP_HUMAN_VILLAGERS = builder.define("humansCanPickupHumanVillagers", true);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        HUMANS_CAN_PICKUP_VAMPIRE_VILLAGERS = builder.define("humansCanPickupVampireVillagers", false);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        HUMANS_CAN_PICKUP_HUNTER_VILLAGERS = builder.define("humansCanPickupHunterVillagers", false);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        HUMANS_CAN_PICKUP_WEREWOLF_VILLAGERS = builder.define("humansCanPickupWerewolfVillagers", false);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        HUNTERS_CAN_PICKUP_HUMAN_VILLAGERS = builder.define("huntersCanPickupHumanVillagers", true);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        HUNTERS_CAN_PICKUP_HUNTER_VILLAGERS = builder.define("huntersCanPickupHunterVillagers", true);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        HUNTERS_CAN_PICKUP_VAMPIRE_VILLAGERS = builder.define("huntersCanPickupVampireVillagers", false);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        HUNTERS_CAN_PICKUP_WEREWOLF_VILLAGERS = builder.define("huntersCanPickupWerewolfVillagers", false);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        VAMPIRES_CAN_PICKUP_HUMAN_VILLAGERS = builder.define("vampiresCanPickupHumanVillagers", true);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        VAMPIRES_CAN_PICKUP_VAMPIRE_VILLAGERS = builder.define("vampiresCanPickupVampireVillagers", true);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        VAMPIRES_CAN_PICKUP_HUNTER_VILLAGERS = builder.define("vampiresCanPickupHunterVillagers", false);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        VAMPIRES_CAN_PICKUP_WEREWOLF_VILLAGERS = builder.define("vampiresCanPickupWerewolfVillagers", false);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        WEREWOLVES_CAN_PICKUP_HUMAN_VILLAGERS = builder.define("werewolvesCanPickupHumanVillagers", true);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        WEREWOLVES_CAN_PICKUP_WEREWOLF_VILLAGERS = builder.define("werewolvesCanPickupWerewolfVillagers", true);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        WEREWOLVES_CAN_PICKUP_VAMPIRE_VILLAGERS = builder.define("werewolvesCanPickupVampireVillagers", false);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        WEREWOLVES_CAN_PICKUP_HUNTER_VILLAGERS = builder.define("werewolvesCanPickupHunterVillagers", false);
-        builder.comment("Legacy option. Pickup is delegated to mca-ev-compat and this value is not active in this version.");
-        DISGUISE_DOES_NOT_BYPASS_PICKUP_RULES = builder.define("disguiseDoesNotBypassPickupRules", true);
         builder.pop();
 
         builder.push("werewolf");
@@ -698,16 +592,14 @@ public final class McaVampirismCompatConfig {
         WEREWOLF_VILLAGERS_IMMUNE_TO_VAMPIRISM = builder.define("werewolfVillagersImmuneToVampirism", true);
         builder.comment("If true, MCA werewolf villagers are not converted into hunter-aligned villagers by village/defensive systems.");
         WEREWOLF_VILLAGERS_IMMUNE_TO_HUNTER_CONVERSION = builder.define("werewolfVillagersImmuneToHunterConversion", true);
+        ONE_WEREWOLF_PARENT_INHERITANCE_CHANCE = builder.defineInRange("oneWerewolfParentInheritanceChance", 0.45D, 0.0D, 1.0D);
+        TWO_WEREWOLF_PARENTS_INHERITANCE_CHANCE = builder.defineInRange("twoWerewolfParentsInheritanceChance", 1.0D, 0.0D, 1.0D);
         builder.pop();
 
         builder.push("werewolf");
         WEREWOLF_VILLAGER_APPEARANCE_ENABLED = builder.define("werewolfVillagerAppearanceEnabled", true);
         WEREWOLF_VILLAGER_EARS_ENABLED = builder.define("werewolfVillagerEarsEnabled", true);
         WEREWOLF_VILLAGER_CLAWS_ENABLED = builder.define("werewolfVillagerClawsEnabled", true);
-        WEREWOLF_VILLAGER_EYES_ENABLED = builder.define("werewolfVillagerEyesEnabled", false);
-        WEREWOLF_VILLAGER_KEEPS_ORIGINAL_SKIN_TONE = builder.define("werewolfVillagerKeepsOriginalSkinTone", true);
-        builder.comment("Prepared for future full MCA werewolf model. This version always keeps VillagerEntityMCA and uses only partial overlays.");
-        WEREWOLF_VILLAGER_USE_FULL_WEREWOLF_MODEL = builder.define("werewolfVillagerUseFullWerewolfModel", false);
         WEREWOLF_VILLAGER_APPEARANCE_DEBUG = builder.define("werewolfVillagerAppearanceDebug", false);
         builder.pop();
 
@@ -741,8 +633,6 @@ public final class McaVampirismCompatConfig {
         WEREWOLF_VILLAGERS_ATTACK_HUNTER_PLAYERS = builder.define("werewolfVillagersAttackHunterPlayers", true);
         WEREWOLF_VILLAGERS_ATTACK_VAMPIRE_MOBS = builder.define("werewolfVillagersAttackVampireMobs", true);
         WEREWOLF_VILLAGERS_ATTACK_HUNTER_NPCS = builder.define("werewolfVillagersAttackHunterNpcs", true);
-        WEREWOLF_VILLAGERS_ATTACK_MCA_VAMPIRE_VILLAGERS = builder.define("werewolfVillagersAttackMcaVampireVillagers", false);
-        WEREWOLF_VILLAGERS_ATTACK_MCA_HUNTER_VILLAGERS = builder.define("werewolfVillagersAttackMcaHunterVillagers", false);
         WEREWOLF_VILLAGERS_RESPECT_VAMPIRE_DISGUISE = builder.define("werewolfVillagersRespectVampireDisguise", true);
         WEREWOLF_VILLAGERS_ATTACK_ONLY_AT_NIGHT = builder.define("werewolfVillagersAttackOnlyAtNight", false);
         WEREWOLF_VILLAGER_ATTACK_DAMAGE = builder.defineInRange("werewolfVillagerAttackDamage", 3.0D, 0.0D, 20.0D);
@@ -754,7 +644,6 @@ public final class McaVampirismCompatConfig {
 
         builder.push("balance");
         SPECIAL_VILLAGER_TARGET_SCAN_INTERVAL_TICKS = builder.defineInRange("specialVillagerTargetScanIntervalTicks", 40, 5, 72000);
-        SPECIAL_VILLAGER_TARGET_MEMORY_TICKS = builder.defineInRange("specialVillagerTargetMemoryTicks", 200, 20, 72000);
         SPECIAL_VILLAGER_RETALIATION_MEMORY_TICKS = builder.defineInRange("specialVillagerRetaliationMemoryTicks", 600, 20, 72000);
         SPECIAL_VILLAGER_MAX_CHASE_DISTANCE = builder.defineInRange("specialVillagerMaxChaseDistance", 20, 4, 256);
         SPECIAL_VILLAGER_ATTACK_COOLDOWN_TICKS = builder.defineInRange("specialVillagerAttackCooldownTicks", 35, 1, 72000);
@@ -778,8 +667,6 @@ public final class McaVampirismCompatConfig {
         WEREWOLF_CURE_VILLAGER_CANNOT_TRADE = builder.define("werewolfCureVillagerCannotTrade", true);
         WEREWOLF_CURE_SHOWS_PARTICLES = builder.define("werewolfCureShowsParticles", true);
         WEREWOLF_CURE_APPLIES_WEAKNESS_DURING_PROCESS = builder.define("werewolfCureAppliesWeaknessDuringProcess", true);
-        builder.comment("Legacy value retained for compatibility. Pickup during cure should be enforced by mca-ev-compat via a clean hook.");
-        BLOCK_EASY_VILLAGERS_PICKUP_DURING_WEREWOLF_CURE = builder.define("blockEasyVillagersPickupDuringWerewolfCure", true);
         builder.pop();
 
         builder.push("village_capture");
@@ -795,8 +682,6 @@ public final class McaVampirismCompatConfig {
         MCA_VILLAGE_CAPTURE_DEBUG_BREAKDOWN = builder.define("mcaVillageCaptureDebugBreakdown", false);
         builder.comment("If true, MakeAggressive creates safe MCA hunter state only in hunter-controlled/captured village contexts.");
         MAKE_AGGRESSIVE_ONLY_CREATES_MCA_HUNTERS_IN_HUNTER_VILLAGES = builder.define("makeAggressiveOnlyCreatesMcaHuntersInHunterVillages", true);
-        builder.comment("If true, MakeAggressive outside hunter village context only blocks MCA replacement and does not grant hunter state.");
-        MAKE_AGGRESSIVE_OUTSIDE_HUNTER_VILLAGE_ONLY_BLOCKS_REPLACEMENT = builder.define("makeAggressiveOutsideHunterVillageOnlyBlocksReplacement", true);
         builder.comment("Vampire village capture can infect MCA humans with Sanguinare, but never grants vampire trait or converts instantly.");
         VAMPIRE_VILLAGE_CAPTURE_INFECTS_MCA_VILLAGERS = builder.define("vampireVillageCaptureInfectsMcaVillagers", true);
         VAMPIRE_VILLAGE_CAPTURE_INFECTION_CHANCE = builder.defineInRange("vampireVillageCaptureInfectionChance", 0.35D, 0.0D, 1.0D);
@@ -810,10 +695,9 @@ public final class McaVampirismCompatConfig {
         HUNTER_VILLAGE_CAPTURE_CURES_MCA_SANGUINARE = builder.define("hunterVillageCaptureCuresMcaSanguinare", true);
         HUNTER_VILLAGE_CAPTURE_CURES_MCA_VAMPIRES = builder.define("hunterVillageCaptureCuresMcaVampires", false);
         HUNTER_VILLAGE_CAPTURE_STARTS_CURE_FOR_MCA_VAMPIRES = builder.define("hunterVillageCaptureStartsCureForMcaVampires", false);
-        HUNTER_VILLAGE_CAPTURE_REMOVES_VAMPIRE_INFLUENCE_FROM_HUMANS = builder.define("hunterVillageCaptureRemovesVampireInfluenceFromHumans", true);
-        builder.comment("Prepared for MCA werewolf villagers. If true, werewolf-aligned MCA villagers resist vampire village capture infection.");
+        builder.comment("If true, werewolf-aligned MCA villagers resist vampire village capture infection.");
         WEREWOLF_VILLAGERS_RESIST_VAMPIRE_CAPTURE_INFECTION = builder.define("werewolfVillagersResistVampireCaptureInfection", true);
-        builder.comment("Prepared for MCA werewolf villagers. If true, hunter villages do not convert werewolf-aligned MCA villagers to hunters.");
+        builder.comment("If true, hunter villages do not convert werewolf-aligned MCA villagers to hunters.");
         HUNTER_VILLAGE_DOES_NOT_CONVERT_WEREWOLVES_TO_HUNTERS = builder.define("hunterVillageDoesNotConvertWerewolvesToHunters", true);
         builder.pop();
 
@@ -829,24 +713,16 @@ public final class McaVampirismCompatConfig {
         ENABLE_PERSISTENT_VAMPIRE_APPEARANCE = builder.define("enablePersistentVampireAppearance", true);
         PALE_SKIN_ENABLED = builder.define("paleSkinEnabled", true);
         PRESERVE_ORIGINAL_APPEARANCE_FOR_CURE = builder.define("preserveOriginalAppearanceForCure", true);
-        builder.comment("Active. Controls the client render overlay for vampire eyes. These are Vampirism eye texture indices, not MCA face indices.");
+        builder.comment("Master toggle for client-side vampire eye visuals on MCA vampire villagers.");
         VAMPIRE_EYES_ENABLED = builder.define("vampireEyesEnabled", true);
-        builder.comment("Use Vampirism eye textures as a client-side overlay on MCA vampire villagers.");
-        USE_VAMPIRISM_EYES_FOR_MCA_VAMPIRES = builder.define("useVampirismEyesForMcaVampires", true);
-        builder.comment("Zero-based fallback Vampirism eye texture index. UI eye 16 corresponds to eyes15.png.");
-        FALLBACK_FEMALE_VAMPIRE_EYE_INDEX = builder.defineInRange("fallbackFemaleVampireEyeIndex", 15, 0, 15);
-        builder.comment("Zero-based fallback Vampirism eye texture index. UI eye 5 corresponds to eyes4.png.");
-        FALLBACK_MALE_VAMPIRE_EYE_INDEX = builder.defineInRange("fallbackMaleVampireEyeIndex", 4, 0, 15);
-        builder.comment("Cancel MCA's normal face layer only for MCA vampire villagers so the Vampirism eyes are not covered.");
-        REMOVE_MCA_FACE_FOR_VAMPIRES = builder.define("removeMcaFaceForVampires", true);
-        builder.comment("Use renderer cancellation as the transparent-face strategy. No MCA face gene is changed by this option.");
-        USE_TRANSPARENT_MCA_FACE_FOR_VAMPIRES = builder.define("useTransparentMcaFaceForVampires", true);
         builder.pop();
 
         builder.push("advanced");
         ENABLE_MCA_VAMPIRE_TRAIT = builder.define("enableMcaVampireTrait", true);
         ENABLE_MCA_WEREWOLF_TRAIT = builder.define("enableMcaWerewolfTrait", true);
         SYNC_TRAIT_AND_CAPABILITY_ON_LOAD = builder.define("syncTraitAndCapabilityOnLoad", true);
+        builder.comment("Migrates the Forge 1.20.1 capability payload from existing MCA villagers on first load.");
+        ENABLE_LEGACY_103_MIGRATION = builder.define("enableLegacy103Migration", true);
         TRAIT_CAN_RESTORE_CAPABILITY = builder.define("traitCanRestoreCapability", true);
         VAMPIRE_TRAIT_CONTROLS_INHERITANCE = builder.define("vampireTraitControlsInheritance", true);
         ONE_VAMPIRE_PARENT_TRAIT_INHERITANCE_CHANCE = builder.defineInRange("oneVampireParentTraitInheritanceChance", 0.45D, 0.0D, 1.0D);
@@ -880,6 +756,12 @@ public final class McaVampirismCompatConfig {
         BLOCK_UNKNOWN_MCA_COMMANDS_FOR_ENEMY_FACTIONS = builder.define("blockUnknownMcaCommandsForEnemyFactions", true);
         builder.pop();
 
+        builder.push("guide_book");
+        builder.comment("Gives the Book of Occult Arts once when a player first enters an active vampire, hunter or werewolf-controlled village.");
+        GIVE_OCCULT_ARTS_BOOK_ON_SPECIAL_VILLAGE_DISCOVERY =
+                builder.define("giveOccultArtsBookOnSpecialVillageDiscovery", true);
+        builder.pop();
+
         builder.push("debug");
         builder.comment("Enables compact diagnostic logs for trade, faction, bite, state and Easy Villagers integration.");
         ENABLE_DEBUG_LOGS = builder.define("enableDebugLogs", false);
@@ -911,7 +793,6 @@ public final class McaVampirismCompatConfig {
     public static boolean preventVampiresBitingVampires() { return PREVENT_VAMPIRES_BITING_VAMPIRES.get(); }
     public static boolean preventVampiresBitingMcaVampires() { return PREVENT_VAMPIRES_BITING_MCA_VAMPIRES.get(); }
     public static boolean showAlreadyVampireBiteMessage() { return SHOW_ALREADY_VAMPIRE_BITE_MESSAGE.get(); }
-    public static boolean vampireVillagersNeutralToHumansDuringDay() { return VAMPIRE_VILLAGERS_NEUTRAL_TO_HUMANS_DURING_DAY.get(); }
     public static boolean vampireVillagersInfectHumansAtNight() { return VAMPIRE_VILLAGERS_INFECT_HUMANS_AT_NIGHT.get(); }
     public static boolean vampireVillagersUseNonLethalBiteOnHumans() { return VAMPIRE_VILLAGERS_USE_NON_LETHAL_BITE_ON_HUMANS.get(); }
     public static long retaliationMemoryTicks() { return RETALIATION_MEMORY_TICKS.get(); }
@@ -962,11 +843,9 @@ public final class McaVampirismCompatConfig {
     public static boolean defensiveVillagersCanAttackMcaVampireVillagers() { return DEFENSIVE_VILLAGERS_CAN_ATTACK_MCA_VAMPIRE_VILLAGERS.get(); }
     public static boolean defensiveVillagersWarnInsteadOfAttackMcaVampires() { return DEFENSIVE_VILLAGERS_WARN_INSTEAD_OF_ATTACK_MCA_VAMPIRES.get(); }
     public static boolean defensiveVillagersAttackOnlyIfThreatNearby() { return DEFENSIVE_VILLAGERS_ATTACK_ONLY_IF_THREAT_NEARBY.get(); }
-    public static boolean defensiveVillagersUseWeaponsVisually() { return DEFENSIVE_VILLAGERS_USE_WEAPONS_VISUALLY.get(); }
     public static boolean defensiveModeGrantsHunterTrait() { return DEFENSIVE_MODE_GRANTS_HUNTER_TRAIT.get(); }
     public static boolean defensiveModeUsesPitchfork() { return DEFENSIVE_MODE_USES_PITCHFORK.get(); }
     public static String defensiveVillagerWeaponType() { return DEFENSIVE_VILLAGER_WEAPON_TYPE.get(); }
-    public static boolean defensiveVillagersGetHunterTrait() { return DEFENSIVE_VILLAGERS_GET_HUNTER_TRAIT.get(); }
     public static boolean defensiveVillagersHunterTraitIsTemporary() { return DEFENSIVE_VILLAGERS_HUNTER_TRAIT_IS_TEMPORARY.get(); }
     public static boolean defensiveVillagersAreHunterAligned() { return DEFENSIVE_VILLAGERS_ARE_HUNTER_ALIGNED.get(); }
     public static boolean defensiveVillagersCountAsHuntersForVampireAi() { return DEFENSIVE_VILLAGERS_COUNT_AS_HUNTERS_FOR_VAMPIRE_AI.get(); }
@@ -976,22 +855,17 @@ public final class McaVampirismCompatConfig {
     public static boolean vampireVillagersTradeOnlyWithVampires() { return VAMPIRE_VILLAGERS_TRADE_ONLY_WITH_VAMPIRES.get(); }
     public static boolean clearVampireBiteReputationPenaltyOnConversion() { return CLEAR_VAMPIRE_BITE_REPUTATION_PENALTY_ON_CONVERSION.get(); }
     public static boolean neutralizeConversionBitePenaltyForVampires() { return NEUTRALIZE_CONVERSION_BITE_PENALTY_FOR_VAMPIRES.get(); }
-    public static boolean convertedByPlayerGetsFriendlyTrade() { return CONVERTED_BY_PLAYER_GETS_FRIENDLY_TRADE.get(); }
     public static double vampirePlayerTradeDiscount() { return VAMPIRE_PLAYER_TRADE_DISCOUNT.get(); }
     public static double hunterTradePriceMultiplier() { return HUNTER_TRADE_PRICE_MULTIPLIER.get(); }
     public static double werewolfTradePriceMultiplier() { return WEREWOLF_TRADE_PRICE_MULTIPLIER.get(); }
     public static boolean vampireVillagersTreatVampiresAsAllies() { return VAMPIRE_VILLAGERS_TREAT_VAMPIRES_AS_ALLIES.get(); }
-    public static boolean vampireVillagersTreatHumansAsNeutral() { return VAMPIRE_VILLAGERS_TREAT_HUMANS_AS_NEUTRAL.get(); }
     public static boolean vampireVillagersTreatHuntersAsEnemies() { return VAMPIRE_VILLAGERS_TREAT_HUNTERS_AS_ENEMIES.get(); }
     public static boolean vampireVillagersTreatTransformedWerewolvesAsEnemies() { return VAMPIRE_VILLAGERS_TREAT_TRANSFORMED_WEREWOLVES_AS_ENEMIES.get(); }
-    public static boolean neutralizeAllPositiveReputationForVampirePlayersWithMcaVampires() { return NEUTRALIZE_ALL_POSITIVE_REPUTATION_FOR_VAMPIRE_PLAYERS_WITH_MCA_VAMPIRES.get(); }
     public static boolean respectVampireDisguiseForMcaInteractions() { return RESPECT_VAMPIRE_DISGUISE_FOR_MCA_INTERACTIONS.get(); }
     public static boolean vampireDisguiseSuppressesVampireTradeDiscount() { return VAMPIRE_DISGUISE_SUPPRESSES_VAMPIRE_TRADE_DISCOUNT.get(); }
     public static boolean vampireDisguiseUsesHumanSocialPenalty() { return VAMPIRE_DISGUISE_USES_HUMAN_SOCIAL_PENALTY.get(); }
-    public static boolean vampireDisguisePreventsHunterAutoAggro() { return VAMPIRE_DISGUISE_PREVENTS_HUNTER_AUTO_AGGRO.get(); }
     public static boolean infectiousBiteOverridesConversionChance() { return INFECTIOUS_BITE_OVERRIDES_CONVERSION_CHANCE.get(); }
     public static boolean infectiousBiteStillUsesConfiguredDuration() { return INFECTIOUS_BITE_STILL_USES_CONFIGURED_DURATION.get(); }
-    public static boolean hunterVillagersCanDetectVampireDisguise() { return HUNTER_VILLAGERS_CAN_DETECT_VAMPIRE_DISGUISE.get(); }
     public static boolean hunterVillagersImmuneToVampirism() { return HUNTER_VILLAGERS_IMMUNE_TO_VAMPIRISM.get(); }
     public static boolean hunterVillagersHavePoisonousBlood() { return HUNTER_VILLAGERS_HAVE_POISONOUS_BLOOD.get(); }
     public static boolean hunterVillagersApplyToxicantToVampireBiters() { return HUNTER_VILLAGERS_APPLY_TOXICANT_TO_VAMPIRE_BITERS.get(); }
@@ -1015,7 +889,6 @@ public final class McaVampirismCompatConfig {
     public static boolean hunterVillagerAvoidDuplicateToxicant() { return HUNTER_VILLAGER_AVOID_DUPLICATE_TOXICANT.get(); }
     public static int hunterVillagerMaxChaseDistanceFromVillage() { return HUNTER_VILLAGER_MAX_CHASE_DISTANCE_FROM_VILLAGE.get(); }
     public static int hunterVillagerMaxChaseDistanceFromHome() { return HUNTER_VILLAGER_MAX_CHASE_DISTANCE_FROM_HOME.get(); }
-    public static int hunterVillagerTargetMemoryTicks() { return HUNTER_VILLAGER_TARGET_MEMORY_TICKS.get(); }
     public static int hunterVillagerRetaliationMemoryTicks() { return HUNTER_VILLAGER_RETALIATION_MEMORY_TICKS.get(); }
     public static boolean hunterVillagerPreferRecentVampireAggressors() { return HUNTER_VILLAGER_PREFER_RECENT_VAMPIRE_AGGRESSORS.get(); }
     public static boolean hunterVillagersTradeWithHunters() { return HUNTER_VILLAGERS_TRADE_WITH_HUNTERS.get(); }
@@ -1053,36 +926,12 @@ public final class McaVampirismCompatConfig {
     public static boolean vampireCureVillagerCannotTrade() { return VAMPIRE_CURE_VILLAGER_CANNOT_TRADE.get(); }
     public static boolean vampireCureShowsParticles() { return VAMPIRE_CURE_SHOWS_PARTICLES.get(); }
     public static boolean vampireCureAppliesWeaknessDuringProcess() { return VAMPIRE_CURE_APPLIES_WEAKNESS_DURING_PROCESS.get(); }
-    public static boolean blockEasyVillagersPickupDuringVampireCure() { return BLOCK_EASY_VILLAGERS_PICKUP_DURING_VAMPIRE_CURE.get(); }
     public static int postCureResyncBlockTicks() { return POST_CURE_RESYNC_BLOCK_TICKS.get(); }
-    public static boolean enableFactionBasedPickupRules() { return ENABLE_FACTION_BASED_PICKUP_RULES.get(); }
-    public static boolean blockPickupOfCuringVillagers() { return BLOCK_PICKUP_OF_CURING_VILLAGERS.get(); }
-    public static boolean humansCanPickupHumanVillagers() { return HUMANS_CAN_PICKUP_HUMAN_VILLAGERS.get(); }
-    public static boolean humansCanPickupVampireVillagers() { return HUMANS_CAN_PICKUP_VAMPIRE_VILLAGERS.get(); }
-    public static boolean humansCanPickupHunterVillagers() { return HUMANS_CAN_PICKUP_HUNTER_VILLAGERS.get(); }
-    public static boolean humansCanPickupWerewolfVillagers() { return HUMANS_CAN_PICKUP_WEREWOLF_VILLAGERS.get(); }
-    public static boolean huntersCanPickupHumanVillagers() { return HUNTERS_CAN_PICKUP_HUMAN_VILLAGERS.get(); }
-    public static boolean huntersCanPickupHunterVillagers() { return HUNTERS_CAN_PICKUP_HUNTER_VILLAGERS.get(); }
-    public static boolean huntersCanPickupVampireVillagers() { return HUNTERS_CAN_PICKUP_VAMPIRE_VILLAGERS.get(); }
-    public static boolean huntersCanPickupWerewolfVillagers() { return HUNTERS_CAN_PICKUP_WEREWOLF_VILLAGERS.get(); }
-    public static boolean vampiresCanPickupHumanVillagers() { return VAMPIRES_CAN_PICKUP_HUMAN_VILLAGERS.get(); }
-    public static boolean vampiresCanPickupVampireVillagers() { return VAMPIRES_CAN_PICKUP_VAMPIRE_VILLAGERS.get(); }
-    public static boolean vampiresCanPickupHunterVillagers() { return VAMPIRES_CAN_PICKUP_HUNTER_VILLAGERS.get(); }
-    public static boolean vampiresCanPickupWerewolfVillagers() { return VAMPIRES_CAN_PICKUP_WEREWOLF_VILLAGERS.get(); }
-    public static boolean werewolvesCanPickupHumanVillagers() { return WEREWOLVES_CAN_PICKUP_HUMAN_VILLAGERS.get(); }
-    public static boolean werewolvesCanPickupWerewolfVillagers() { return WEREWOLVES_CAN_PICKUP_WEREWOLF_VILLAGERS.get(); }
-    public static boolean werewolvesCanPickupVampireVillagers() { return WEREWOLVES_CAN_PICKUP_VAMPIRE_VILLAGERS.get(); }
-    public static boolean werewolvesCanPickupHunterVillagers() { return WEREWOLVES_CAN_PICKUP_HUNTER_VILLAGERS.get(); }
-    public static boolean disguiseDoesNotBypassPickupRules() { return DISGUISE_DOES_NOT_BYPASS_PICKUP_RULES.get(); }
     public static boolean enableEasyVillagersFactionRules() { return ENABLE_EASY_VILLAGERS_FACTION_RULES.get(); }
     public static boolean enableEasyVillagersFactionPickupRules() { return ENABLE_EASY_VILLAGERS_FACTION_PICKUP_RULES.get(); }
     public static boolean easyVillagersBlockPickupOfCuringVillagers() { return EASY_VILLAGERS_BLOCK_PICKUP_OF_CURING_VILLAGERS.get(); }
     public static boolean allowPickupOfInfectedHumanVillagers() { return ALLOW_PICKUP_OF_INFECTED_HUMAN_VILLAGERS.get(); }
     public static boolean showPickupBlockedMessage() { return SHOW_PICKUP_BLOCKED_MESSAGE.get(); }
-    public static boolean delegateBaseEasyVillagersCompatToMcaEvCompat() { return DELEGATE_BASE_EASY_VILLAGERS_COMPAT_TO_MCA_EV_COMPAT.get(); }
-    public static boolean useLegacyEasyVillagersPickupHooks() { return USE_LEGACY_EASY_VILLAGERS_PICKUP_HOOKS.get(); }
-    public static boolean useLegacyEasyVillagersGuiHooks() { return USE_LEGACY_EASY_VILLAGERS_GUI_HOOKS.get(); }
-    public static boolean readStoredVillagerFactionDataOnly() { return READ_STORED_VILLAGER_FACTION_DATA_ONLY.get(); }
     public static boolean allowMcaVillagerWerewolfInfection() { return ALLOW_MCA_VILLAGER_WEREWOLF_INFECTION.get(); }
     public static boolean allowMcaChildWerewolfInfection() { return ALLOW_MCA_CHILD_WEREWOLF_INFECTION.get(); }
     public static double werewolfConversionChanceOnBite() { return WEREWOLF_CONVERSION_CHANCE_ON_BITE.get(); }
@@ -1093,9 +942,6 @@ public final class McaVampirismCompatConfig {
     public static boolean werewolfVillagerAppearanceEnabled() { return WEREWOLF_VILLAGER_APPEARANCE_ENABLED.get(); }
     public static boolean werewolfVillagerEarsEnabled() { return WEREWOLF_VILLAGER_EARS_ENABLED.get(); }
     public static boolean werewolfVillagerClawsEnabled() { return WEREWOLF_VILLAGER_CLAWS_ENABLED.get(); }
-    public static boolean werewolfVillagerEyesEnabled() { return WEREWOLF_VILLAGER_EYES_ENABLED.get(); }
-    public static boolean werewolfVillagerKeepsOriginalSkinTone() { return WEREWOLF_VILLAGER_KEEPS_ORIGINAL_SKIN_TONE.get(); }
-    public static boolean werewolfVillagerUseFullWerewolfModel() { return WEREWOLF_VILLAGER_USE_FULL_WEREWOLF_MODEL.get(); }
     public static boolean werewolfVillagerAppearanceDebug() { return WEREWOLF_VILLAGER_APPEARANCE_DEBUG.get(); }
     public static boolean werewolfVillagersTradeWithWerewolves() { return WEREWOLF_VILLAGERS_TRADE_WITH_WEREWOLVES.get(); }
     public static boolean werewolfVillagersTradeWithHumans() { return WEREWOLF_VILLAGERS_TRADE_WITH_HUMANS.get(); }
@@ -1120,8 +966,6 @@ public final class McaVampirismCompatConfig {
     public static boolean werewolfVillagersAttackHunterPlayers() { return WEREWOLF_VILLAGERS_ATTACK_HUNTER_PLAYERS.get(); }
     public static boolean werewolfVillagersAttackVampireMobs() { return WEREWOLF_VILLAGERS_ATTACK_VAMPIRE_MOBS.get(); }
     public static boolean werewolfVillagersAttackHunterNpcs() { return WEREWOLF_VILLAGERS_ATTACK_HUNTER_NPCS.get(); }
-    public static boolean werewolfVillagersAttackMcaVampireVillagers() { return WEREWOLF_VILLAGERS_ATTACK_MCA_VAMPIRE_VILLAGERS.get(); }
-    public static boolean werewolfVillagersAttackMcaHunterVillagers() { return WEREWOLF_VILLAGERS_ATTACK_MCA_HUNTER_VILLAGERS.get(); }
     public static boolean werewolfVillagersRespectVampireDisguise() { return WEREWOLF_VILLAGERS_RESPECT_VAMPIRE_DISGUISE.get(); }
     public static boolean werewolfVillagersAttackOnlyAtNight() { return WEREWOLF_VILLAGERS_ATTACK_ONLY_AT_NIGHT.get(); }
     public static double werewolfVillagerAttackDamage() { return WEREWOLF_VILLAGER_ATTACK_DAMAGE.get(); }
@@ -1130,7 +974,6 @@ public final class McaVampirismCompatConfig {
     public static double werewolfVillagerMaxChaseDistanceFromHome() { return WEREWOLF_VILLAGER_MAX_CHASE_DISTANCE_FROM_HOME.get(); }
     public static int werewolfVillagerTargetMemoryTicks() { return WEREWOLF_VILLAGER_TARGET_MEMORY_TICKS.get(); }
     public static int specialVillagerTargetScanIntervalTicks() { return SPECIAL_VILLAGER_TARGET_SCAN_INTERVAL_TICKS.get(); }
-    public static int specialVillagerTargetMemoryTicks() { return SPECIAL_VILLAGER_TARGET_MEMORY_TICKS.get(); }
     public static int specialVillagerRetaliationMemoryTicks() { return SPECIAL_VILLAGER_RETALIATION_MEMORY_TICKS.get(); }
     public static int specialVillagerMaxChaseDistance() { return SPECIAL_VILLAGER_MAX_CHASE_DISTANCE.get(); }
     public static int specialVillagerAttackCooldownTicks() { return SPECIAL_VILLAGER_ATTACK_COOLDOWN_TICKS.get(); }
@@ -1148,7 +991,6 @@ public final class McaVampirismCompatConfig {
     public static boolean werewolfCureVillagerCannotTrade() { return WEREWOLF_CURE_VILLAGER_CANNOT_TRADE.get(); }
     public static boolean werewolfCureShowsParticles() { return WEREWOLF_CURE_SHOWS_PARTICLES.get(); }
     public static boolean werewolfCureAppliesWeaknessDuringProcess() { return WEREWOLF_CURE_APPLIES_WEAKNESS_DURING_PROCESS.get(); }
-    public static boolean blockEasyVillagersPickupDuringWerewolfCure() { return BLOCK_EASY_VILLAGERS_PICKUP_DURING_WEREWOLF_CURE.get(); }
     public static boolean enableMcaVillageCaptureIntegration() { return ENABLE_MCA_VILLAGE_CAPTURE_INTEGRATION.get(); }
     public static double mcaHumanVillagerDefenseStrength() { return MCA_HUMAN_VILLAGER_DEFENSE_STRENGTH.get(); }
     public static double mcaHunterVillagerDefenseStrength() { return MCA_HUNTER_VILLAGER_DEFENSE_STRENGTH.get(); }
@@ -1159,7 +1001,6 @@ public final class McaVampirismCompatConfig {
     public static int mcaVillageCaptureStrengthRadius() { return MCA_VILLAGE_CAPTURE_STRENGTH_RADIUS.get(); }
     public static boolean mcaVillageCaptureDebugBreakdown() { return MCA_VILLAGE_CAPTURE_DEBUG_BREAKDOWN.get(); }
     public static boolean makeAggressiveOnlyCreatesMcaHuntersInHunterVillages() { return MAKE_AGGRESSIVE_ONLY_CREATES_MCA_HUNTERS_IN_HUNTER_VILLAGES.get(); }
-    public static boolean makeAggressiveOutsideHunterVillageOnlyBlocksReplacement() { return MAKE_AGGRESSIVE_OUTSIDE_HUNTER_VILLAGE_ONLY_BLOCKS_REPLACEMENT.get(); }
     public static boolean vampireVillageCaptureInfectsMcaVillagers() { return VAMPIRE_VILLAGE_CAPTURE_INFECTS_MCA_VILLAGERS.get(); }
     public static double vampireVillageCaptureInfectionChance() { return VAMPIRE_VILLAGE_CAPTURE_INFECTION_CHANCE.get(); }
     public static boolean vampireVillageCaptureInfectsChildren() { return VAMPIRE_VILLAGE_CAPTURE_INFECTS_CHILDREN.get(); }
@@ -1171,11 +1012,12 @@ public final class McaVampirismCompatConfig {
     public static boolean hunterVillageCaptureCuresMcaSanguinare() { return HUNTER_VILLAGE_CAPTURE_CURES_MCA_SANGUINARE.get(); }
     public static boolean hunterVillageCaptureCuresMcaVampires() { return HUNTER_VILLAGE_CAPTURE_CURES_MCA_VAMPIRES.get(); }
     public static boolean hunterVillageCaptureStartsCureForMcaVampires() { return HUNTER_VILLAGE_CAPTURE_STARTS_CURE_FOR_MCA_VAMPIRES.get(); }
-    public static boolean hunterVillageCaptureRemovesVampireInfluenceFromHumans() { return HUNTER_VILLAGE_CAPTURE_REMOVES_VAMPIRE_INFLUENCE_FROM_HUMANS.get(); }
     public static boolean werewolfVillagersResistVampireCaptureInfection() { return WEREWOLF_VILLAGERS_RESIST_VAMPIRE_CAPTURE_INFECTION.get(); }
     public static boolean hunterVillageDoesNotConvertWerewolvesToHunters() { return HUNTER_VILLAGE_DOES_NOT_CONVERT_WEREWOLVES_TO_HUNTERS.get(); }
     public static double twoVampireParentsInheritanceChance() { return TWO_VAMPIRE_PARENTS_INHERITANCE_CHANCE.get(); }
     public static double oneVampireParentInheritanceChance() { return ONE_VAMPIRE_PARENT_INHERITANCE_CHANCE.get(); }
+    public static double twoWerewolfParentsInheritanceChance() { return TWO_WEREWOLF_PARENTS_INHERITANCE_CHANCE.get(); }
+    public static double oneWerewolfParentInheritanceChance() { return ONE_WEREWOLF_PARENT_INHERITANCE_CHANCE.get(); }
     public static double vampireBabyGrowthMultiplier() { return VAMPIRE_BABY_GROWTH_MULTIPLIER.get(); }
     public static long growthProcessIntervalTicks() { return GROWTH_PROCESS_INTERVAL_TICKS.get(); }
     public static boolean allowVampireChildrenGrowthBoost() { return ALLOW_VAMPIRE_CHILDREN_GROWTH_BOOST.get(); }
@@ -1183,14 +1025,10 @@ public final class McaVampirismCompatConfig {
     public static boolean paleSkinEnabled() { return PALE_SKIN_ENABLED.get(); }
     public static boolean vampireEyesEnabled() { return VAMPIRE_EYES_ENABLED.get(); }
     public static boolean preserveOriginalAppearanceForCure() { return PRESERVE_ORIGINAL_APPEARANCE_FOR_CURE.get(); }
-    public static boolean useVampirismEyesForMcaVampires() { return USE_VAMPIRISM_EYES_FOR_MCA_VAMPIRES.get(); }
-    public static int fallbackFemaleVampireEyeIndex() { return FALLBACK_FEMALE_VAMPIRE_EYE_INDEX.get(); }
-    public static int fallbackMaleVampireEyeIndex() { return FALLBACK_MALE_VAMPIRE_EYE_INDEX.get(); }
-    public static boolean removeMcaFaceForVampires() { return REMOVE_MCA_FACE_FOR_VAMPIRES.get(); }
-    public static boolean useTransparentMcaFaceForVampires() { return USE_TRANSPARENT_MCA_FACE_FOR_VAMPIRES.get(); }
     public static boolean enableMcaVampireTrait() { return ENABLE_MCA_VAMPIRE_TRAIT.get(); }
     public static boolean enableMcaWerewolfTrait() { return ENABLE_MCA_WEREWOLF_TRAIT.get(); }
     public static boolean syncTraitAndCapabilityOnLoad() { return SYNC_TRAIT_AND_CAPABILITY_ON_LOAD.get(); }
+    public static boolean enableLegacy103Migration() { return ENABLE_LEGACY_103_MIGRATION.get(); }
     public static boolean traitCanRestoreCapability() { return TRAIT_CAN_RESTORE_CAPABILITY.get(); }
     public static boolean vampireTraitControlsInheritance() { return VAMPIRE_TRAIT_CONTROLS_INHERITANCE.get(); }
     public static double oneVampireParentTraitInheritanceChance() { return ONE_VAMPIRE_PARENT_TRAIT_INHERITANCE_CHANCE.get(); }
@@ -1209,6 +1047,7 @@ public final class McaVampirismCompatConfig {
     public static boolean allowCommandsForInfectedHumans() { return ALLOW_COMMANDS_FOR_INFECTED_HUMANS.get(); }
     public static boolean allowCommandsForCuringVillagers() { return ALLOW_COMMANDS_FOR_CURING_VILLAGERS.get(); }
     public static boolean blockUnknownMcaCommandsForEnemyFactions() { return BLOCK_UNKNOWN_MCA_COMMANDS_FOR_ENEMY_FACTIONS.get(); }
+    public static boolean giveOccultArtsBookOnSpecialVillageDiscovery() { return GIVE_OCCULT_ARTS_BOOK_ON_SPECIAL_VILLAGE_DISCOVERY.get(); }
     public static boolean enableDebugLogs() { return ENABLE_DEBUG_LOGS.get(); }
     public static boolean enableVerboseAiDebugLogs() { return ENABLE_DEBUG_LOGS.get() && ENABLE_VERBOSE_AI_DEBUG_LOGS.get(); }
     public static boolean enableVerboseNbtDebugLogs() { return ENABLE_VERBOSE_NBT_DEBUG_LOGS.get(); }

@@ -2,21 +2,21 @@ package com.guilh.mca_vampirism_compat.attribute;
 
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.util.McaVillagerUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.AgeState;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
-import java.util.UUID;
-
 public final class McaVampireAttributeHandler {
-    private static final UUID MAX_HEALTH_UUID = UUID.fromString("2b2ff74b-64cf-40bf-a8ec-3c9f4a1b24a1");
-    private static final UUID ATTACK_DAMAGE_UUID = UUID.fromString("19e0a97f-3f07-462c-9f3c-30a3ccbb1485");
-    private static final UUID ARMOR_UUID = UUID.fromString("762f9d41-0897-41cf-bf20-39c2275b7a5d");
-    private static final UUID FOLLOW_RANGE_UUID = UUID.fromString("0625cccf-28a3-46d8-bc0f-8538540dd379");
+    private static final ResourceLocation MAX_HEALTH_ID = id("vampire_max_health");
+    private static final ResourceLocation ATTACK_DAMAGE_ID = id("vampire_attack_damage");
+    private static final ResourceLocation ARMOR_ID = id("vampire_armor");
+    private static final ResourceLocation FOLLOW_RANGE_ID = id("vampire_follow_range");
 
     private McaVampireAttributeHandler() {
     }
@@ -31,19 +31,20 @@ public final class McaVampireAttributeHandler {
         }
 
         float healthBefore = entity.getHealth();
-        applyModifier(entity, Attributes.MAX_HEALTH, MAX_HEALTH_UUID, "MCA vampire max health",
-                McaVampirismCompatConfig.maxHealthMultiplier() - 1.0D, AttributeModifier.Operation.MULTIPLY_BASE);
-        applyModifier(entity, Attributes.ARMOR, ARMOR_UUID, "MCA vampire armor", McaVampirismCompatConfig.armorBonus(),
-                AttributeModifier.Operation.ADDITION);
+        applyModifier(entity, Attributes.MAX_HEALTH, MAX_HEALTH_ID,
+                McaVampirismCompatConfig.maxHealthMultiplier() - 1.0D,
+                AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        applyModifier(entity, Attributes.ARMOR, ARMOR_ID, McaVampirismCompatConfig.armorBonus(),
+                AttributeModifier.Operation.ADD_VALUE);
 
         if (shouldApplyCombatAttributes(entity)) {
-            applyModifier(entity, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_UUID, "MCA vampire attack damage",
-                    McaVampirismCompatConfig.attackDamageBonus(), AttributeModifier.Operation.ADDITION);
-            applyModifier(entity, Attributes.FOLLOW_RANGE, FOLLOW_RANGE_UUID, "MCA vampire follow range",
-                    McaVampirismCompatConfig.followRangeBonus(), AttributeModifier.Operation.ADDITION);
+            applyModifier(entity, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_ID,
+                    McaVampirismCompatConfig.attackDamageBonus(), AttributeModifier.Operation.ADD_VALUE);
+            applyModifier(entity, Attributes.FOLLOW_RANGE, FOLLOW_RANGE_ID,
+                    McaVampirismCompatConfig.followRangeBonus(), AttributeModifier.Operation.ADD_VALUE);
         } else {
-            removeModifier(entity, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_UUID);
-            removeModifier(entity, Attributes.FOLLOW_RANGE, FOLLOW_RANGE_UUID);
+            removeModifier(entity, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_ID);
+            removeModifier(entity, Attributes.FOLLOW_RANGE, FOLLOW_RANGE_ID);
         }
 
         if (fillHealth) {
@@ -54,47 +55,50 @@ public final class McaVampireAttributeHandler {
     }
 
     public static void removeVampireAttributes(LivingEntity entity) {
-        removeModifier(entity, Attributes.MAX_HEALTH, MAX_HEALTH_UUID);
-        removeModifier(entity, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_UUID);
-        removeModifier(entity, Attributes.ARMOR, ARMOR_UUID);
-        removeModifier(entity, Attributes.FOLLOW_RANGE, FOLLOW_RANGE_UUID);
+        removeModifier(entity, Attributes.MAX_HEALTH, MAX_HEALTH_ID);
+        removeModifier(entity, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_ID);
+        removeModifier(entity, Attributes.ARMOR, ARMOR_ID);
+        removeModifier(entity, Attributes.FOLLOW_RANGE, FOLLOW_RANGE_ID);
         entity.setHealth(Math.min(entity.getHealth(), entity.getMaxHealth()));
     }
 
     public static boolean hasVampireAttributes(LivingEntity entity) {
-        boolean hasSafeAttributes = hasModifierIfAttributeExists(entity, Attributes.MAX_HEALTH, MAX_HEALTH_UUID)
-                && hasModifierIfAttributeExists(entity, Attributes.ARMOR, ARMOR_UUID);
+        boolean hasSafeAttributes = hasModifierIfAttributeExists(entity, Attributes.MAX_HEALTH, MAX_HEALTH_ID)
+                && hasModifierIfAttributeExists(entity, Attributes.ARMOR, ARMOR_ID);
         if (!hasSafeAttributes) {
             return false;
         }
         if (!shouldApplyCombatAttributes(entity)) {
             return true;
         }
-        return hasModifierIfAttributeExists(entity, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_UUID)
-                && hasModifierIfAttributeExists(entity, Attributes.FOLLOW_RANGE, FOLLOW_RANGE_UUID);
+        return hasModifierIfAttributeExists(entity, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_ID)
+                && hasModifierIfAttributeExists(entity, Attributes.FOLLOW_RANGE, FOLLOW_RANGE_ID);
     }
 
-    private static void applyModifier(LivingEntity entity, Attribute attribute, UUID uuid, String name, double amount,
+    private static void applyModifier(LivingEntity entity, Holder<Attribute> attribute, ResourceLocation id, double amount,
                                       AttributeModifier.Operation operation) {
         AttributeInstance instance = entity.getAttribute(attribute);
         if (instance == null) {
             return;
         }
 
-        instance.removeModifier(uuid);
-        instance.addTransientModifier(new AttributeModifier(uuid, name, amount, operation));
+        instance.removeModifier(id);
+        instance.addTransientModifier(new AttributeModifier(id, amount, operation));
     }
 
-    private static void removeModifier(LivingEntity entity, Attribute attribute, UUID uuid) {
+    private static void removeModifier(LivingEntity entity, Holder<Attribute> attribute, ResourceLocation id) {
         AttributeInstance instance = entity.getAttribute(attribute);
         if (instance != null) {
-            instance.removeModifier(uuid);
+            instance.removeModifier(id);
         }
     }
 
-    private static boolean hasModifierIfAttributeExists(LivingEntity entity, Attribute attribute, UUID uuid) {
+    private static boolean hasModifierIfAttributeExists(
+            LivingEntity entity,
+            Holder<Attribute> attribute,
+            ResourceLocation id) {
         AttributeInstance instance = entity.getAttribute(attribute);
-        return instance == null || instance.getModifier(uuid) != null;
+        return instance == null || instance.getModifier(id) != null;
     }
 
     private static boolean isAdultMcaVillager(LivingEntity entity) {
@@ -103,5 +107,9 @@ public final class McaVampireAttributeHandler {
 
     private static boolean shouldApplyCombatAttributes(LivingEntity entity) {
         return !McaVampirismCompatConfig.applyCombatAttributesOnlyToAdults() || isAdultMcaVillager(entity);
+    }
+
+    private static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath("mca_vamp_compat", path);
     }
 }

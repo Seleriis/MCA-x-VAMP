@@ -5,8 +5,8 @@ import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.visual.McaWerewolfVisualData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import forge.net.mca.client.model.VillagerEntityModelMCA;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.client.model.VillagerEntityModelMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -19,7 +19,7 @@ import org.joml.Matrix4f;
 
 public class LayerMcaWerewolfParts extends RenderLayer<VillagerEntityMCA, VillagerEntityModelMCA<VillagerEntityMCA>> {
     private static final ResourceLocation DEBUG_VISIBLE_TEXTURE =
-            new ResourceLocation("minecraft", "textures/block/gray_wool.png");
+            ResourceLocation.fromNamespaceAndPath("minecraft", "textures/block/gray_wool.png");
 
     public LayerMcaWerewolfParts(RenderLayerParent<VillagerEntityMCA, VillagerEntityModelMCA<VillagerEntityMCA>> parent) {
         super(parent);
@@ -49,7 +49,6 @@ public class LayerMcaWerewolfParts extends RenderLayer<VillagerEntityMCA, Villag
 
     private boolean shouldRender(VillagerEntityMCA villager) {
         return McaVampirismCompatConfig.werewolfVillagerAppearanceEnabled()
-                && !McaVampirismCompatConfig.werewolfVillagerUseFullWerewolfModel()
                 && (McaVampirismCompatConfig.werewolfVillagerEarsEnabled()
                 || McaVampirismCompatConfig.werewolfVillagerClawsEnabled())
                 && McaWerewolfVisualData.isWerewolfVisual(villager);
@@ -96,42 +95,38 @@ public class LayerMcaWerewolfParts extends RenderLayer<VillagerEntityMCA, Villag
         float z2 = Math.max(minZ, maxZ);
 
         PoseStack.Pose pose = poseStack.last();
-        Matrix4f matrix = pose.pose();
-        Matrix3f normal = pose.normal();
-
-        quad(consumer, matrix, normal, packedLight, x1, y1, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2, 0.0F, 0.0F, 1.0F, red, green, blue, alpha);
-        quad(consumer, matrix, normal, packedLight, x2, y1, z1, x1, y1, z1, x1, y2, z1, x2, y2, z1, 0.0F, 0.0F, -1.0F, red, green, blue, alpha);
-        quad(consumer, matrix, normal, packedLight, x1, y2, z2, x2, y2, z2, x2, y2, z1, x1, y2, z1, 0.0F, 1.0F, 0.0F, red, green, blue, alpha);
-        quad(consumer, matrix, normal, packedLight, x1, y1, z1, x2, y1, z1, x2, y1, z2, x1, y1, z2, 0.0F, -1.0F, 0.0F, red, green, blue, alpha);
-        quad(consumer, matrix, normal, packedLight, x2, y1, z2, x2, y1, z1, x2, y2, z1, x2, y2, z2, 1.0F, 0.0F, 0.0F, red, green, blue, alpha);
-        quad(consumer, matrix, normal, packedLight, x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1, -1.0F, 0.0F, 0.0F, red, green, blue, alpha);
+        quad(consumer, pose, packedLight, x1, y1, z2, x2, y1, z2, x2, y2, z2, x1, y2, z2, 0.0F, 0.0F, 1.0F, red, green, blue, alpha);
+        quad(consumer, pose, packedLight, x2, y1, z1, x1, y1, z1, x1, y2, z1, x2, y2, z1, 0.0F, 0.0F, -1.0F, red, green, blue, alpha);
+        quad(consumer, pose, packedLight, x1, y2, z2, x2, y2, z2, x2, y2, z1, x1, y2, z1, 0.0F, 1.0F, 0.0F, red, green, blue, alpha);
+        quad(consumer, pose, packedLight, x1, y1, z1, x2, y1, z1, x2, y1, z2, x1, y1, z2, 0.0F, -1.0F, 0.0F, red, green, blue, alpha);
+        quad(consumer, pose, packedLight, x2, y1, z2, x2, y1, z1, x2, y2, z1, x2, y2, z2, 1.0F, 0.0F, 0.0F, red, green, blue, alpha);
+        quad(consumer, pose, packedLight, x1, y1, z1, x1, y1, z2, x1, y2, z2, x1, y2, z1, -1.0F, 0.0F, 0.0F, red, green, blue, alpha);
     }
 
-    private static void quad(VertexConsumer consumer, Matrix4f matrix, Matrix3f normal, int packedLight,
+    private static void quad(VertexConsumer consumer, PoseStack.Pose pose, int packedLight,
                              float x1, float y1, float z1,
                              float x2, float y2, float z2,
                              float x3, float y3, float z3,
                              float x4, float y4, float z4,
                              float normalX, float normalY, float normalZ,
                              int red, int green, int blue, int alpha) {
-        vertex(consumer, matrix, normal, packedLight, x1, y1, z1, 0.0F, 0.0F, normalX, normalY, normalZ, red, green, blue, alpha);
-        vertex(consumer, matrix, normal, packedLight, x2, y2, z2, 1.0F, 0.0F, normalX, normalY, normalZ, red, green, blue, alpha);
-        vertex(consumer, matrix, normal, packedLight, x3, y3, z3, 1.0F, 1.0F, normalX, normalY, normalZ, red, green, blue, alpha);
-        vertex(consumer, matrix, normal, packedLight, x4, y4, z4, 0.0F, 1.0F, normalX, normalY, normalZ, red, green, blue, alpha);
+        vertex(consumer, pose, packedLight, x1, y1, z1, 0.0F, 0.0F, normalX, normalY, normalZ, red, green, blue, alpha);
+        vertex(consumer, pose, packedLight, x2, y2, z2, 1.0F, 0.0F, normalX, normalY, normalZ, red, green, blue, alpha);
+        vertex(consumer, pose, packedLight, x3, y3, z3, 1.0F, 1.0F, normalX, normalY, normalZ, red, green, blue, alpha);
+        vertex(consumer, pose, packedLight, x4, y4, z4, 0.0F, 1.0F, normalX, normalY, normalZ, red, green, blue, alpha);
     }
 
-    private static void vertex(VertexConsumer consumer, Matrix4f matrix, Matrix3f normal, int packedLight,
+    private static void vertex(VertexConsumer consumer, PoseStack.Pose pose, int packedLight,
                                float x, float y, float z,
                                float u, float v,
                                float normalX, float normalY, float normalZ,
                                int red, int green, int blue, int alpha) {
-        consumer.vertex(matrix, x, y, z)
-                .color(red, green, blue, alpha)
-                .uv(u, v)
-                .overlayCoords(OverlayTexture.NO_OVERLAY)
-                .uv2(packedLight)
-                .normal(normal, normalX, normalY, normalZ)
-                .endVertex();
+        consumer.addVertex(pose.pose(), x, y, z)
+                .setColor(red, green, blue, alpha)
+                .setUv(u, v)
+                .setOverlay(OverlayTexture.NO_OVERLAY)
+                .setLight(packedLight)
+                .setNormal(pose, normalX, normalY, normalZ);
     }
 
     private static void logRenderCheck(VillagerEntityMCA villager, boolean shouldRender) {

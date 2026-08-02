@@ -8,8 +8,8 @@ import com.guilh.mca_vampirism_compat.service.faction.hunter.McaHunterAggression
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
 import com.guilh.mca_vampirism_compat.util.VampirismUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,7 +20,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -68,7 +68,7 @@ public final class McaDefensiveVillagerService {
                 McaHunterAggressionPolicy.DefensiveReason.TEMPORARY_DEFENSE)) {
             return false;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> !state.isInfected())
                 .orElse(true);
     }
@@ -77,12 +77,12 @@ public final class McaDefensiveVillagerService {
         if (!canEnterDefensiveMode(villager)) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             long gameTime = villager.level().getGameTime();
             state.enterDefensiveMode(gameTime, McaVampirismCompatConfig.defensiveModeDurationTicks(), reason, targetUuid);
             syncHunterTrait(villager);
             registerDefenseGoalsIfNeeded(villager);
-            equipDefenseWeaponIfNeeded(villager);
+            reconcileHunterWeapon(villager);
             McaVampirismCompat.debugLog(
                     "[DEFENSE] defensive mode enabled villager={} until={} reason={} target={}",
                     villager.getUUID(),
@@ -98,7 +98,7 @@ public final class McaDefensiveVillagerService {
         if (villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             if (!state.isDefensiveMode()) {
                 return;
             }
@@ -109,7 +109,7 @@ public final class McaDefensiveVillagerService {
             }
             syncHunterTrait(villager);
             registerDefenseGoalsIfNeeded(villager);
-            equipDefenseWeaponIfNeeded(villager);
+            reconcileHunterWeapon(villager);
         });
     }
 
@@ -117,7 +117,7 @@ public final class McaDefensiveVillagerService {
         if (villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             if (!state.isDefensiveMode() && !state.isOriginalMainHandItemSaved()) {
                 return;
             }
@@ -137,7 +137,7 @@ public final class McaDefensiveVillagerService {
         if (villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             boolean canHaveHunterTrait = McaVampirismCompatConfig.defensiveModeGrantsHunterTrait()
                     && state.isDefensiveMode()
                     && canEnterDefensiveMode(villager)
@@ -176,7 +176,7 @@ public final class McaDefensiveVillagerService {
                 || McaWerewolfStateService.isWerewolf(villager)) {
             return false;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> state.isDefensiveMode()
                         && McaHunterAggressionPolicy.canEnterDefensiveAggressiveMode(
                         villager,
@@ -210,13 +210,13 @@ public final class McaDefensiveVillagerService {
 
     private static boolean hasRecentThreat(VillagerEntityMCA villager) {
         long gameTime = villager.level().getGameTime();
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> gameTime - state.getLastVampireThreatTick() <= McaVampirismCompatConfig.vampireThreatWindowTicks())
                 .orElse(false);
     }
 
     private static void registerDefenseGoalsIfNeeded(VillagerEntityMCA villager) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             if (state.areDefensiveGoalsAdded()) {
                 return;
             }
@@ -225,14 +225,86 @@ public final class McaDefensiveVillagerService {
     }
 
     public static void equipDefenseWeaponIfNeeded(VillagerEntityMCA villager) {
-        equipHunterWeaponIfAllowed(villager, McaHunterAggressionPolicy.HunterSource.DEFENSIVE_MODE);
+        reconcileHunterWeapon(villager);
+    }
+
+    /**
+     * Maintains the temporary weapon from one authoritative state snapshot.
+     * The former independent equip and restore paths could race during MCA
+     * state normalization, making a pitchfork appear for one sync and vanish
+     * on the next. Reconciliation always makes one final decision instead.
+     */
+    public static void reconcileHunterWeapon(VillagerEntityMCA villager) {
+        if (villager == null || villager.level().isClientSide) {
+            return;
+        }
+        // MCA temporarily puts food in the main hand while a villager recovers.
+        // Do not replace that item with the pitchfork before MCA finishes its use.
+        if (villager.isUsingRecoveryFood()) {
+            return;
+        }
+        ModCapabilities.get(villager).ifPresent(state -> {
+            McaHunterAggressionPolicy.HunterSource source = resolveWeaponSource(villager, state);
+            if (source == null) {
+                restoreDefenseWeapon(villager);
+                return;
+            }
+            equipHunterWeaponIfAllowed(villager, source);
+        });
+    }
+
+    /**
+     * Reasserts a previously established Hunter weapon after MCA's equipment
+     * behavior has updated the dominant hand. This path intentionally never
+     * restores a hand or captures a new original item: the regular lifecycle
+     * reconciliation remains responsible for those state transitions.
+     */
+    public static void reconcileHunterWeaponAfterMcaEquipmentTask(VillagerEntityMCA villager) {
+        if (villager == null || villager.level().isClientSide || villager.isUsingRecoveryFood()) {
+            return;
+        }
+        ModCapabilities.get(villager).ifPresent(state -> {
+            if (!state.isOriginalMainHandItemSaved()) {
+                return;
+            }
+            McaHunterAggressionPolicy.HunterSource source = resolveWeaponSource(villager, state);
+            if (source != null) {
+                equipHunterWeaponIfAllowed(villager, source);
+            }
+        });
+    }
+
+    private static McaHunterAggressionPolicy.HunterSource resolveWeaponSource(
+            VillagerEntityMCA villager,
+            com.guilh.mca_vampirism_compat.VampiricVillagerState state
+    ) {
+        if (McaVampireStateService.isVampire(villager) || McaWerewolfStateService.isWerewolf(villager)) {
+            return null;
+        }
+        if (state.isDefensiveMode()
+                && McaHunterAggressionPolicy.canEnterDefensiveAggressiveMode(
+                villager,
+                McaHunterAggressionPolicy.DefensiveReason.TEMPORARY_DEFENSE)) {
+            return McaHunterAggressionPolicy.HunterSource.DEFENSIVE_MODE;
+        }
+        if (state.isHunterVillageApplied()) {
+            return McaHunterAggressionPolicy.HunterSource.HUNTER_CAPTURE_FINISHED;
+        }
+        if (McaVillageFactionControlService.shouldVillagerBeHunterByVillageControl(villager)) {
+            return McaHunterAggressionPolicy.HunterSource.HUNTER_VILLAGE;
+        }
+        if (McaTraitBridge.hasHunterTrait(villager)
+                && McaHunterAggressionPolicy.isManualHunterAllowed(villager)) {
+            return McaHunterAggressionPolicy.HunterSource.MANUAL_TRAIT;
+        }
+        return null;
     }
 
     public static void equipHunterWeaponIfAllowed(VillagerEntityMCA villager, McaHunterAggressionPolicy.HunterSource source) {
         if (!McaHunterAggressionPolicy.canEquipHunterWeapon(villager, source)) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             if (!state.isOriginalMainHandItemSaved()) {
                 state.saveOriginalMainHandItem(villager.getItemInHand(InteractionHand.MAIN_HAND));
             }
@@ -241,14 +313,14 @@ public final class McaDefensiveVillagerService {
                 return;
             }
             ItemStack current = villager.getItemInHand(InteractionHand.MAIN_HAND);
-            if (!ItemStack.isSameItemSameTags(current, weapon)) {
+            if (!ItemStack.isSameItemSameComponents(current, weapon)) {
                 villager.setItemInHand(InteractionHand.MAIN_HAND, weapon);
                 if (!state.isDefensiveWeaponEquippedLogged()) {
                     state.markDefensiveWeaponEquippedLogged();
                     McaVampirismCompat.debugLog(
                             "[DEFENSE] weapon equipped villager={} item={}",
                             villager.getUUID(),
-                            ForgeRegistries.ITEMS.getKey(weapon.getItem())
+                            BuiltInRegistries.ITEM.getKey(weapon.getItem())
                     );
                 }
             }
@@ -256,7 +328,7 @@ public final class McaDefensiveVillagerService {
     }
 
     public static void restoreDefenseWeapon(VillagerEntityMCA villager) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             if (!state.isOriginalMainHandItemSaved()) {
                 return;
             }
@@ -302,7 +374,7 @@ public final class McaDefensiveVillagerService {
     }
 
     private static Item lookupItem(String id) {
-        Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(id));
+        Item item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
         return item == null ? Items.AIR : item;
     }
 }

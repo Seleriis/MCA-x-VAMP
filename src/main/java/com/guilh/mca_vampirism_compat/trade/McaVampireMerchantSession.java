@@ -2,11 +2,17 @@ package com.guilh.mca_vampirism_compat.trade;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
-import forge.net.mca.entity.VillagerEntityMCA;
+import com.guilh.mca_vampirism_compat.network.EasyVillagersCycleStatePayload;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
+import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,13 +26,14 @@ public final class McaVampireMerchantSession {
     private final UUID sessionId;
     private final ServerPlayer player;
     private final VillagerEntityMCA originalVillager;
-    private final MerchantOffers originalOffers;
-    private final MerchantOffers adjustedOffers;
-    private final Map<Integer, Integer> adjustedIndexToOriginalIndex;
+    private MerchantOffers originalOffers;
+    private MerchantOffers adjustedOffers;
+    private Map<Integer, Integer> adjustedIndexToOriginalIndex;
     private final PlayerFaction faction;
     private final boolean hunterTrade;
     private final boolean werewolfTrade;
     private boolean closed;
+    private static final Map<String, Method> REFLECTED_METHODS = new HashMap<>();
 
     private McaVampireMerchantSession(ServerPlayer player, VillagerEntityMCA originalVillager, PlayerFaction faction,
                                       boolean hunterTrade, boolean werewolfTrade) {
@@ -38,6 +45,10 @@ public final class McaVampireMerchantSession {
         this.hunterTrade = hunterTrade;
         this.werewolfTrade = werewolfTrade;
 
+        rebuildAdjustedOffers();
+    }
+
+    private void rebuildAdjustedOffers() {
         McaVampireTradeOfferMapper.MappedOffers mappedOffers = hunterTrade
                 ? McaVampireTradeOfferMapper.copyAndAdjustForHunter(originalOffers, faction)
                 : werewolfTrade
@@ -88,6 +99,15 @@ public final class McaVampireMerchantSession {
         }
     }
 
+    public static boolean handleCycleTrades(ServerPlayer player) {
+        McaVampireMerchantSession session = SESSIONS_BY_PLAYER.get(player.getUUID());
+        if (session == null || session.isClosed()) {
+            return false;
+        }
+        session.cycleTrades();
+        return true;
+    }
+
     public static void closeForVillager(UUID villagerUuid, String reason) {
         List<McaVampireMerchantSession> sessions = new ArrayList<>(SESSIONS_BY_ID.values());
         for (McaVampireMerchantSession session : sessions) {
@@ -101,6 +121,7 @@ public final class McaVampireMerchantSession {
         if (closed) {
             return;
         }
+        TradeCycleEligibility.lockAfterTrade(originalVillager);
         int adjustedIndex = adjustedOffers.indexOf(adjustedOffer);
         Integer originalIndex = adjustedIndexToOriginalIndex.get(adjustedIndex);
         if (originalIndex == null || originalIndex < 0 || originalIndex >= originalOffers.size()) {
@@ -110,12 +131,14 @@ public final class McaVampireMerchantSession {
                     sessionId
             );
             adjustedOffer.increaseUses();
+            sendCurrentCycleState();
             return;
         }
 
         MerchantOffer originalOffer = originalOffers.get(originalIndex);
         originalVillager.notifyTrade(originalOffer);
         adjustedOffer.increaseUses();
+        sendCurrentCycleState();
         McaVampirismCompat.debugLog(
                 "[TRADE-WRAPPER] trade completed adjustedIndex={} originalIndex={} session={}",
                 adjustedIndex,
@@ -138,6 +161,97 @@ public final class McaVampireMerchantSession {
                 originalVillager.getUUID(),
                 reason
         );
+    }
+
+    public boolean isCycleTradesAvailable() {
+        return TradeCycleEligibility.isAvailable(originalVillager, originalOffers, closed);
+    }
+
+    public void sendCycleState(int containerId) {
+        PacketDistributor.sendToPlayer(
+                player,
+                new EasyVillagersCycleStatePayload(
+                        containerId,
+                        isCycleTradesAvailable()
+                )
+        );
+    }
+
+    private void cycleTrades() {
+        if (!(player.containerMenu instanceof MerchantMenu menu)
+                || !isCycleTradesAvailable()
+                || TradeCycleEligibility.hasActiveOffer(menu)) {
+            return;
+        }
+
+        menu.setSelectionHint(0);
+        originalVillager.setOffers(null);
+        originalOffers = originalVillager.getOffers();
+        applyNativePlayerPrices();
+        rebuildAdjustedOffers();
+        menu.setSelectionHint(0);
+        menu.slotsChanged(player.getInventory());
+
+        sendCycleState(menu.containerId);
+        player.sendMerchantOffers(
+                menu.containerId,
+                adjustedOffers,
+                originalVillager.getVillagerData().getLevel(),
+                originalVillager.getVillagerXp(),
+                originalVillager.showProgressBar(),
+                originalVillager.canRestock()
+        );
+        McaVampirismCompat.debugLog(
+                "[TRADE-WRAPPER] trades cycled player={} villager={} offers={} faction={}",
+                player.getName().getString(),
+                originalVillager.getUUID(),
+                adjustedOffers.size(),
+                faction
+        );
+    }
+
+    private void sendCurrentCycleState() {
+        if (player.containerMenu instanceof MerchantMenu menu) {
+            sendCycleState(menu.containerId);
+        }
+    }
+
+    private void applyNativePlayerPrices() {
+        try {
+            Method updateSpecialPrices = findMethod(
+                    originalVillager.getClass(),
+                    "updateSpecialPrices",
+                    Player.class
+            );
+            updateSpecialPrices.invoke(originalVillager, player);
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            McaVampirismCompat.LOGGER.warn(
+                    "[MCA Reborn x Vampirism Compat] Could not apply native MCA reputation prices while cycling trades for {}",
+                    originalVillager.getUUID(),
+                    exception
+            );
+        }
+    }
+
+    private static Method findMethod(Class<?> type, String name, Class<?>... parameterTypes)
+            throws NoSuchMethodException {
+        String key = type.getName() + "#" + name + Arrays.toString(parameterTypes);
+        Method cached = REFLECTED_METHODS.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        Class<?> cursor = type;
+        while (cursor != null) {
+            try {
+                Method method = cursor.getDeclaredMethod(name, parameterTypes);
+                method.setAccessible(true);
+                REFLECTED_METHODS.put(key, method);
+                return method;
+            } catch (NoSuchMethodException ignored) {
+                cursor = cursor.getSuperclass();
+            }
+        }
+        throw new NoSuchMethodException(name);
     }
 
     public boolean isClosed() {

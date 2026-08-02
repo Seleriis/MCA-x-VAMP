@@ -17,7 +17,7 @@ import com.guilh.mca_vampirism_compat.service.faction.werewolf.McaWerewolfCombat
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
 import com.guilh.mca_vampirism_compat.util.McaVampireTargetUtil;
 import com.guilh.mca_vampirism_compat.util.McaWerewolfTargetUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -183,7 +183,7 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static void markVampireRetaliation(VillagerEntityMCA villager, LivingEntity attacker) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.markRetaliation(
                         attacker.getUUID(),
                         villager.level().getGameTime(),
@@ -198,7 +198,7 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static void markGuardMonsterRetaliation(VillagerEntityMCA villager, LivingEntity attacker) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.markRetaliation(
                         attacker.getUUID(),
                         villager.level().getGameTime(),
@@ -212,7 +212,7 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static void markWerewolfRetaliation(VillagerEntityMCA villager, LivingEntity attacker) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.markRetaliation(
                         attacker.getUUID(),
                         villager.level().getGameTime(),
@@ -333,7 +333,7 @@ public final class McaSpecialVillagerCombatService {
 
     private static boolean registerDefensiveGoalsIfNeeded(VillagerEntityMCA villager) {
         PathfinderMob mob = (PathfinderMob) villager;
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        return ModCapabilities.get(villager).map(state -> {
             if (state.areDefensiveGoalsAdded()) {
                 return false;
             }
@@ -565,7 +565,7 @@ public final class McaSpecialVillagerCombatService {
             return false;
         }
         long gameTime = villager.level().getGameTime();
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> state.isRetaliatingAgainst(target.getUUID(), gameTime))
                 .orElse(false);
     }

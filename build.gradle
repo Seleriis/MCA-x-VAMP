@@ -1,67 +1,154 @@
 plugins {
-    id 'net.minecraftforge.gradle' version '6.0.53'
-    id 'org.spongepowered.mixin' version '0.7.38'
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.141'
 }
 
-version = mod_version
 group = mod_group_id
+version = mod_version
 
 base {
-    archivesName = "${mod_archive_base}"
+    archivesName = "mca-vamp-compat-${minecraft_version}"
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+}
 
-minecraft {
-    mappings channel: 'official', version: minecraft_version
+def localCompileLibs = file('local-mods')
+def compatProfile = providers.gradleProperty('compatProfile').orElse('all').get()
+def optionalRuntimeMods = []
+if (compatProfile in ['werewolves', 'all']) {
+    optionalRuntimeMods += "${localCompileLibs}/Werewolves-${werewolves_version}.jar"
+}
+if (compatProfile in ['easy', 'all']) {
+    optionalRuntimeMods += "${localCompileLibs}/easy-villagers-neoforge-${easy_villagers_version}.jar"
+}
+if (compatProfile == 'all') {
+    optionalRuntimeMods += "${localCompileLibs}/mca-ev-compat-${mca_ev_compat_version}.jar"
+}
+
+neoForge {
+    version = neoforge_version
 
     runs {
-        configureEach {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
+        client {
+            client()
+            gameDirectory = project.file("run/client-${compatProfile}")
+        }
+        server {
+            server()
+            gameDirectory = project.file("run/server-${compatProfile}")
+            programArgument '--nogui'
+        }
+        gameTestServer {
+            type = 'gameTestServer'
+            gameDirectory = project.file("run/gametest-${compatProfile}")
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
         }
     }
 }
 
-repositories {
-    flatDir {
-        dirs 'local-mods'
-    }
-}
-
-mixin {
-    config "${mod_id}.mixins.json"
-}
-
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    implementation files(
+            "${localCompileLibs}/Vampirism-${vampirism_version}.jar",
+            "${localCompileLibs}/mca-neoforge-${mca_version}.jar"
+    )
+    compileOnly files(
+            "${localCompileLibs}/Werewolves-${werewolves_version}.jar",
+            "${localCompileLibs}/easy-villagers-neoforge-${easy_villagers_version}.jar",
+            "${localCompileLibs}/mca-ev-compat-${mca_ev_compat_version}.jar"
+    )
+    runtimeOnly files(optionalRuntimeMods)
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
 
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+sourceSets.test.compileClasspath += sourceSets.main.compileClasspath
+sourceSets.test.runtimeClasspath += sourceSets.main.runtimeClasspath
 
-    compileOnly fg.deobf('local:Vampirism:1.20.1-1.10.15')
-    compileOnly fg.deobf('local:minecraft-comes-alive:7.6.16+1.20.1-universal')
+tasks.named('test', Test) {
+    useJUnitPlatform()
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.release = 21
+    options.compilerArgs += ['-proc:none']
 }
 
 processResources {
-    inputs.property 'mod_id', mod_id
-    inputs.property 'mod_name', mod_name
-    inputs.property 'mod_version', mod_version
-    inputs.property 'minecraft_version', minecraft_version
-    inputs.property 'forge_version', forge_version
-
-    filesMatching('META-INF/mods.toml') {
-        expand project.properties
+    def replaceProperties = [
+            version                    : project.version,
+            minecraft_version          : minecraft_version,
+            neoforge_version           : neoforge_version,
+            vampirism_version          : vampirism_version,
+            mca_version                : mca_version,
+            werewolves_version         : werewolves_version,
+            easy_villagers_version     : easy_villagers_version,
+            mca_ev_compat_version      : mca_ev_compat_version
+    ]
+    inputs.properties replaceProperties
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand replaceProperties
     }
 }
 
-jar.finalizedBy('reobfJar')
+jar {
+    manifest {
+        attributes([
+                'Specification-Title'     : mod_id,
+                'Specification-Vendor'    : 'guilh',
+                'Specification-Version'   : '2',
+                'Implementation-Title'    : mod_name,
+                'Implementation-Version'  : project.version,
+                'Implementation-Vendor'   : 'guilh',
+                'MixinConfigs'            : "${mod_id}.mixins.json"
+        ])
+    }
+}
+
+def releaseDirectory = layout.buildDirectory.dir(
+        "release/mca-vamp-compat-${minecraft_version}-${project.version}"
+)
+
+tasks.register('releaseBundle', Sync) {
+    group = 'build'
+    description = 'Builds the distributable jar, sources, release notes and SHA-256 manifest.'
+    dependsOn tasks.named('build')
+    into releaseDirectory
+    from tasks.named('jar')
+    from tasks.named('sourcesJar')
+    from('LICENSE')
+    from('README.md')
+    from('CHANGELOG.md')
+    from("RELEASE_NOTES_${project.version}.md")
+    from('CURSEFORGE_DESCRIPTION.md')
+
+    doLast {
+        File outputDirectory = releaseDirectory.get().asFile
+        List<File> jars = outputDirectory
+                .listFiles()
+                .findAll { it.name.endsWith('.jar') }
+                .sort { it.name }
+        File checksumManifest = new File(outputDirectory, 'SHA256SUMS.txt')
+        checksumManifest.setText(
+                jars.collect { artifact ->
+                    byte[] digest = java.security.MessageDigest
+                            .getInstance('SHA-256')
+                            .digest(artifact.bytes)
+                    String checksum = digest.collect { String.format('%02x', it) }.join()
+                    "${checksum}  ${artifact.name}"
+                }.join(System.lineSeparator()) + System.lineSeparator(),
+                'UTF-8'
+        )
+    }
+}

@@ -8,7 +8,6 @@ import com.guilh.mca_vampirism_compat.attribute.McaVampireAttributeHandler;
 import com.guilh.mca_vampirism_compat.attribute.McaSpecialVillagerAttributeService;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
-import com.guilh.mca_vampirism_compat.capability.VampiricVillagerProvider;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.easyvillagers.EasyVillagersBlockTradeService;
 import com.guilh.mca_vampirism_compat.easyvillagers.McaEvCompatBridge;
@@ -44,7 +43,7 @@ import com.guilh.mca_vampirism_compat.util.VampirismUtil;
 import de.teamlapen.vampirism.api.event.BloodDrinkEvent;
 import de.teamlapen.vampirism.api.event.VampirismVillageEvent;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -53,19 +52,17 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.living.LivingAttackEvent;
-import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
-import net.minecraftforge.event.entity.living.BabyEntitySpawnEvent;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
+import net.neoforged.neoforge.event.entity.living.BabyEntitySpawnEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.SubscribeEvent;
 
 public final class VampiricVillagerEvents {
     private static boolean configProbeLogged;
@@ -127,13 +124,6 @@ public final class VampiricVillagerEvents {
     @SubscribeEvent
     public static void onVampirismDefineRaidStrength(VampirismVillageEvent.DefineRaidStrength event) {
         McaVillageCaptureIntegrationService.onDefineRaidStrength(event);
-    }
-
-    @SubscribeEvent
-    public static void attachCapabilities(AttachCapabilitiesEvent<Entity> event) {
-        if (McaVillagerUtil.isMcaVillager(event.getObject())) {
-            event.addCapability(VampiricVillagerProvider.ID, new VampiricVillagerProvider());
-        }
     }
 
     @SubscribeEvent
@@ -206,7 +196,16 @@ public final class VampiricVillagerEvents {
     }
 
     @SubscribeEvent
-    public static void onBloodDrink(BloodDrinkEvent event) {
+    public static void onPlayerBloodDrink(BloodDrinkEvent.PlayerDrinkBloodEvent event) {
+        onBloodDrink(event);
+    }
+
+    @SubscribeEvent
+    public static void onEntityBloodDrink(BloodDrinkEvent.EntityDrinkBloodEvent event) {
+        onBloodDrink(event);
+    }
+
+    private static void onBloodDrink(BloodDrinkEvent event) {
         event.getBloodSource().getEntity().ifPresent(target -> {
             if (McaVampirismCompatConfig.preventVampiresBitingMcaVampires() && McaVillagerUtil.isMcaVampire(target)) {
                 blockBloodDrain(event);
@@ -232,7 +231,7 @@ public final class VampiricVillagerEvents {
     }
 
     @SubscribeEvent
-    public static void onVampiricAttack(LivingAttackEvent event) {
+    public static void onVampiricAttack(LivingIncomingDamageEvent event) {
         LivingEntity target = event.getEntity();
         Entity attacker = event.getSource().getEntity();
         if (McaVampireCureService.shouldBlockCuringAttack(attacker)) {
@@ -282,8 +281,10 @@ public final class VampiricVillagerEvents {
     }
 
     @SubscribeEvent
-    public static void onLivingTick(LivingEvent.LivingTickEvent event) {
-        LivingEntity entity = event.getEntity();
+    public static void onLivingTick(EntityTickEvent.Post event) {
+        if (!(event.getEntity() instanceof LivingEntity entity)) {
+            return;
+        }
         if (entity.level().isClientSide) {
             return;
         }
@@ -305,7 +306,7 @@ public final class VampiricVillagerEvents {
     }
 
     @SubscribeEvent
-    public static void onMcaVampireHurtTarget(LivingHurtEvent event) {
+    public static void onMcaVampireHurtTarget(LivingIncomingDamageEvent event) {
         LivingEntity target = event.getEntity();
         Entity source = event.getSource().getEntity();
         if (!target.level().isClientSide && McaSpecialVillagerMonsterIgnoreService.shouldCancelMonsterAttack(source, target)) {
@@ -403,7 +404,7 @@ public final class VampiricVillagerEvents {
 
     @SubscribeEvent
     public static void onLivingChangeTarget(LivingChangeTargetEvent event) {
-        LivingEntity target = event.getNewTarget();
+        LivingEntity target = event.getNewAboutToBeSetTarget();
         if (event.getEntity().level().isClientSide || !(event.getEntity() instanceof Mob mob)) {
             return;
         }
@@ -412,7 +413,7 @@ public final class VampiricVillagerEvents {
             return;
         }
         boolean specialVillagerIgnoringMonster = McaSpecialVillagerMonsterIgnoreService.shouldSpecialVillagerIgnoreMonster(mob, target);
-        event.setNewTarget(null);
+        event.setNewAboutToBeSetTarget(null);
         event.setCanceled(true);
         mob.setTarget(null);
         if (!specialVillagerIgnoringMonster
@@ -432,7 +433,7 @@ public final class VampiricVillagerEvents {
     }
 
     @SubscribeEvent
-    public static void onMcaVampireHurtByHuman(LivingHurtEvent event) {
+    public static void onMcaVampireHurtByHuman(LivingIncomingDamageEvent event) {
         LivingEntity vampire = event.getEntity();
         Entity source = event.getSource().getEntity();
         if (vampire.level().isClientSide || !(vampire instanceof VillagerEntityMCA)
@@ -446,7 +447,7 @@ public final class VampiricVillagerEvents {
             McaCommandRespectService.logRejectedTarget(villager, attacker);
             return;
         }
-        vampire.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(vampire)
                 .ifPresent(state -> state.markRetaliation(
                         attacker.getUUID(),
                         vampire.level().getGameTime(),

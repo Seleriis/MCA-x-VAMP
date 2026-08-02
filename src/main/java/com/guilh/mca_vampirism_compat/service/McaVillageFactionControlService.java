@@ -8,8 +8,8 @@ import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import de.teamlapen.vampirism.api.entity.factions.IFaction;
 import de.teamlapen.vampirism.api.world.ITotem;
 import de.teamlapen.vampirism.util.TotemHelper;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.Villager;
@@ -85,7 +85,7 @@ public final class McaVillageFactionControlService {
             );
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             boolean alreadyHadTrait = McaTraitBridge.hasHunterTrait(villager);
             if (McaVampirismCompatConfig.hunterVillageControlGrantsHunterTrait() && !alreadyHadTrait) {
                 McaTraitBridge.addHunterTrait(villager);
@@ -99,7 +99,7 @@ public final class McaVillageFactionControlService {
                 state.setHunterVillageApplied(true);
             }
             state.setHunterAligned(true, Long.MAX_VALUE);
-            McaDefensiveVillagerService.equipHunterWeaponIfAllowed(villager, source);
+            McaDefensiveVillagerService.reconcileHunterWeapon(villager);
             McaVampirismCompat.debugLog(
                     "[HUNTER-VILLAGE] state applied villager={} source={}",
                     villager.getUUID(),
@@ -113,7 +113,7 @@ public final class McaVillageFactionControlService {
         if (villager == null || villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             boolean hadVillageState = state.isHunterVillageApplied();
             boolean removeTrait = hadVillageState && McaVampirismCompatConfig.hunterVillagerRemoveTraitWhenVillageControlLost();
             if (removeTrait && McaTraitBridge.hasHunterTrait(villager)) {
@@ -143,9 +143,7 @@ public final class McaVillageFactionControlService {
                 return;
             }
 
-            if (!hasHunterTrait && !isActiveDefensiveMode(villager, state.getDefensiveModeUntilTick())) {
-                McaDefensiveVillagerService.restoreDefenseWeapon(villager);
-            }
+            McaDefensiveVillagerService.reconcileHunterWeapon(villager);
 
             if (!hadVillageState && !hasHunterTrait && (state.isHunterAligned()
                     || state.isHunterTraitApplied()
@@ -215,12 +213,6 @@ public final class McaVillageFactionControlService {
 
     private static BlockPos totemPos(ITotem totem) {
         return totem instanceof BlockEntity blockEntity ? blockEntity.getBlockPos() : BlockPos.ZERO;
-    }
-
-    private static boolean isActiveDefensiveMode(VillagerEntityMCA villager, long untilTick) {
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
-                .map(state -> state.isDefensiveMode() && villager.level().getGameTime() <= untilTick)
-                .orElse(false);
     }
 
     private static boolean isStaleAggressiveReplacementDefense(String reason) {

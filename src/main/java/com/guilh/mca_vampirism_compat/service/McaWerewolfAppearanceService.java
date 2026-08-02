@@ -2,7 +2,7 @@ package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.visual.McaWerewolfVisualData;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 
 public final class McaWerewolfAppearanceService {
     private McaWerewolfAppearanceService() {
@@ -16,7 +16,7 @@ public final class McaWerewolfAppearanceService {
                 || McaVampireCureService.isInPostCureGracePeriod(villager, McaVampireCureService.CureType.WEREWOLF)) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             state.setWerewolfAppearanceApplied(true);
             state.setWerewolfPartialForm(true);
         });
@@ -27,7 +27,7 @@ public final class McaWerewolfAppearanceService {
         if (villager == null || villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             state.setWerewolfAppearanceApplied(false);
             state.setWerewolfPartialForm(false);
         });

@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 
 public final class McaGuardDetectionService {
     private static boolean loggedGuardAccessorFailure;

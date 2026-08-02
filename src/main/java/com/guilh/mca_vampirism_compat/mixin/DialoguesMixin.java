@@ -1,8 +1,8 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.social.McaFactionSocialService;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.resources.Dialogues;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.resources.Dialogues;
 import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

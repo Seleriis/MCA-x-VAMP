@@ -1,6 +1,6 @@
 package com.guilh.mca_vampirism_compat.service.faction;
 
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.LivingEntity;
 
 public interface McaFactionCombatRules {

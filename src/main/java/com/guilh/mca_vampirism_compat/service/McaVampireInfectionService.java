@@ -6,7 +6,7 @@ import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.util.McaVampireTargetUtil;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -49,7 +49,7 @@ public final class McaVampireInfectionService {
                 sourceType.logName(),
                 durationTicks
         );
-        target.addEffect(new MobEffectInstance(ModEffects.SANGUINARE.get(), durationTicks), source);
+        target.addEffect(new MobEffectInstance(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare(), durationTicks), source);
         UUID sourceUuid = source == null ? null : source.getUUID();
         if (target instanceof VillagerEntityMCA villager) {
             McaVampireStateService.markInfected(villager, sourceUuid, target.level().getGameTime());
@@ -98,10 +98,10 @@ public final class McaVampireInfectionService {
         if (!McaVampireBiteService.canMcaVillagerReceiveInfection(target)) {
             return false;
         }
-        if (McaVampireTargetUtil.isVampireTarget(target) || target.hasEffect(ModEffects.SANGUINARE.get())) {
+        if (McaVampireTargetUtil.isVampireTarget(target) || target.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())) {
             return false;
         }
-        return target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(target)
                 .map(state -> !state.isInfected() && !state.isConverted())
                 .orElse(true);
     }

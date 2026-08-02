@@ -4,7 +4,7 @@ import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
@@ -30,7 +30,7 @@ public final class McaVillageVampireThreatService {
             if (villager == center || !McaDefensiveVillagerService.canEnterDefensiveMode(villager)) {
                 continue;
             }
-            villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+            ModCapabilities.get(villager).ifPresent(state -> {
                 int count = state.recordVampireThreat(
                         villager.level().getGameTime(),
                         McaVampirismCompatConfig.vampireThreatWindowTicks()

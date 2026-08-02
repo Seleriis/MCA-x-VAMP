@@ -1,21 +1,24 @@
 package com.guilh.mca_vampirism_compat.client;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
-import forge.net.mca.client.model.VillagerEntityModelMCA;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.Gender;
+import net.conczin.mca.client.model.VillagerEntityModelMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.Gender;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.world.entity.EntityType;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
-@Mod.EventBusSubscriber(modid = McaVampirismCompat.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-public final class McaVampireEyeVisualHandler {
-    private McaVampireEyeVisualHandler() {
+@EventBusSubscriber(
+        modid = McaVampirismCompat.MOD_ID,
+        value = Dist.CLIENT
+)
+public final class McaSpecialVillagerLayerRegistration {
+    private McaSpecialVillagerLayerRegistration() {
     }
 
     @SubscribeEvent
@@ -32,7 +35,6 @@ public final class McaVampireEyeVisualHandler {
         if (renderer instanceof LivingEntityRenderer livingRenderer) {
             RenderLayerParent<VillagerEntityMCA, VillagerEntityModelMCA<VillagerEntityMCA>> parent =
                     (RenderLayerParent<VillagerEntityMCA, VillagerEntityModelMCA<VillagerEntityMCA>>) livingRenderer;
-            livingRenderer.addLayer(new LayerMcaVampireEyes(parent));
             livingRenderer.addLayer(new LayerMcaWerewolfParts(parent));
             McaVampirismCompat.debugLog(
                     "[WEREWOLF-APPEARANCE] layer registered renderer={} entityType={}",

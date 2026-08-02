@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
-import de.teamlapen.vampirism.api.VampirismCapabilities;
+import de.teamlapen.vampirism.api.VampirismAPI;
 import de.teamlapen.vampirism.api.entity.vampire.IVampire;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -10,9 +10,9 @@ import net.minecraft.world.entity.player.Player;
 
 public final class VampireSkillIntegrationService {
     public static final ResourceLocation DISGUISE_VAMPIRE_ACTION_ID =
-            new ResourceLocation("vampirism", "disguise_vampire");
+            ResourceLocation.fromNamespaceAndPath("vampirism", "disguise_vampire");
     public static final ResourceLocation INFECT_ACTION_ID =
-            new ResourceLocation("vampirism", "infect");
+            ResourceLocation.fromNamespaceAndPath("vampirism", "infect");
 
     private VampireSkillIntegrationService() {
     }
@@ -22,7 +22,7 @@ public final class VampireSkillIntegrationService {
             return false;
         }
         try {
-            return player.getCapability(VampirismCapabilities.VAMPIRE_PLAYER)
+            return VampirismAPI.getVampirePlayer(player)
                     .map(vampire -> vampire.getLevel() > 0 && vampire.isDisguised())
                     .orElse(false);
         } catch (RuntimeException | LinkageError exception) {

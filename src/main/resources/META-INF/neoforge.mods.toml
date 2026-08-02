@@ -1,0 +1,62 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "GPL-3.0-only"
+
+[[mixins]]
+config = "mca_vamp_compat.mixins.json"
+
+[[mods]]
+modId = "mca_vamp_compat"
+version = "${version}"
+displayName = "MCA Reborn x Vampirism Compat"
+authors = "guilh"
+description = '''Compatibility layer between Minecraft Comes Alive, Vampirism and Werewolves. MCA villagers retain their MCA identity while gaining faction, infection, cure, combat, trade and social behavior.'''
+
+[[dependencies.mca_vamp_compat]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neoforge_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.mca_vamp_compat]]
+modId = "minecraft"
+type = "required"
+versionRange = "[${minecraft_version}]"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.mca_vamp_compat]]
+modId = "vampirism"
+type = "required"
+versionRange = "[1.10.12,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.mca_vamp_compat]]
+modId = "mca"
+type = "required"
+versionRange = "[${mca_version},)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.mca_vamp_compat]]
+modId = "werewolves"
+type = "optional"
+versionRange = "[2.0.3.3,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.mca_vamp_compat]]
+modId = "easy_villagers"
+type = "optional"
+versionRange = "[${easy_villagers_version},)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.mca_vamp_compat]]
+modId = "mca_ev_compat"
+type = "optional"
+versionRange = "[2.0.0,)"
+ordering = "AFTER"
+side = "BOTH"

@@ -13,13 +13,13 @@ import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfTradeService;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public final class McaFactionTradeService {
     public static final String VAMPIRE_ALLY = "mca_vamp_compat.trade.vampire_ally";
@@ -89,32 +89,6 @@ public final class McaFactionTradeService {
         return true;
     }
 
-    public static boolean onTradeAttempt(Player player, VillagerEntityMCA villager, String method) {
-        debugTradeState(method, player, villager);
-        if (!McaTradeContextService.isRecentMcaTradeContext(player, villager)) {
-            McaVampirismCompat.debugLog(
-                    "[TRADE] copiedBeginTradeWith ignored without MCA trade context method={} player={} villager={}",
-                    method,
-                    player.getName().getString(),
-                    villager.getUUID()
-            );
-            return false;
-        }
-        if (shouldBlockTrade(player, villager)) {
-            player.displayClientMessage(Component.translatable(messageFor(player, villager)), true);
-            logTradeBlocked(player, villager);
-            McaVampirismCompat.debugLog(
-                    "[TRADE] trade blocked method={} player={} faction={} villager={}",
-                    method,
-                    player.getName().getString(),
-                    tradeFaction(player, villager),
-                    villager.getUUID()
-            );
-            return true;
-        }
-        return false;
-    }
-
     public static boolean shouldBlockTrade(Player player, VillagerEntityMCA villager) {
         if (McaVampireCureService.shouldBlockTrade(villager)) {
             return true;
@@ -157,10 +131,14 @@ public final class McaFactionTradeService {
 
     public static void debugTradeState(String method, Player player, VillagerEntityMCA villager) {
         logPlayerFactionContext(player);
-        boolean vampireConverted = villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        // AbstractVillager#getOffers deliberately throws on the logical client in
+        // 1.21.1. mobInteract runs on both sides, so even debug arguments must not
+        // query offers there.
+        boolean hasTradeOffers = !villager.level().isClientSide && villager.hasTradeOffers();
+        boolean vampireConverted = ModCapabilities.get(villager)
                 .map(state -> state.isConverted())
                 .orElse(false);
-        boolean werewolfConverted = villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        boolean werewolfConverted = ModCapabilities.get(villager)
                 .map(state -> state.isWerewolfConverted())
                 .orElse(false);
         McaVampirismCompat.debugLog(
@@ -176,7 +154,7 @@ public final class McaFactionTradeService {
                 vampireConverted,
                 McaTraitBridge.hasWerewolfTrait(villager),
                 werewolfConverted,
-                villager.hasTradeOffers()
+                hasTradeOffers
         );
     }
 
@@ -210,7 +188,7 @@ public final class McaFactionTradeService {
         if (player == null || !McaVampireStateService.isVampire(villager)) {
             return false;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> state.wasBittenByVampirePlayer()
                         && state.isBiteWasConversionCause()
                         && state.getLastVampirePlayerBiteUuid()

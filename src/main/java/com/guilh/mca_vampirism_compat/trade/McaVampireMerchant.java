@@ -2,6 +2,7 @@ package com.guilh.mca_vampirism_compat.trade;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.service.McaTradeContextService;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -16,7 +17,7 @@ import net.minecraft.world.item.trading.MerchantOffers;
 
 import java.util.OptionalInt;
 
-public final class McaVampireMerchant implements Merchant {
+public final class McaVampireMerchant implements Merchant, EntityBackedMerchant {
     private final McaVampireMerchantSession session;
     private Player tradingPlayer;
 
@@ -41,6 +42,7 @@ public final class McaVampireMerchant implements Merchant {
                     showProgressBar(),
                     canRestock()
             );
+            session.sendCycleState(containerId.getAsInt());
         } else {
             McaVampirismCompat.debugLog(
                     "[TRADE-WRAPPER] openMenu failed session={} player={} villager={}",
@@ -115,6 +117,11 @@ public final class McaVampireMerchant implements Merchant {
     @Override
     public boolean isClientSide() {
         return session.originalVillager().level().isClientSide;
+    }
+
+    @Override
+    public VillagerEntityMCA mcaVampCompat$getTradeSoundEntity() {
+        return session.originalVillager();
     }
 
     private int getVillagerLevel() {

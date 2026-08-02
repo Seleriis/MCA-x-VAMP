@@ -3,20 +3,22 @@ package com.guilh.mca_vampirism_compat.service;
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.UUID;
 
 public final class McaWerewolfInfectionService {
-    private static final ResourceLocation LUPUS_SANGUINEM_ID = new ResourceLocation("werewolves", "lupus_sanguinem");
+    private static final ResourceLocation LUPUS_SANGUINEM_ID =
+            ResourceLocation.fromNamespaceAndPath("werewolves", "lupus_sanguinem");
     private static boolean lupusSanguinemResolved;
-    private static MobEffect lupusSanguinemEffect;
+    private static Holder<MobEffect> lupusSanguinemEffect;
 
     private McaWerewolfInfectionService() {
     }
@@ -52,12 +54,12 @@ public final class McaWerewolfInfectionService {
         }
 
         int duration = McaVampirismCompatConfig.werewolfVillagerInfectionDurationTicks();
-        MobEffect lupusSanguinem = lupusSanguinemEffect();
+        Holder<MobEffect> lupusSanguinem = lupusSanguinemEffect();
         if (lupusSanguinem != null) {
             target.addEffect(new MobEffectInstance(lupusSanguinem, duration), source);
         }
         UUID sourceUuid = source == null ? null : source.getUUID();
-        target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(target)
                 .ifPresent(state -> state.startWerewolfInfection(target.level().getGameTime(), duration, sourceUuid));
         McaVampirismCompat.debugLog(
                 "[WEREWOLF-CONVERSION] infection applied target={} source={} duration={} effectFound={}",
@@ -82,8 +84,8 @@ public final class McaWerewolfInfectionService {
             logBlocked(target, "CURING");
             return false;
         }
-        if (target.hasEffect(de.teamlapen.vampirism.core.ModEffects.SANGUINARE.get())
-                || target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        if (target.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())
+                || ModCapabilities.get(target)
                 .map(state -> state.isInfected() || state.isConverted())
                 .orElse(false)) {
             logBlocked(target, "VAMPIRE_OR_SANGUINARE_CONFLICT");
@@ -103,11 +105,11 @@ public final class McaWerewolfInfectionService {
             logBlocked(target, "ALREADY_WEREWOLF");
             return false;
         }
-        MobEffect lupusSanguinem = lupusSanguinemEffect();
+        Holder<MobEffect> lupusSanguinem = lupusSanguinemEffect();
         if (lupusSanguinem != null && target.hasEffect(lupusSanguinem)) {
             return false;
         }
-        return target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(target)
                 .map(state -> !state.isWerewolfInfected())
                 .orElse(true);
     }
@@ -116,8 +118,8 @@ public final class McaWerewolfInfectionService {
         if (villager == null || villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
-            MobEffect lupusSanguinem = lupusSanguinemEffect();
+        ModCapabilities.get(villager).ifPresent(state -> {
+            Holder<MobEffect> lupusSanguinem = lupusSanguinemEffect();
             MobEffectInstance effect = lupusSanguinem == null ? null : villager.getEffect(lupusSanguinem);
             if (effect != null && !state.isWerewolfInfected() && !McaWerewolfStateService.isWerewolf(villager)) {
                 state.startWerewolfInfection(
@@ -153,12 +155,12 @@ public final class McaWerewolfInfectionService {
     }
 
     public static boolean isLupusSanguinemActive(VillagerEntityMCA villager) {
-        MobEffect lupusSanguinem = lupusSanguinemEffect();
+        Holder<MobEffect> lupusSanguinem = lupusSanguinemEffect();
         return lupusSanguinem != null && villager.hasEffect(lupusSanguinem);
     }
 
     public static boolean removeLupusSanguinem(VillagerEntityMCA villager) {
-        MobEffect lupusSanguinem = lupusSanguinemEffect();
+        Holder<MobEffect> lupusSanguinem = lupusSanguinemEffect();
         return lupusSanguinem != null && villager.removeEffect(lupusSanguinem);
     }
 
@@ -170,10 +172,11 @@ public final class McaWerewolfInfectionService {
                 || villager.getAgeState() == AgeState.ADULT);
     }
 
-    private static MobEffect lupusSanguinemEffect() {
+    private static Holder<MobEffect> lupusSanguinemEffect() {
         if (!lupusSanguinemResolved) {
             lupusSanguinemResolved = true;
-            lupusSanguinemEffect = ForgeRegistries.MOB_EFFECTS.getValue(LUPUS_SANGUINEM_ID);
+            MobEffect effect = BuiltInRegistries.MOB_EFFECT.get(LUPUS_SANGUINEM_ID);
+            lupusSanguinemEffect = effect == null ? null : BuiltInRegistries.MOB_EFFECT.wrapAsHolder(effect);
         }
         return lupusSanguinemEffect;
     }

@@ -8,7 +8,7 @@ import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerClassifier;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerType;
 import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
@@ -101,6 +101,33 @@ public final class McaFactionPickupPermissionService {
         return true;
     }
 
+    /**
+     * mca-ev-compat owns MCA snapshot creation. It deliberately leaves the
+     * villager in place on a safe failure, so report that result after its
+     * method returns. Faction denials are handled at HEAD and never reach here.
+     */
+    public static void reportAllowedPickupFailureIfNeeded(Villager villager, Player player, String source) {
+        if (!(villager instanceof VillagerEntityMCA mcaVillager)
+                || player == null
+                || player.level().isClientSide
+                || mcaVillager.isRemoved()
+                || !McaVampirismCompatConfig.enableEasyVillagersFactionRules()
+                || !McaVampirismCompatConfig.enableEasyVillagersFactionPickupRules()
+                || !McaEvCompatBridge.isDelegatedPickupHandledByMcaEvCompat()) {
+            return;
+        }
+
+        PickupFailure failure = pickupFailure(mcaVillager, player);
+        maybeSendPickupFailureMessage(player, mcaVillager, failure);
+        McaVampirismCompat.debugLog(
+                "[PICKUP] allowed capture failed source={} player={} villager={} reason={}",
+                source,
+                player.getName().getString(),
+                mcaVillager.getUUID(),
+                failure
+        );
+    }
+
     private static boolean isPickupAllowed(PlayerFaction playerFaction, PickupVillagerFaction villagerFaction) {
         if (villagerFaction == PickupVillagerFaction.UNKNOWN) {
             return true;
@@ -165,6 +192,30 @@ public final class McaFactionPickupPermissionService {
         player.displayClientMessage(Component.translatable(messageKey(reason)), true);
     }
 
+    private static PickupFailure pickupFailure(VillagerEntityMCA villager, Player player) {
+        if (villager.isSleeping()) {
+            return PickupFailure.SLEEPING;
+        }
+        if (!player.getMainHandItem().isEmpty() && player.getInventory().getFreeSlot() < 0) {
+            return PickupFailure.INVENTORY_FULL;
+        }
+        return PickupFailure.SNAPSHOT;
+    }
+
+    private static void maybeSendPickupFailureMessage(Player player, VillagerEntityMCA villager, PickupFailure failure) {
+        if (!McaVampirismCompatConfig.showPickupBlockedMessage()) {
+            return;
+        }
+        long gameTime = villager.level().getGameTime();
+        String key = player.getUUID() + "|" + villager.getUUID() + "|" + failure.name();
+        Long lastTick = LAST_MESSAGE_TICKS.get(key);
+        if (lastTick != null && gameTime - lastTick < MESSAGE_COOLDOWN_TICKS) {
+            return;
+        }
+        LAST_MESSAGE_TICKS.put(key, gameTime);
+        player.displayClientMessage(Component.translatable(messageKey(failure)), true);
+    }
+
     private static String messageKey(PickupBlockReason reason) {
         return switch (reason) {
             case CURING -> McaCompatMessages.PICKUP_BLOCKED_CURING;
@@ -174,11 +225,25 @@ public final class McaFactionPickupPermissionService {
         };
     }
 
+    private static String messageKey(PickupFailure failure) {
+        return switch (failure) {
+            case INVENTORY_FULL -> McaCompatMessages.PICKUP_FAILED_INVENTORY_FULL;
+            case SLEEPING -> McaCompatMessages.PICKUP_FAILED_SLEEPING;
+            case SNAPSHOT -> McaCompatMessages.PICKUP_FAILED_SNAPSHOT;
+        };
+    }
+
     public enum PickupBlockReason {
         NONE,
         CURING,
         ENEMY_FACTION,
         PROTECTED
+    }
+
+    private enum PickupFailure {
+        INVENTORY_FULL,
+        SLEEPING,
+        SNAPSHOT
     }
 
     private enum PickupVillagerFaction {

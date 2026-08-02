@@ -5,8 +5,8 @@ import com.guilh.mca_vampirism_compat.service.McaFactionCommandPermissionService
 import com.guilh.mca_vampirism_compat.service.McaVampireCureService;
 import com.guilh.mca_vampirism_compat.social.McaFactionSocialService;
 import com.guilh.mca_vampirism_compat.trade.McaFactionTradeService;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.interaction.VillagerCommandHandler;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.interaction.VillagerCommandHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;

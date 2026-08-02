@@ -5,17 +5,18 @@ import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerClassifier;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerType;
-import forge.net.mca.entity.VillagerEntityMCA;
+import net.conczin.mca.entity.VillagerEntityMCA;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 import java.util.Optional;
-import java.util.UUID;
 
 public final class McaSpecialVillagerAttributeService {
-    private static final UUID MOVEMENT_SPEED_UUID = UUID.fromString("dd2d0870-0f36-4ef2-8fbc-77d07e5b81f0");
+    private static final ResourceLocation MOVEMENT_SPEED_ID =
+            ResourceLocation.fromNamespaceAndPath("mca_vamp_compat", "special_villager_movement_speed");
 
     private McaSpecialVillagerAttributeService() {
     }
@@ -30,18 +31,18 @@ public final class McaSpecialVillagerAttributeService {
         if (speed == null) {
             return;
         }
-        Optional<VampiricVillagerState> state = villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).resolve();
-        AttributeModifier current = speed.getModifier(MOVEMENT_SPEED_UUID);
+        Optional<VampiricVillagerState> state = ModCapabilities.get(villager);
+        AttributeModifier current = speed.getModifier(MOVEMENT_SPEED_ID);
         if (!shouldHaveMovementModifier(type, multiplier)) {
             if (current != null) {
-                speed.removeModifier(MOVEMENT_SPEED_UUID);
+                speed.removeModifier(MOVEMENT_SPEED_ID);
             }
             state.ifPresent(VampiricVillagerState::clearMovementSpeedModifierApplied);
             return;
         }
 
         double amount = multiplier - 1.0D;
-        if (current != null && Double.compare(current.getAmount(), amount) == 0) {
+        if (current != null && Double.compare(current.amount(), amount) == 0) {
             state.ifPresent(value -> value.markMovementSpeedModifierApplied(type.name(), multiplier));
             return;
         }
@@ -50,13 +51,12 @@ public final class McaSpecialVillagerAttributeService {
             return;
         }
         if (current != null) {
-            speed.removeModifier(MOVEMENT_SPEED_UUID);
+            speed.removeModifier(MOVEMENT_SPEED_ID);
         }
         speed.addTransientModifier(new AttributeModifier(
-                MOVEMENT_SPEED_UUID,
-                "MCA special villager movement speed",
+                MOVEMENT_SPEED_ID,
                 amount,
-                AttributeModifier.Operation.MULTIPLY_TOTAL
+                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
         ));
         state.ifPresent(value -> value.markMovementSpeedModifierApplied(type.name(), multiplier));
     }
@@ -67,10 +67,10 @@ public final class McaSpecialVillagerAttributeService {
         }
         AttributeInstance speed = entity.getAttribute(Attributes.MOVEMENT_SPEED);
         if (speed != null) {
-            speed.removeModifier(MOVEMENT_SPEED_UUID);
+            speed.removeModifier(MOVEMENT_SPEED_ID);
         }
         if (entity instanceof VillagerEntityMCA villager) {
-            villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+            ModCapabilities.get(villager)
                     .ifPresent(VampiricVillagerState::clearMovementSpeedModifierApplied);
         }
     }
