@@ -130,7 +130,7 @@ tasks.register('releaseBundle', Sync) {
     from('LICENSE')
     from('README.md')
     from('CHANGELOG.md')
-    from("RELEASE_NOTES_${project.version}.md")
+    from('RELEASE_NOTES.md')
     from('CURSEFORGE_DESCRIPTION.md')
 
     doLast {

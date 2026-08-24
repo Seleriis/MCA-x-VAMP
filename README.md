@@ -322,6 +322,13 @@ The complete release bundle, including sources, notes and SHA-256 hashes, is gen
 build/release/mca-vamp-compat-1.21.1-2.1.7/
 ```
 
+## Release Notes
+
+[`RELEASE_NOTES.md`](RELEASE_NOTES.md) contains the current public release
+summary. The complete version history is kept in
+[`CHANGELOG.md`](CHANGELOG.md), so individual release-note files do not clutter
+the repository root.
+
 ## Runtime Marker
 
 Current implementation marker:
