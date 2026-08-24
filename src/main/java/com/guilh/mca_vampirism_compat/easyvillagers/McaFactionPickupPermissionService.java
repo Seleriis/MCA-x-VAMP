@@ -1,6 +1,8 @@
 package com.guilh.mca_vampirism_compat.easyvillagers;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
+import com.guilh.mca_vampirism_compat.advancement.McaCompatAdvancements;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.faction.PlayerFactionContext;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 public final class McaFactionPickupPermissionService {
     private static final long MESSAGE_COOLDOWN_TICKS = 40L;
+    private static final int MAX_TRACKED_MESSAGE_COOLDOWNS = 512;
     private static final Map<String, Long> LAST_MESSAGE_TICKS = new HashMap<>();
 
     private McaFactionPickupPermissionService() {
@@ -110,10 +113,18 @@ public final class McaFactionPickupPermissionService {
         if (!(villager instanceof VillagerEntityMCA mcaVillager)
                 || player == null
                 || player.level().isClientSide
-                || mcaVillager.isRemoved()
                 || !McaVampirismCompatConfig.enableEasyVillagersFactionRules()
                 || !McaVampirismCompatConfig.enableEasyVillagersFactionPickupRules()
                 || !McaEvCompatBridge.isDelegatedPickupHandledByMcaEvCompat()) {
+            return;
+        }
+
+        if (mcaVillager.isRemoved()) {
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
+                    && pickupVillagerFaction(McaSpecialVillagerClassifier.classify(mcaVillager)) != PickupVillagerFaction.HUMAN
+                    && pickupVillagerFaction(McaSpecialVillagerClassifier.classify(mcaVillager)) != PickupVillagerFaction.UNKNOWN) {
+                McaAdvancementService.award(serverPlayer, McaCompatAdvancements.FACTION_PICKUP);
+            }
             return;
         }
 
@@ -183,6 +194,7 @@ public final class McaFactionPickupPermissionService {
             return;
         }
         long gameTime = villager.level().getGameTime();
+        pruneMessageCooldowns(gameTime);
         String key = player.getUUID() + "|" + villager.getUUID() + "|" + reason.name();
         Long lastTick = LAST_MESSAGE_TICKS.get(key);
         if (lastTick != null && gameTime - lastTick < MESSAGE_COOLDOWN_TICKS) {
@@ -207,6 +219,7 @@ public final class McaFactionPickupPermissionService {
             return;
         }
         long gameTime = villager.level().getGameTime();
+        pruneMessageCooldowns(gameTime);
         String key = player.getUUID() + "|" + villager.getUUID() + "|" + failure.name();
         Long lastTick = LAST_MESSAGE_TICKS.get(key);
         if (lastTick != null && gameTime - lastTick < MESSAGE_COOLDOWN_TICKS) {
@@ -214,6 +227,18 @@ public final class McaFactionPickupPermissionService {
         }
         LAST_MESSAGE_TICKS.put(key, gameTime);
         player.displayClientMessage(Component.translatable(messageKey(failure)), true);
+    }
+
+    private static void pruneMessageCooldowns(long gameTime) {
+        if (LAST_MESSAGE_TICKS.size() < MAX_TRACKED_MESSAGE_COOLDOWNS) {
+            return;
+        }
+        LAST_MESSAGE_TICKS.entrySet().removeIf(
+                entry -> gameTime - entry.getValue() >= MESSAGE_COOLDOWN_TICKS
+        );
+        if (LAST_MESSAGE_TICKS.size() >= MAX_TRACKED_MESSAGE_COOLDOWNS) {
+            LAST_MESSAGE_TICKS.clear();
+        }
     }
 
     private static String messageKey(PickupBlockReason reason) {

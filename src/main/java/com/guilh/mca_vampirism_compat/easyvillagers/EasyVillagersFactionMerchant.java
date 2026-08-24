@@ -64,12 +64,13 @@ public final class EasyVillagersFactionMerchant implements Merchant, EntityBacke
 
     @Override
     public MerchantOffers getOffers() {
-        return session.adjustedOffers();
+        return session.offers();
     }
 
     @Override
     public void overrideOffers(MerchantOffers offers) {
-        // The Easy Villagers wrapper owns copied offers for this menu only.
+        // Offers remain owned by the stored villager. Replacing them from a
+        // client menu would desynchronize its persisted Easy Villagers stack.
     }
 
     @Override

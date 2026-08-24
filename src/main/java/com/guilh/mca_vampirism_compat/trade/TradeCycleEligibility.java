@@ -8,13 +8,6 @@ import net.minecraft.world.item.trading.MerchantOffers;
 public final class TradeCycleEligibility {
     private static final String CYCLE_LOCK_KEY = "McaVampCompatTradeCycleLocked";
 
-    /*
-     * mca-ev-compat gives a stored MCA villager one synthetic profession XP
-     * so its profession remains stable. Treat that value as untraded while
-     * still rejecting villagers with genuine trade progress.
-     */
-    private static final int MAX_UNTRADED_XP = 1;
-
     private TradeCycleEligibility() {
     }
 
@@ -24,16 +17,13 @@ public final class TradeCycleEligibility {
         }
         return isAvailable(
                 closed,
-                villager.showProgressBar(),
-                villager.getVillagerXp(),
                 villager.getPersistentData().getBoolean(CYCLE_LOCK_KEY),
                 offers
         );
     }
 
-    static boolean isAvailable(boolean closed, boolean showProgressBar, int villagerXp,
-                               boolean explicitlyLocked, MerchantOffers offers) {
-        if (closed || !showProgressBar || explicitlyLocked || villagerXp > MAX_UNTRADED_XP) {
+    static boolean isAvailable(boolean closed, boolean explicitlyLocked, MerchantOffers offers) {
+        if (closed || explicitlyLocked) {
             return false;
         }
         if (offers == null) {

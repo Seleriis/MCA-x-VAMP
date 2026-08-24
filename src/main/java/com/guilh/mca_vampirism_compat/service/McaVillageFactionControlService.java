@@ -7,7 +7,6 @@ import com.guilh.mca_vampirism_compat.service.faction.hunter.McaHunterAggression
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import de.teamlapen.vampirism.api.entity.factions.IFaction;
 import de.teamlapen.vampirism.api.world.ITotem;
-import de.teamlapen.vampirism.util.TotemHelper;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.core.BlockPos;
@@ -177,13 +176,30 @@ public final class McaVillageFactionControlService {
         }
     }
 
+    /**
+     * Reconciles only loaded MCA villagers after the compat-effective bounds
+     * change. Capture keeps calling the native-area method above on purpose.
+     */
+    public static void syncVillagersForEffectiveBoundsChange(ServerLevel level, AABB previousArea, AABB currentArea) {
+        if (level == null) {
+            return;
+        }
+        AABB affectedArea = McaVillageEffectBounds.union(previousArea, currentArea);
+        if (affectedArea == null) {
+            return;
+        }
+        for (VillagerEntityMCA villager : level.getEntitiesOfClass(VillagerEntityMCA.class, affectedArea)) {
+            syncHunterTraitFromVillageControl(villager);
+        }
+    }
+
     public static boolean isHunterControlledTotem(ITotem totem) {
         return totem != null && isHunterFaction(totem.getControllingFaction());
     }
 
     private static Optional<ITotem> findTotemNear(ServerLevel level, BlockPos pos) {
         try {
-            return TotemHelper.getTotemNearPos(level, pos, false)
+            return McaVillageEffectBoundsService.findActiveTotemAt(level, pos)
                     .map(totem -> (ITotem) totem);
         } catch (RuntimeException | LinkageError exception) {
             McaVampirismCompat.debugLog(
@@ -199,7 +215,7 @@ public final class McaVillageFactionControlService {
         if (!isHunterControlledTotem(totem)) {
             return false;
         }
-        AABB area = totem.getVillageArea();
+        AABB area = McaVillageEffectBoundsService.getEffectiveArea(totem);
         return area == null || area.contains(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
     }
 

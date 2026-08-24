@@ -1,6 +1,8 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
+import com.guilh.mca_vampirism_compat.advancement.McaCompatAdvancements;
 import com.guilh.mca_vampirism_compat.appearance.McaVampireAppearanceHandler;
 import com.guilh.mca_vampirism_compat.attribute.McaVampireAttributeHandler;
 import com.guilh.mca_vampirism_compat.attribute.McaSpecialVillagerAttributeService;
@@ -286,11 +288,40 @@ public final class McaVampireStateService {
             if (source != null) {
                 state.setSource(source);
             }
+            if (villager.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                // The editor and village capture can also call markConverted;
+                // only a recorded player conversion bite earns this progress.
+                state.getLastVampirePlayerBiteUuid().ifPresent(playerId -> McaAdvancementService.awardOrQueue(
+                        serverLevel.getServer(), playerId, McaCompatAdvancements.VAMPIRE_CONVERSION));
+            }
             McaVampirismCompat.debugLog("[STATE] markConverted villager={} source={}", villager.getUUID(), source);
         });
         McaSpecialStateNormalizer.normalize(villager);
         ensureVampireState(villager);
         McaVillageVampireThreatService.recordConversionThreat(villager);
+    }
+
+    /**
+     * Removes every vampire-specific marker without creating the post-cure
+     * grace window. This is used by an explicit MCA editor change, which is an
+     * immediate administrative transformation rather than the gameplay cure.
+     */
+    public static void clearVampireState(VillagerEntityMCA villager, String reason) {
+        if (villager == null || villager.level().isClientSide) {
+            return;
+        }
+        McaVampireAppearanceHandler.restoreOriginalAppearance(villager);
+        ModCapabilities.get(villager).ifPresent(state -> state.clearVampirismAfterCure());
+        McaTraitBridge.removeVampireTrait(villager);
+        villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
+        McaVampireAttributeHandler.removeVampireAttributes(villager);
+        McaSpecialVillagerAttributeService.applyMovementSpeedForState(villager);
+        McaVampireNightScheduleService.process(villager);
+        McaVampirismCompat.debugLog(
+                "[STATE] cleared vampire state villager={} reason={}",
+                villager.getUUID(),
+                reason
+        );
     }
 
     public static void markInfected(VillagerEntityMCA villager, UUID source, long gameTime) {

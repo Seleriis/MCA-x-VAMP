@@ -19,11 +19,24 @@ public final class McaSpecialVillagerRuntimeService {
         if (villager == null || villager.level().isClientSide) {
             return;
         }
+        synchronizeNow(villager);
+    }
+
+    /**
+     * Reuses the safe lifecycle reconciliation after an administrator asks for
+     * a repair. It deliberately derives all decisions from existing state,
+     * traits and village control instead of granting a faction itself.
+     */
+    public static void synchronizeNow(VillagerEntityMCA villager) {
+        if (villager == null || villager.level().isClientSide) {
+            return;
+        }
         McaTraitBridge.migrateLegacyTraitIds(villager);
         synchronizeState(villager);
         McaSpecialVillagerAttributeService.applyMovementSpeedForState(villager);
         McaSpecialVillagerCombatService.registerGoalsIfNeeded(villager);
         McaDefensiveVillagerService.reconcileHunterWeapon(villager);
+        McaVampireNightScheduleService.process(villager);
     }
 
     public static void onTick(VillagerEntityMCA villager) {
@@ -48,6 +61,7 @@ public final class McaSpecialVillagerRuntimeService {
         McaVampireCureService.processCureTick(villager);
         McaWerewolfVillagerService.processWerewolfTick(villager);
         McaVampireGrowthHandler.processGrowth(villager);
+        McaVampireNightScheduleService.process(villager);
         McaVampireShelterService.process(villager);
         McaVampireSunlightHandler.processSunlightDamage(villager);
 
@@ -101,6 +115,7 @@ public final class McaSpecialVillagerRuntimeService {
                 || state.isOriginalMainHandItemSaved()
                 || state.isOriginalAppearanceSaved()
                 || state.isVampireAppearanceApplied()
+                || state.isVampireNightScheduleApplied()
                 || state.isCuringVampire()
                 || state.isCuringWerewolf();
     }

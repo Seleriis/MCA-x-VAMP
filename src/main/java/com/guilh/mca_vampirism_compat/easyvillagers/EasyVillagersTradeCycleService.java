@@ -1,6 +1,7 @@
 package com.guilh.mca_vampirism_compat.easyvillagers;
 
-import com.guilh.mca_vampirism_compat.trade.McaVampireMerchantSession;
+import com.guilh.mca_vampirism_compat.trade.McaFactionTradeSession;
+import com.guilh.mca_vampirism_compat.trade.McaNativeTradeCycleSession;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class EasyVillagersTradeCycleService {
@@ -18,6 +19,9 @@ public final class EasyVillagersTradeCycleService {
         if (EasyVillagersFactionMerchantSession.handleCycleTrades(player)) {
             return true;
         }
-        return McaVampireMerchantSession.handleCycleTrades(player);
+        if (McaFactionTradeSession.handleCycleTrades(player)) {
+            return true;
+        }
+        return McaNativeTradeCycleSession.handleCycleTrades(player);
     }
 }

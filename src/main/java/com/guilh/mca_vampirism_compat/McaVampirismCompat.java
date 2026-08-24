@@ -8,12 +8,15 @@ import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.gametest.McaVampCompatGameTests;
 import com.guilh.mca_vampirism_compat.network.ModNetwork;
 import com.guilh.mca_vampirism_compat.registry.ModItems;
+import com.guilh.mca_vampirism_compat.registry.ModSpecialistWorkstations;
+import com.guilh.mca_vampirism_compat.service.McaVillageEffectBoundsService;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.mojang.logging.LogUtils;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.minecraft.world.item.ItemStack;
@@ -23,8 +26,8 @@ import org.slf4j.Logger;
 public class McaVampirismCompat {
     public static final String MOD_ID = "mca_vamp_compat";
     public static final String LEGACY_DATA_NAMESPACE = "mca_vampirism_compat";
-    public static final String VERSION = "2.0.12";
-    public static final String BUILD_MARKER = "2.0.12-neoforge-1.21.1";
+    public static final String VERSION = "2.1.2";
+    public static final String BUILD_MARKER = "2.1.2-neoforge-1.21.1-mca-7.7.36";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public McaVampirismCompat(IEventBus modBus, ModContainer modContainer) {
@@ -33,7 +36,9 @@ public class McaVampirismCompat {
 
         ModAttachments.register(modBus);
         ModItems.register(modBus);
+        ModSpecialistWorkstations.register(modBus);
         modBus.addListener(this::registerCapabilities);
+        modBus.addListener(this::onCommonConfigReloading);
         modBus.addListener(McaVampCompatGameTests::register);
         modBus.addListener(ModNetwork::registerPayloads);
         modContainer.registerConfig(
@@ -54,6 +59,12 @@ public class McaVampirismCompat {
 
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
         ModCapabilities.register(event);
+    }
+
+    private void onCommonConfigReloading(ModConfigEvent.Reloading event) {
+        if (event.getConfig().getType() == ModConfig.Type.COMMON) {
+            McaVillageEffectBoundsService.refreshTrackedTotems();
+        }
     }
 
     public static void debugLog(String message, Object... args) {

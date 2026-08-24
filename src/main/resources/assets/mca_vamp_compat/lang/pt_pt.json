@@ -1,18 +1,105 @@
 {
   "trait.vampirism_mca_compat:vampire": "Vampiro",
   "traitDescription.vampirism_mca_compat:vampire": "Este aldeão é um vampiro.",
+  "trait.vampirism_mca_compat.vampire": "Vampiro",
+  "traitDescription.vampirism_mca_compat.vampire": "Este aldeão é um vampiro.",
   "trait.vampirism_mca_compat:werewolf": "Lobisomem",
   "traitDescription.vampirism_mca_compat:werewolf": "Este aldeão é um lobisomem.",
+  "trait.vampirism_mca_compat.werewolf": "Lobisomem",
+  "traitDescription.vampirism_mca_compat.werewolf": "Este aldeão é um lobisomem.",
   "trait.vampirism_mca_compat:hunter": "Caçador",
   "traitDescription.vampirism_mca_compat:hunter": "Este aldeão está alinhado com os caçadores.",
-  "trait.VAMPIRISM_MCA_COMPAT:VAMPIRE": "Vampiro (a migrar)",
-  "trait.VAMPIRISM_MCA_COMPAT:WEREWOLF": "Lobisomem (a migrar)",
-  "trait.VAMPIRISM_MCA_COMPAT:HUNTER": "Caçador (a migrar)",
+  "trait.vampirism_mca_compat.hunter": "Caçador",
+  "traitDescription.vampirism_mca_compat.hunter": "Este aldeão está alinhado com os caçadores.",
   "item.mca_vamp_compat.book_occult_arts": "Livro das Artes Ocultas",
   "message.mca_vamp_compat.occult_arts.main_hand": "Segura o Livro das Artes Ocultas na mão principal para o abrir.",
+  "mca_vamp_compat.bite.already_vampire": "Este aldeão já é um vampiro.",
+  "mca_vamp_compat.bite.vampire_cannot_be_drained": "Vampiros não podem sugar o sangue de outros vampiros.",
+  "mca_vamp_compat.command.blocked.curing": "Este aldeão não pode receber ordens enquanto está em recuperação.",
+  "mca_vamp_compat.command.blocked.enemy_faction": "Não podes dar ordens a aldeões de uma fação inimiga.",
+  "mca_vamp_compat.command.blocked.own_faction": "Este aldeão só obedece a membros da própria fação.",
+  "mca_vamp_compat.cure.completed": "%s foi curado do vampirismo.",
+  "mca_vamp_compat.cure.in_progress": "Este aldeão está em recuperação.",
+  "mca_vamp_compat.cure.infection_treated": "Trataste a infeção vampírica de %s.",
+  "mca_vamp_compat.cure.milk_not_enough": "O leite não cura um aldeão que já se transformou em vampiro.",
+  "mca_vamp_compat.cure.started": "%s começou a recuperar do vampirismo.",
+  "mca_vamp_compat.cure.weakness_required": "Este aldeão vampiro precisa primeiro de Fraqueza durante 4:00.",
+  "mca_vamp_compat.cure.werewolf.completed": "%s foi curado da licantropia.",
+  "mca_vamp_compat.cure.werewolf.in_progress": "Este aldeão está em recuperação.",
+  "mca_vamp_compat.cure.werewolf.started": "%s começou a recuperar da licantropia.",
+  "mca_vamp_compat.pickup.blocked.curing": "Não podes guardar este aldeão enquanto está em recuperação.",
+  "mca_vamp_compat.pickup.blocked.enemy_faction": "Não podes guardar aldeões de uma fação inimiga.",
+  "mca_vamp_compat.pickup.blocked.protected": "Este aldeão está protegido pela sua fação.",
+  "mca_vamp_compat.social.blocked.hunter": "Este aldeão vampiro não confia em Caçadores.",
+  "mca_vamp_compat.social.blocked.werewolf": "Este aldeão vampiro não confia em Lobisomens transformados.",
+  "mca_vamp_compat.social.hunter_blocked.vampire": "Este aldeão Caçador não confia em Vampiros.",
+  "mca_vamp_compat.social.hunter_blocked.werewolf": "Este aldeão Caçador não confia em Lobisomens transformados.",
+  "mca_vamp_compat.social.hunter_marriage_blocked.vampire": "Este aldeão Caçador não aceita casar-se com Vampiros.",
+  "mca_vamp_compat.social.hunter_marriage_blocked.werewolf": "Este aldeão Caçador não aceita casar-se com Lobisomens transformados.",
+  "mca_vamp_compat.social.hunter_penalty.vampire": "Este aldeão Caçador sente algo perigoso em ti.",
+  "mca_vamp_compat.social.hunter_penalty.werewolf": "Este aldeão Caçador desconfia da tua natureza.",
+  "mca_vamp_compat.social.marriage_blocked.hunter": "Este aldeão vampiro não aceita casar-se com inimigos da fação dos Vampiros.",
+  "mca_vamp_compat.social.marriage_blocked.werewolf": "Este aldeão vampiro não aceita casar-se com Lobisomens transformados.",
+  "mca_vamp_compat.social.penalty.human": "Este aldeão vampiro parece um pouco desconfiado.",
+  "mca_vamp_compat.social.penalty.hunter": "Este aldeão vampiro sente hostilidade em ti.",
+  "mca_vamp_compat.social.penalty.werewolf": "Este aldeão vampiro sente algo estranho em ti.",
+  "mca_vamp_compat.social.werewolf_blocked.hunter": "Este aldeão Lobisomem não confia em Caçadores.",
+  "mca_vamp_compat.social.werewolf_blocked.vampire": "Este aldeão Lobisomem não confia em Vampiros.",
+  "mca_vamp_compat.social.werewolf_marriage_blocked.hunter": "Este aldeão Lobisomem não aceita casar-se com Caçadores.",
+  "mca_vamp_compat.social.werewolf_marriage_blocked.vampire": "Este aldeão Lobisomem não aceita casar-se com Vampiros.",
+  "mca_vamp_compat.social.werewolf_penalty.hunter": "Este aldeão Lobisomem desconfia dos teus laços com os Caçadores.",
+  "mca_vamp_compat.social.werewolf_penalty.vampire": "Este aldeão Lobisomem sente perigo em ti.",
+  "mca_vamp_compat.trade.conversion_penalty_cleared": "A penalização da mordida desapareceu após a transformação.",
+  "mca_vamp_compat.trade.human_markup": "Os preços deste aldeão vampiro são mais altos para humanos.",
+  "mca_vamp_compat.trade.human_markup_active": "Este aldeão vampiro cobra mais a humanos.",
+  "mca_vamp_compat.trade.hunter_blocked": "Este aldeão vampiro recusa-se a negociar com Caçadores.",
+  "mca_vamp_compat.trade.hunter_blocked.generic": "Este aldeão Caçador recusa-se a negociar.",
+  "mca_vamp_compat.trade.hunter_blocked.vampire": "Este aldeão Caçador não negoceia com Vampiros.",
+  "mca_vamp_compat.trade.hunter_blocked.werewolf": "Este aldeão Caçador não negoceia com Lobisomens transformados.",
+  "mca_vamp_compat.trade.only_vampires": "Apenas Vampiros recebem preços justos deste aldeão.",
+  "mca_vamp_compat.trade.vampire_allowed": "O aldeão vampiro negoceia contigo normalmente.",
+  "mca_vamp_compat.trade.vampire_ally": "Este aldeão vampiro reconhece-te como aliado.",
+  "mca_vamp_compat.trade.werewolf_blocked": "Este aldeão vampiro não negoceia com Lobisomens.",
+  "mca_vamp_compat.trade.werewolf_blocked.generic": "Este aldeão Lobisomem recusa-se a negociar.",
+  "mca_vamp_compat.trade.werewolf_blocked.hunter": "Este aldeão Lobisomem não negoceia com Caçadores.",
+  "mca_vamp_compat.trade.werewolf_blocked.vampire": "Este aldeão Lobisomem não negoceia com Vampiros.",
+  "message.mca_vamp_compat.interaction.human_penalty": "O aldeão vampiro observa-te com desconfiança silenciosa.",
+  "message.mca_vamp_compat.interaction.hunter_hostility": "O aldeão vampiro reconhece um Caçador e recusa a interação.",
+  "message.mca_vamp_compat.interaction.vampire_friendly": "O aldeão vampiro reconhece um dos seus.",
+  "message.mca_vamp_compat.interaction.werewolf_hostility": "O aldeão vampiro recua e recusa lidar com um Lobisomem.",
   "advancement.mca_vamp_compat.discover_occult_village": "Segredos Além do Véu",
   "advancement.mca_vamp_compat.discover_occult_village.title": "Segredos Além do Véu",
   "advancement.mca_vamp_compat.discover_occult_village.description": "Encontraste uma aldeia tocada pelas artes ocultas.",
+  "advancement.mca_vamp_compat.vampire_infection.title": "Mordida da Noite",
+  "advancement.mca_vamp_compat.vampire_infection.description": "Transmite a doença vampírica a um aldeão MCA.",
+  "advancement.mca_vamp_compat.vampire_conversion.title": "Filho da Noite",
+  "advancement.mca_vamp_compat.vampire_conversion.description": "Vê um aldeão infetado por ti tornar-se Vampiro.",
+  "advancement.mca_vamp_compat.vampire_trade.title": "Mercado Noturno",
+  "advancement.mca_vamp_compat.vampire_trade.description": "Recebe o desconto de um aliado Vampiro.",
+  "advancement.mca_vamp_compat.hunter_blood.title": "Sangue Amargo",
+  "advancement.mca_vamp_compat.hunter_blood.description": "Descobre porque o sangue de um Caçador não deve ser provado.",
+  "advancement.mca_vamp_compat.vampire_specialist.title": "Altar da Inspiração",
+  "advancement.mca_vamp_compat.vampire_specialist.description": "Cria um Especialista de Vampiros pelo Trader.",
+  "advancement.mca_vamp_compat.hunter_trade.title": "O Preço da Proteção",
+  "advancement.mca_vamp_compat.hunter_trade.description": "Recebe o desconto de um aliado Caçador.",
+  "advancement.mca_vamp_compat.hunter_specialist.title": "Mesa da Vigília",
+  "advancement.mca_vamp_compat.hunter_specialist.description": "Cria um Caçador Especialista pelo Trader.",
+  "advancement.mca_vamp_compat.werewolf_infection.title": "Marca da Lua",
+  "advancement.mca_vamp_compat.werewolf_infection.description": "Transmite licantropia como Lobisomem transformado.",
+  "advancement.mca_vamp_compat.werewolf_conversion.title": "Chamado da Alcateia",
+  "advancement.mca_vamp_compat.werewolf_conversion.description": "Vê um aldeão infetado por ti tornar-se Lobisomem.",
+  "advancement.mca_vamp_compat.werewolf_trade.title": "Mercado da Alcateia",
+  "advancement.mca_vamp_compat.werewolf_trade.description": "Recebe o desconto de um aliado Lobisomem.",
+  "advancement.mca_vamp_compat.werewolf_specialist.title": "Altar de Pedra",
+  "advancement.mca_vamp_compat.werewolf_specialist.description": "Cria um Especialista em Lobisomens pelo Trader.",
+  "advancement.mca_vamp_compat.treat_early_infection.title": "Ainda Há Esperança",
+  "advancement.mca_vamp_compat.treat_early_infection.description": "Trata uma infeção vampírica inicial com leite.",
+  "advancement.mca_vamp_compat.complete_cure.title": "Quebrar a Maldição",
+  "advancement.mca_vamp_compat.complete_cure.description": "Conclui a cura de um Vampiro ou Lobisomem.",
+  "advancement.mca_vamp_compat.inherited_baby.title": "Legado do Véu",
+  "advancement.mca_vamp_compat.inherited_baby.description": "Recebe uma criança que herdou uma natureza oculta.",
+  "advancement.mca_vamp_compat.faction_safe_carrying.title": "Sob a Mesma Proteção",
+  "advancement.mca_vamp_compat.faction_safe_carrying.description": "Guarda em segurança um aldeão de fação aliada.",
   "book.mca_vamp_compat.occult_arts.title": "Livro das Artes Ocultas",
   "book.mca_vamp_compat.occult_arts.author": "Seleris, a Cronista do Véu",
   "book.mca_vamp_compat.occult_arts.page.02.title": "Antes de começar",
@@ -36,7 +123,7 @@
   "book.mca_vamp_compat.occult_arts.page.11.title": "Transformação vampírica",
   "book.mca_vamp_compat.occult_arts.page.11.body": "Quando a transformação termina, o aldeão passa a possuir alguns dos poderes e hábitos de um Vampiro. Para voltar a ser humano, será necessário realizar a cura.",
   "book.mca_vamp_compat.occult_arts.page.12.title": "O perigo do sol",
-  "book.mca_vamp_compat.occult_arts.page.12.body": "Durante o dia, os Vampiros tentam encontrar um lugar seguro. Um teto, um capacete, água ou chuva podem protegê-los. Também podem continuar a seguir ordens ou a lutar quando necessário.",
+  "book.mca_vamp_compat.occult_arts.page.12.body": "Durante o dia, os Vampiros procuram a própria cama para descansar e trabalham à noite. Um teto, capacete, água ou chuva ainda os podem proteger. Continuam a seguir ordens e a lutar quando necessário.",
   "book.mca_vamp_compat.occult_arts.page.13.title": "A marca da lua",
   "book.mca_vamp_compat.occult_arts.page.13.body": "Ataques de Lobisomens podem transmitir licantropia. A transformação pode demorar algum tempo. Crianças normalmente não podem ser mordidas, mas ainda podem herdar a natureza dos pais.",
   "book.mca_vamp_compat.occult_arts.page.14.title": "Velhas rivalidades",
@@ -70,10 +157,105 @@
   "book.mca_vamp_compat.occult_arts.page.28.title": "EV — Guardar aldeões",
   "book.mca_vamp_compat.occult_arts.page.28.body": "Ao colocar um aldeão dentro de um bloco do Easy Villagers, a sua fação e aparência são mantidas. Inimigos podem ser impedidos de o capturar. Aldeões em processo de cura também não podem ser movidos.",
   "book.mca_vamp_compat.occult_arts.page.29.title": "EV — Trader e Converter",
-  "book.mca_vamp_compat.occult_arts.page.29.body": "O Trader mantém os descontos e as recusas de cada fação. O Converter também aplica descontos nas trocas, e esses descontos podem ser acumulados.",
+  "book.mca_vamp_compat.occult_arts.page.29.body": "O Trader mantém os descontos e as recusas. Usa o Altar da Inspiração, a Mesa de Pesquisa ou o Altar de Pedra para especializar Vampiros, Caçadores e Lobisomens.",
   "book.mca_vamp_compat.occult_arts.page.30.title": "Bebés e edição",
   "book.mca_vamp_compat.occult_arts.page.30.body": "O Breeder e o Incubator mantêm a natureza herdada pelo bebé. O livro de edição do MCA também pode ser usado normalmente. Depois de editar, guardar ou recolocar um aldeão, confirma se a sua natureza continua correta."
   ,"mca_vamp_compat.pickup.failed.inventory_full": "Liberta um espaço no inventário antes de guardar este aldeão."
   ,"mca_vamp_compat.pickup.failed.sleeping": "Acorda este aldeão antes de o guardar."
   ,"mca_vamp_compat.pickup.failed.snapshot": "Não foi possível guardar este aldeão em segurança. Tenta novamente dentro de instantes."
+  ,"mca_vamp_compat.specialist.requires_vampire": "Apenas um aldeão Vampiro pode tornar-se Especialista de Vampiros."
+  ,"mca_vamp_compat.specialist.requires_hunter": "Apenas um aldeão Caçador pode tornar-se Caçador Especialista."
+  ,"mca_vamp_compat.specialist.requires_werewolf": "Apenas um aldeão Lobisomem pode tornar-se Especialista em Lobisomens."
+  ,"mca_vamp_compat.admin.error.not_mca_villager": "O alvo tem de ser um aldeão do MCA."
+  ,"mca_vamp_compat.admin.error.villager_not_found": "Nenhum aldeão MCA carregado tem o nome \"%s\"."
+  ,"mca_vamp_compat.admin.error.villager_ambiguous": "Há %2$s aldeões MCA carregados chamados \"%1$s\". Usa o UUID ou um seletor para escolher apenas um."
+  ,"mca_vamp_compat.admin.error.not_active_totem": "Não existe um totem especial ativo nessa posição."
+  ,"mca_vamp_compat.admin.error.player_required": "Este comando tem de ser executado por um jogador."
+  ,"mca_vamp_compat.admin.help.header": "Comandos administrativos do MCA x Vampirism Compat:"
+  ,"mca_vamp_compat.admin.help.inspect": "/mca_vamp_compat inspect <nome, UUID ou seletor> — mostra o estado de fação do aldeão."
+  ,"mca_vamp_compat.admin.help.resync": "/mca_vamp_compat resync <nome, UUID ou seletor> — reaplica em segurança o estado guardado."
+  ,"mca_vamp_compat.admin.help.village": "/mca_vamp_compat village — mostra os comandos de diagnóstico da aldeia."
+  ,"mca_vamp_compat.admin.help.village_header": "Diagnóstico de aldeias especiais:"
+  ,"mca_vamp_compat.admin.help.village_info": "/mca_vamp_compat village info [posição do totem] — mostra os limites atuais."
+  ,"mca_vamp_compat.admin.help.village_outline": "/mca_vamp_compat village outline [posição do totem] [segundos] — desenha o contorno temporário."
+  ,"mca_vamp_compat.admin.inspect.header": "Diagnóstico de %s"
+  ,"mca_vamp_compat.admin.inspect.faction": "Fação efetiva: %s | origem do estado: %s"
+  ,"mca_vamp_compat.admin.inspect.traits": "Traços — Vampiro: %s | Caçador: %s | Lobisomem: %s"
+  ,"mca_vamp_compat.admin.inspect.profession": "Profissão: %s | Cycle Trades disponível: %s"
+  ,"mca_vamp_compat.admin.inspect.no_state": "Estado do compat: ainda não foi associado."
+  ,"mca_vamp_compat.admin.inspect.infection": "Vampiro — infetado: %s, convertido: %s, fonte: %s | Lobisomem — infetado: %s, convertido: %s, fonte: %s"
+  ,"mca_vamp_compat.admin.inspect.cure": "Cura — vampiro: %s (fim: %s) | lobisomem: %s (fim: %s)"
+  ,"mca_vamp_compat.admin.inspect.runtime": "Aparência — vampiro: %s, lobisomem: %s | rotina noturna: %s (%s) | mão original guardada: %s, mão: %s"
+  ,"mca_vamp_compat.admin.inspect.hunter": "Caçador — alinhado: %s, por aldeia: %s, defensivo: %s, traço aplicado: %s | herança processada: %s"
+  ,"mca_vamp_compat.admin.resync.result": "Reconciliação concluída: %s aldeão(ões) reparado(s), %s alvo(s) ignorado(s)."
+  ,"mca_vamp_compat.admin.village.header": "Totem em %s | fação: %s"
+  ,"mca_vamp_compat.admin.village.native": "Área nativa: %s"
+  ,"mca_vamp_compat.admin.village.effective": "Área efetiva do compat: %s"
+  ,"mca_vamp_compat.admin.village.fog": "Faixa aplicada à névoa: %s"
+  ,"mca_vamp_compat.admin.village.mca": "Usa limites MCA: %s | aldeia MCA: %s | área MCA: %s"
+  ,"mca_vamp_compat.admin.village.fog_margin": "Configuração — seguir limites MCA: %s | margem do nevoeiro: %s blocos"
+  ,"mca_vamp_compat.admin.village.outline_started": "Contorno da área efetiva ativado por %s segundos para o totem em %s."
+  ,"mca_vamp_compat.dialogue.vampire.greeting": "%s baixa a voz: “A noite escuta sempre.”"
+  ,"mca_vamp_compat.dialogue.vampire.trade_refused": "%s desvia o olhar, fiel às velhas regras da noite."
+  ,"mca_vamp_compat.dialogue.vampire.social_refused": "%s mantém-se distante; velhas rivalidades não desaparecem depressa."
+  ,"mca_vamp_compat.dialogue.vampire.cure_started": "%s respira fundo enquanto a marca da noite começa a enfraquecer."
+  ,"mca_vamp_compat.dialogue.vampire.cure_completed": "%s abre os olhos para um novo amanhecer."
+  ,"mca_vamp_compat.dialogue.hunter.greeting": "%s observa os arredores: “Fica atento às sombras.”"
+  ,"mca_vamp_compat.dialogue.hunter.trade_refused": "%s mantém a mão perto do forcado e recusa a negociação."
+  ,"mca_vamp_compat.dialogue.hunter.social_refused": "%s não baixa a guarda perante um possível inimigo."
+  ,"mca_vamp_compat.dialogue.hunter.cure_started": "%s vigia em silêncio enquanto a cura começa."
+  ,"mca_vamp_compat.dialogue.hunter.cure_completed": "%s reconhece que a recuperação chegou ao fim."
+  ,"mca_vamp_compat.dialogue.werewolf.greeting": "%s fareja o ar: “A lua conhece todos os caminhos.”"
+  ,"mca_vamp_compat.dialogue.werewolf.trade_refused": "%s recua, guiado pelo instinto da alcateia."
+  ,"mca_vamp_compat.dialogue.werewolf.social_refused": "%s deixa claro que a confiança tem de ser conquistada."
+  ,"mca_vamp_compat.dialogue.werewolf.cure_started": "%s luta contra a marca da lua enquanto a cura começa."
+  ,"mca_vamp_compat.dialogue.werewolf.cure_completed": "%s acalma-se quando a marca da lua desaparece."
+  ,"advancement.mca_vamp_compat.vampire_village_favor.title": "Favor da Noite"
+  ,"advancement.mca_vamp_compat.vampire_village_favor.description": "Conclui um pedido de uma aldeia Vampira."
+  ,"advancement.mca_vamp_compat.hunter_village_favor.title": "Favor da Vigília"
+  ,"advancement.mca_vamp_compat.hunter_village_favor.description": "Conclui um pedido de uma aldeia de Caçadores."
+  ,"advancement.mca_vamp_compat.werewolf_village_favor.title": "Favor da Alcateia"
+  ,"advancement.mca_vamp_compat.werewolf_village_favor.description": "Conclui um pedido de uma aldeia de Lobisomens."
+  ,"advancement.mca_vamp_compat.urgent_hunter_aid.title": "Esperança Antes da Noite"
+  ,"advancement.mca_vamp_compat.urgent_hunter_aid.description": "Salva com leite um morador infectado de uma aldeia de Caçadores."
+  ,"book.mca_vamp_compat.occult_arts.page.31.title": "Favores da Aldeia"
+  ,"book.mca_vamp_compat.occult_arts.page.31.body": "Moradores de aldeias especiais às vezes precisam de ajuda. Pergunta “Precisas de ajuda?” enquanto falas com eles. Se aceitares um favor, volta antes de o prazo acabar. Podes consultar ou desistir falando novamente com a mesma pessoa. A ajuda rende 5 corações."
+  ,"dialogue.main.occult_favor_offer": "Precisas de ajuda?"
+  ,"dialogue.main.occult_favor_status": "Sobre o favor"
+  ,"dialogue.occult_favor_pending": "Favor da Aldeia"
+  ,"dialogue.occult_favor_pending.accept": "Eu ajudo."
+  ,"dialogue.occult_favor_pending.decline": "Agora não."
+  ,"dialogue.occult_favor_active": "Favor em curso"
+  ,"dialogue.occult_favor_active.progress": "Como vai o favor?"
+  ,"dialogue.occult_favor_active.cancel": "Não consigo continuar."
+  ,"mca_vamp_compat.village_mission.not_enough": "Ainda precisas de %1$s × %2$s."
+  ,"mca_vamp_compat.village_mission.completed": "Favor concluído! +%1$s corações."
+  ,"mca_vamp_compat.village_mission.vampire_blood.request": "A minha reserva de sangue está baixa. Podes trazer %1$s × %2$s?"
+  ,"mca_vamp_compat.village_mission.vampire_blood.accepted": "Óptimo. Vou esperar por %1$s × %2$s. Restam %3$s."
+  ,"mca_vamp_compat.village_mission.vampire_blood.active": "Ainda preciso de %1$s × %2$s. Restam %3$s."
+  ,"mca_vamp_compat.village_mission.vampire_blood.item": "Frasco de Sangue cheio"
+  ,"mca_vamp_compat.village_mission.vampire_fang.request": "Uma %2$s faria muita falta por aqui. Podes encontrar uma?"
+  ,"mca_vamp_compat.village_mission.vampire_fang.accepted": "Óptimo. Vou esperar pela %2$s. Restam %3$s."
+  ,"mca_vamp_compat.village_mission.vampire_fang.active": "Ainda preciso de uma %2$s. Restam %3$s."
+  ,"mca_vamp_compat.village_mission.hunter_garlic.request": "Estamos a ficar sem %2$s. Podes trazer %1$s × %2$s?"
+  ,"mca_vamp_compat.village_mission.hunter_garlic.accepted": "Óptimo. Vou esperar por %1$s × %2$s. Restam %3$s."
+  ,"mca_vamp_compat.village_mission.hunter_garlic.active": "Ainda preciso de %1$s × %2$s. Restam %3$s."
+  ,"mca_vamp_compat.village_mission.hunter_garlic_injection.request": "Uma %2$s pode ser importante agora. Consegues uma?"
+  ,"mca_vamp_compat.village_mission.hunter_garlic_injection.accepted": "Óptimo. Vou esperar pela %2$s. Restam %3$s."
+  ,"mca_vamp_compat.village_mission.hunter_garlic_injection.active": "Ainda preciso de uma %2$s. Restam %3$s."
+  ,"mca_vamp_compat.village_mission.hunter_urgent_aid.request": "Por favor… preciso de leite."
+  ,"mca_vamp_compat.village_mission.hunter_urgent_aid.accepted": "Obrigado. Vou esperar pelo leite. Restam %1$s."
+  ,"mca_vamp_compat.village_mission.hunter_urgent_aid.active": "Ainda preciso de leite. Restam %1$s."
+  ,"mca_vamp_compat.village_mission.werewolf_mutton.request": "A alcateia está com fome. Podes trazer %1$s × %2$s?"
+  ,"mca_vamp_compat.village_mission.werewolf_mutton.accepted": "Óptimo. Vou esperar por %1$s × %2$s. Restam %3$s."
+  ,"mca_vamp_compat.village_mission.werewolf_mutton.active": "Ainda preciso de %1$s × %2$s. Restam %3$s."
+  ,"mca_vamp_compat.village_mission.dialogue.declined": "Está bem. Talvez noutra altura."
+  ,"mca_vamp_compat.village_mission.dialogue.canceled": "Está bem. Procurarei outra ajuda."
+  ,"mca_vamp_compat.village_mission.expired": "O prazo deste favor acabou."
+  ,"mca_vamp_compat.village_mission.time.days": "%s dias"
+  ,"mca_vamp_compat.village_mission.time.minutes": "%s minutos"
+  ,"mca_vamp_compat.village_mission.time.none": "sem prazo"
+  ,"mca_vamp_compat.cure.garlic_relation_loss": "A injeção dói. Relação: -%s corações."
+  ,"mca_vamp_compat.gift.rejected.vampire": "Isto não serve para alguém da noite."
+  ,"mca_vamp_compat.gift.rejected.werewolf": "O meu instinto não aceita isto como alimento."
 }

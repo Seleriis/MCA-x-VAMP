@@ -27,7 +27,7 @@ if (compatProfile in ['easy', 'all']) {
     optionalRuntimeMods += "${localCompileLibs}/easy-villagers-neoforge-${easy_villagers_version}.jar"
 }
 if (compatProfile == 'all') {
-    optionalRuntimeMods += "${localCompileLibs}/mca-ev-compat-${mca_ev_compat_version}.jar"
+    optionalRuntimeMods += "${localCompileLibs}/mca-ev-compat-${mca_ev_compat_file_version}.jar"
 }
 
 neoForge {
@@ -65,7 +65,7 @@ dependencies {
     compileOnly files(
             "${localCompileLibs}/Werewolves-${werewolves_version}.jar",
             "${localCompileLibs}/easy-villagers-neoforge-${easy_villagers_version}.jar",
-            "${localCompileLibs}/mca-ev-compat-${mca_ev_compat_version}.jar"
+            "${localCompileLibs}/mca-ev-compat-${mca_ev_compat_file_version}.jar"
     )
     runtimeOnly files(optionalRuntimeMods)
     testImplementation platform('org.junit:junit-bom:5.11.4')

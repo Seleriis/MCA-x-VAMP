@@ -47,6 +47,7 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
     private boolean originalAppearanceSaved;
     private boolean vampireAppearanceApplied;
     private boolean vampireEyeIndexAssigned;
+    private boolean vampireNightScheduleApplied;
     private boolean wasBittenByVampirePlayer;
     private boolean biteWasConversionCause;
     private boolean curingVampire;
@@ -84,6 +85,8 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
     private long werewolfBiteCooldownUntilTick = Long.MIN_VALUE;
     private long lastCureCompletedTick = Long.MIN_VALUE;
     private String originalCustomSkin = "";
+    private String originalMcaSchedule = "";
+    private String lastAppliedVampireSchedule = "";
     private String defensiveReason = "";
     private String lastCureType = "";
     private ItemStack originalMainHandItem = ItemStack.EMPTY;
@@ -612,6 +615,38 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
         return vampireAppearanceApplied;
     }
 
+    public boolean isVampireNightScheduleApplied() {
+        return vampireNightScheduleApplied;
+    }
+
+    public String getOriginalMcaSchedule() {
+        return originalMcaSchedule;
+    }
+
+    public String getLastAppliedVampireSchedule() {
+        return lastAppliedVampireSchedule;
+    }
+
+    public void beginVampireNightSchedule(String originalSchedule, String appliedSchedule) {
+        vampireNightScheduleApplied = true;
+        originalMcaSchedule = originalSchedule == null ? "" : originalSchedule;
+        lastAppliedVampireSchedule = appliedSchedule == null ? "" : appliedSchedule;
+    }
+
+    public void updateOriginalMcaSchedule(String originalSchedule) {
+        originalMcaSchedule = originalSchedule == null ? "" : originalSchedule;
+    }
+
+    public void updateLastAppliedVampireSchedule(String appliedSchedule) {
+        lastAppliedVampireSchedule = appliedSchedule == null ? "" : appliedSchedule;
+    }
+
+    public void clearVampireNightSchedule() {
+        vampireNightScheduleApplied = false;
+        originalMcaSchedule = "";
+        lastAppliedVampireSchedule = "";
+    }
+
     public void setVampireAppearanceApplied(boolean vampireAppearanceApplied) {
         this.vampireAppearanceApplied = vampireAppearanceApplied;
     }
@@ -920,6 +955,7 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
         tag.putBoolean("OriginalAppearanceSaved", originalAppearanceSaved);
         tag.putBoolean("VampireAppearanceApplied", vampireAppearanceApplied);
         tag.putBoolean("VampireEyeIndexAssigned", vampireEyeIndexAssigned);
+        tag.putBoolean("VampireNightScheduleApplied", vampireNightScheduleApplied);
         tag.putBoolean("CuringVampire", curingVampire);
         tag.putBoolean("CuringWerewolf", curingWerewolf);
         tag.putBoolean("CureHadWeakness", cureHadWeakness);
@@ -955,6 +991,8 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
         tag.putLong("WerewolfBiteCooldownUntilTick", werewolfBiteCooldownUntilTick);
         tag.putLong("LastCureCompletedTick", lastCureCompletedTick);
         tag.putString("OriginalCustomSkin", originalCustomSkin);
+        tag.putString("OriginalMcaSchedule", originalMcaSchedule);
+        tag.putString("LastAppliedVampireSchedule", lastAppliedVampireSchedule);
         tag.putString("DefensiveReason", defensiveReason);
         tag.putString("LastCureType", lastCureType);
         if (source != null) {
@@ -1027,6 +1065,7 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
         originalAppearanceSaved = tag.getBoolean("OriginalAppearanceSaved");
         vampireAppearanceApplied = tag.getBoolean("VampireAppearanceApplied");
         vampireEyeIndexAssigned = tag.getBoolean("VampireEyeIndexAssigned");
+        vampireNightScheduleApplied = tag.getBoolean("VampireNightScheduleApplied");
         curingVampire = tag.getBoolean("CuringVampire");
         curingWerewolf = tag.getBoolean("CuringWerewolf");
         boolean legacyCureHadWeakness = tag.getBoolean("CureHadWeakness");
@@ -1068,6 +1107,10 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
         werewolfBiteCooldownUntilTick = tag.contains("WerewolfBiteCooldownUntilTick") ? tag.getLong("WerewolfBiteCooldownUntilTick") : Long.MIN_VALUE;
         lastCureCompletedTick = tag.contains("LastCureCompletedTick") ? tag.getLong("LastCureCompletedTick") : Long.MIN_VALUE;
         originalCustomSkin = tag.contains("OriginalCustomSkin") ? tag.getString("OriginalCustomSkin") : "";
+        originalMcaSchedule = tag.contains("OriginalMcaSchedule") ? tag.getString("OriginalMcaSchedule") : "";
+        lastAppliedVampireSchedule = tag.contains("LastAppliedVampireSchedule")
+                ? tag.getString("LastAppliedVampireSchedule")
+                : "";
         defensiveReason = tag.contains("DefensiveReason") ? tag.getString("DefensiveReason") : "";
         lastCureType = tag.contains("LastCureType") ? tag.getString("LastCureType") : "";
         source = tag.hasUUID("Source") ? tag.getUUID("Source") : null;

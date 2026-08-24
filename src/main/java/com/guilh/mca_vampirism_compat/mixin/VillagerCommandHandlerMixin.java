@@ -2,9 +2,10 @@ package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.service.McaFactionCommandPermissionService;
+import com.guilh.mca_vampirism_compat.service.McaFactionGiftService;
 import com.guilh.mca_vampirism_compat.service.McaVampireCureService;
+import com.guilh.mca_vampirism_compat.mission.OccultVillageMissionService;
 import com.guilh.mca_vampirism_compat.social.McaFactionSocialService;
-import com.guilh.mca_vampirism_compat.trade.McaFactionTradeService;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.interaction.VillagerCommandHandler;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,24 +33,28 @@ public abstract class VillagerCommandHandlerMixin {
             cir.setReturnValue(true);
             return;
         }
-        if ("gift".equals(command) && McaVampireCureService.handleGiftCommand(player, villager)) {
-            ((VillagerCommandHandler) (Object) this).stopInteracting();
-            cir.setReturnValue(true);
-            return;
+        if ("gift".equals(command)) {
+            if (OccultVillageMissionService.handleGiftCommand(player, villager)
+                    || McaVampireCureService.handleGiftCommand(player, villager)) {
+                ((VillagerCommandHandler) (Object) this).stopInteracting();
+                cir.setReturnValue(true);
+                return;
+            }
         }
         if (!"trade".equals(command)) {
             if (McaFactionSocialService.handleCommandAction(player, villager, command)) {
                 cir.setReturnValue(true);
+                return;
+            }
+            if ("gift".equals(command) && McaFactionGiftService.handleGiftCommand(player, villager)) {
+                ((VillagerCommandHandler) (Object) this).stopInteracting();
+                cir.setReturnValue(true);
             }
             return;
         }
-        if (!McaFactionTradeService.shouldHandleMcaTrade(villager)) {
-            return;
-        }
-        ((VillagerCommandHandler) (Object) this).stopInteracting();
-        if (McaFactionTradeService.onMcaTradeOptionSelected(player, villager)) {
-            cir.setReturnValue(false);
-        }
+        // MCA 7.7.36 now owns the dialogue trade call as well. Let its
+        // command handler reach vanilla Villager.startTrading, where the
+        // faction gate and temporary price session are installed.
     }
 
     private Entity mcaVampirismCompat$getEntity() {

@@ -1,6 +1,8 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
+import com.guilh.mca_vampirism_compat.advancement.McaCompatAdvancements;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
@@ -23,6 +25,7 @@ public final class McaHunterBloodService {
     private static final ResourceLocation VAMPIRISM_POISON_ID = ResourceLocation.fromNamespaceAndPath("vampirism", "poison");
     private static final ResourceLocation VANILLA_POISON_ID = ResourceLocation.fromNamespaceAndPath("minecraft", "poison");
     private static final long BLOCK_LOG_COOLDOWN_TICKS = 100L;
+    private static final int MAX_TRACKED_BLOCK_LOGS = 512;
     private static final Map<UUID, Long> LAST_BLOCK_LOG_TICKS = new ConcurrentHashMap<>();
 
     private McaHunterBloodService() {
@@ -75,6 +78,9 @@ public final class McaHunterBloodService {
         }
 
         biter.addEffect(new MobEffectInstance(effect, durationTicks, amplifier), target);
+        if (biter instanceof net.minecraft.server.level.ServerPlayer player) {
+            McaAdvancementService.award(player, McaCompatAdvancements.HUNTER_BLOOD);
+        }
         McaVampirismCompat.debugLog(
                 "[HUNTER-BLOOD] toxicant applied by compat effect={} biter={} target={} duration={} amplifier={}",
                 effectId,
@@ -124,6 +130,7 @@ public final class McaHunterBloodService {
             return;
         }
         long gameTime = target.level().getGameTime();
+        pruneBlockLogs(gameTime);
         Long lastLog = LAST_BLOCK_LOG_TICKS.get(target.getUUID());
         if (lastLog != null && gameTime - lastLog < BLOCK_LOG_COOLDOWN_TICKS) {
             return;
@@ -137,5 +144,17 @@ public final class McaHunterBloodService {
                 "[HUNTER-BLOOD] vampire infection blocked target={} reason=POISONOUS_HUNTER_BLOOD",
                 target.getUUID()
         );
+    }
+
+    private static void pruneBlockLogs(long gameTime) {
+        if (LAST_BLOCK_LOG_TICKS.size() < MAX_TRACKED_BLOCK_LOGS) {
+            return;
+        }
+        LAST_BLOCK_LOG_TICKS.entrySet().removeIf(
+                entry -> gameTime - entry.getValue() >= BLOCK_LOG_COOLDOWN_TICKS
+        );
+        if (LAST_BLOCK_LOG_TICKS.size() >= MAX_TRACKED_BLOCK_LOGS) {
+            LAST_BLOCK_LOG_TICKS.clear();
+        }
     }
 }

@@ -47,6 +47,11 @@ public final class McaVampireShelterService {
             return;
         }
 
+        if (McaVampireNightScheduleService.isUsingNativeDayRest(villager)) {
+            clear(villager, false);
+            return;
+        }
+
         if (villager.getTarget() != null
                 || McaCommandRespectService.getCommandState(villager)
                 != McaCommandRespectService.McaCommandControlState.NONE) {

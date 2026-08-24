@@ -41,6 +41,9 @@ public final class McaCompatMessages {
     public static final String WEREWOLF_CURE_STARTED = "mca_vamp_compat.cure.werewolf.started";
     public static final String WEREWOLF_CURE_COMPLETED = "mca_vamp_compat.cure.werewolf.completed";
     public static final String WEREWOLF_CURE_IN_PROGRESS = "mca_vamp_compat.cure.werewolf.in_progress";
+    public static final String CURE_GARLIC_RELATION_LOSS = "mca_vamp_compat.cure.garlic_relation_loss";
+    public static final String GIFT_REJECTED_VAMPIRE = "mca_vamp_compat.gift.rejected.vampire";
+    public static final String GIFT_REJECTED_WEREWOLF = "mca_vamp_compat.gift.rejected.werewolf";
     public static final String PICKUP_BLOCKED_CURING = "mca_vamp_compat.pickup.blocked.curing";
     public static final String PICKUP_BLOCKED_ENEMY_FACTION = "mca_vamp_compat.pickup.blocked.enemy_faction";
     public static final String PICKUP_BLOCKED_PROTECTED = "mca_vamp_compat.pickup.blocked.protected";

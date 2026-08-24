@@ -108,4 +108,23 @@ class VampiricVillagerStateTest {
         assertTrue(restored.isOriginalMainHandItemSaved());
         assertTrue(restored.getOriginalMainHandItem().isEmpty());
     }
+
+    @Test
+    void roundTripsOriginalScheduleAroundVampireNightSchedule() {
+        VampiricVillagerState original = new VampiricVillagerState();
+        original.beginVampireNightSchedule("guard", "guard_night");
+
+        CompoundTag serialized = original.serializeNBT(RegistryAccess.EMPTY);
+        VampiricVillagerState restored = new VampiricVillagerState();
+        restored.deserializeNBT(RegistryAccess.EMPTY, serialized);
+
+        assertTrue(restored.isVampireNightScheduleApplied());
+        assertEquals("guard", restored.getOriginalMcaSchedule());
+        assertEquals("guard_night", restored.getLastAppliedVampireSchedule());
+
+        restored.clearVampireNightSchedule();
+        assertFalse(restored.isVampireNightScheduleApplied());
+        assertEquals("", restored.getOriginalMcaSchedule());
+        assertEquals("", restored.getLastAppliedVampireSchedule());
+    }
 }

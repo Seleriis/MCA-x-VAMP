@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.book;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
-import com.guilh.mca_vampirism_compat.mixin.accessor.TotemBlockEntityAccessor;
+import com.guilh.mca_vampirism_compat.service.McaVillageEffectBoundsService;
 import de.teamlapen.vampirism.api.entity.factions.IFaction;
 import de.teamlapen.vampirism.api.world.ITotem;
 import de.teamlapen.vampirism.util.TotemHelper;
@@ -128,6 +128,13 @@ public final class OccultVillageBookDeliveryService {
             return Optional.empty();
         }
         try {
+            Optional<ITotem> effectiveAreaTotem = McaVillageEffectBoundsService
+                    .findActiveTotemAt(level, player.blockPosition())
+                    .map(totem -> (ITotem) totem)
+                    .filter(totem -> isEligibleTotem(level, player, totem));
+            if (effectiveAreaTotem.isPresent()) {
+                return effectiveAreaTotem;
+            }
             Optional<ITotem> nearbyTotem = TotemHelper.getTotemNearPos(level, player.blockPosition(), true)
                     .map(totem -> (ITotem) totem)
                     .filter(totem -> isEligibleTotem(level, player, totem));
@@ -184,18 +191,7 @@ public final class OccultVillageBookDeliveryService {
         if (totem instanceof BlockEntity blockEntity && blockEntity.isRemoved()) {
             return false;
         }
-        if (!(totem instanceof TotemBlockEntityAccessor accessor)) {
-            return false;
-        }
-        int villagePoiCount = accessor.mcaVampCompat$getVillagePois() == null
-                ? 0
-                : accessor.mcaVampCompat$getVillagePois().size();
-        if (!OccultVillageFactionPolicy.isActiveVillageTotem(
-                accessor.mcaVampCompat$isComplete(),
-                accessor.mcaVampCompat$isInsideVillage(),
-                accessor.mcaVampCompat$isDisabled(),
-                villagePoiCount
-        )) {
+        if (!McaVillageEffectBoundsService.isActiveVillageTotem(totem)) {
             return false;
         }
 
@@ -205,7 +201,7 @@ public final class OccultVillageBookDeliveryService {
             return false;
         }
 
-        AABB villageArea = totem.getVillageArea();
+        AABB villageArea = McaVillageEffectBoundsService.getEffectiveArea(totem);
         return villageArea != null
                 && villageArea.getSize() > 0.0D
                 && villageArea.contains(player.getX(), player.getY(), player.getZ());

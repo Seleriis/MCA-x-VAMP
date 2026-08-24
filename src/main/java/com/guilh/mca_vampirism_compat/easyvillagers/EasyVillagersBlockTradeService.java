@@ -99,7 +99,7 @@ public final class EasyVillagersBlockTradeService {
                 : McaVampireFactionService.tradeFaction(player);
         McaVampireFactionService.debugClassification(player, faction, "EASY_VILLAGERS_BLOCK_TRADE");
         if (shouldBlockTrade(player, faction, hunterTrade, werewolfTrade)) {
-            player.displayClientMessage(Component.translatable(messageFor(player, faction, hunterTrade, werewolfTrade)), true);
+            player.displayClientMessage(refusalMessage(player, faction, hunterTrade, werewolfTrade), true);
             logBlockedTrade(player, faction, hunterTrade, werewolfTrade);
             event.setCancellationResult(InteractionResult.SUCCESS);
             event.setCanceled(true);
@@ -173,8 +173,7 @@ public final class EasyVillagersBlockTradeService {
         McaVampireFactionService.debugClassification(player, faction, "EASY_VILLAGERS_DIRECT_TRADER");
 
         if (shouldBlockTrade(player, faction, hunterTrade, werewolfTrade)) {
-            player.displayClientMessage(Component.translatable(
-                    messageFor(player, faction, hunterTrade, werewolfTrade)), true);
+            player.displayClientMessage(refusalMessage(player, faction, hunterTrade, werewolfTrade), true);
             logBlockedTrade(player, faction, hunterTrade, werewolfTrade);
             return true;
         }
@@ -240,6 +239,10 @@ public final class EasyVillagersBlockTradeService {
             case WEREWOLF -> McaFactionTradeService.HUMAN_MARKUP_ACTIVE;
             case VAMPIRE, HUMAN_DISGUISED, HUMAN, UNKNOWN -> McaFactionTradeService.HUMAN_MARKUP_ACTIVE;
         };
+    }
+
+    private static Component refusalMessage(Player player, PlayerFaction faction, boolean hunterTrade, boolean werewolfTrade) {
+        return Component.translatable(messageFor(player, faction, hunterTrade, werewolfTrade));
     }
 
     private static void logBlockedTrade(Player player, PlayerFaction faction, boolean hunterTrade, boolean werewolfTrade) {

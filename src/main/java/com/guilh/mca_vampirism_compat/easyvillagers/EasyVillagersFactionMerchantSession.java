@@ -1,10 +1,11 @@
 package com.guilh.mca_vampirism_compat.easyvillagers;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
 import com.guilh.mca_vampirism_compat.easyvillagers.readonly.StoredMcaVillagerInfo;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.network.EasyVillagersCycleStatePayload;
-import com.guilh.mca_vampirism_compat.trade.McaVampireTradeOfferMapper;
+import com.guilh.mca_vampirism_compat.trade.McaFactionTradePriceOverlay;
 import com.guilh.mca_vampirism_compat.trade.TradeCycleEligibility;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,9 +36,8 @@ public final class EasyVillagersFactionMerchantSession {
     private final BlockPos blockPos;
     private final StoredMcaVillagerInfo storedVillagerInfo;
     private final Villager storedVillager;
-    private MerchantOffers originalOffers;
-    private MerchantOffers adjustedOffers;
-    private Map<Integer, Integer> adjustedIndexToOriginalIndex;
+    private MerchantOffers offers;
+    private McaFactionTradePriceOverlay priceOverlay;
     private final PlayerFaction faction;
     private final boolean hunterTrade;
     private final boolean werewolfTrade;
@@ -51,23 +51,18 @@ public final class EasyVillagersFactionMerchantSession {
         this.blockPos = blockEntity.getBlockPos().immutable();
         this.storedVillagerInfo = storedVillagerInfo;
         this.storedVillager = storedVillagerInfo.villagerEntity();
-        this.originalOffers = storedVillagerInfo.offers();
+        this.offers = storedVillagerInfo.offers();
         this.faction = faction;
         this.hunterTrade = hunterTrade;
         this.werewolfTrade = werewolfTrade;
 
         applyNativePlayerPrices();
-        rebuildAdjustedOffers();
+        applyFactionPrices();
     }
 
-    private void rebuildAdjustedOffers() {
-        McaVampireTradeOfferMapper.MappedOffers mappedOffers = hunterTrade
-                ? McaVampireTradeOfferMapper.copyAndAdjustForHunter(originalOffers, faction)
-                : werewolfTrade
-                ? McaVampireTradeOfferMapper.copyAndAdjustForWerewolf(originalOffers, faction)
-                : McaVampireTradeOfferMapper.copyAndAdjust(originalOffers, faction);
-        this.adjustedOffers = mappedOffers.adjustedOffers();
-        this.adjustedIndexToOriginalIndex = mappedOffers.adjustedIndexToOriginalIndex();
+    private void applyFactionPrices() {
+        priceOverlay = McaFactionTradePriceOverlay.create(offers, faction, tradeKind());
+        priceOverlay.apply();
     }
 
     public static EasyVillagersFactionMerchantSession create(ServerPlayer player, StoredMcaVillagerInfo info, PlayerFaction faction) {
@@ -99,17 +94,16 @@ public final class EasyVillagersFactionMerchantSession {
                 session.sessionId()
         );
         McaVampirismCompat.debugLog(
-                "[EASY-VILLAGERS] copied offers count={}",
-                session.adjustedOffers().size()
+                "[EASY-VILLAGERS] live offers prepared count={}",
+                session.offers().size()
         );
-        for (int i = 0; i < session.adjustedOffers().size(); i++) {
-            MerchantOffer original = session.originalOffers().get(session.adjustedIndexToOriginalIndex().get(i));
-            MerchantOffer adjusted = session.adjustedOffers().get(i);
+        for (int i = 0; i < session.offers().size(); i++) {
+            MerchantOffer offer = session.offers().get(i);
             McaVampirismCompat.debugLog(
-                    "[EASY-VILLAGERS] price apply offer={} base={} adjusted={} faction={}",
+                    "[EASY-VILLAGERS] live price apply offer={} base={} adjusted={} faction={}",
                     i,
-                    original.getBaseCostA().isEmpty() ? 0 : original.getBaseCostA().getCount(),
-                    adjusted.getCostA().getCount(),
+                    offer.getBaseCostA().isEmpty() ? 0 : offer.getBaseCostA().getCount(),
+                    offer.getCostA().getCount(),
                     faction
             );
         }
@@ -141,37 +135,27 @@ public final class EasyVillagersFactionMerchantSession {
         }
     }
 
-    public void completeTrade(MerchantOffer adjustedOffer) {
+    public void completeTrade(MerchantOffer offer) {
         if (closed) {
             return;
         }
-        TradeCycleEligibility.lockAfterTrade(storedVillager);
-        int adjustedIndex = adjustedOffers.indexOf(adjustedOffer);
-        Integer originalIndex = adjustedIndexToOriginalIndex.get(adjustedIndex);
-        if (originalIndex == null || originalIndex < 0 || originalIndex >= originalOffers.size()) {
-            McaVampirismCompat.debugLog(
-                    "[EASY-VILLAGERS] trade completed without original mapping adjustedIndex={} session={}",
-                    adjustedIndex,
-                    sessionId
+        if (!priceOverlay.contains(offer)) {
+            McaVampirismCompat.LOGGER.warn(
+                    "[MCA Reborn x Vampirism Compat] Ignoring Easy Villagers trade with an offer outside its active session at {}",
+                    blockPos
             );
-            adjustedOffer.increaseUses();
-            persistStoredVillager("trade completed without offer mapping");
-            sendCurrentCycleState();
             return;
         }
-
-        MerchantOffer originalOffer = originalOffers.get(originalIndex);
-        storedVillager.notifyTrade(originalOffer);
-        adjustedOffer.increaseUses();
+        TradeCycleEligibility.lockAfterTrade(storedVillager);
+        storedVillager.notifyTrade(offer);
+        McaAdvancementService.awardFactionTrade(player, faction, tradeKind());
         persistStoredVillager("trade completed");
         sendCurrentCycleState();
         McaVampirismCompat.debugLog(
-                "[EASY-VILLAGERS] trade completed adjustedIndex={} originalIndex={} session={}",
-                adjustedIndex,
-                originalIndex,
+                "[EASY-VILLAGERS] live trade completed offerUses={} session={}",
+                offer.getUses(),
                 sessionId
         );
-        McaVampirismCompat.debugLog("[EASY-VILLAGERS] original offer uses updated");
     }
 
     public void close(String reason) {
@@ -181,8 +165,9 @@ public final class EasyVillagersFactionMerchantSession {
         if (storedVillager.getTradingPlayer() == player) {
             storedVillager.setTradingPlayer(null);
         }
-        persistStoredVillager("session closing: " + reason);
+        priceOverlay.restore();
         closed = true;
+        persistStoredVillager("session closing: " + reason);
         SESSIONS_BY_ID.remove(sessionId);
         SESSIONS_BY_PLAYER.remove(player.getUUID(), this);
         McaVampirismCompat.debugLog(
@@ -203,7 +188,7 @@ public final class EasyVillagersFactionMerchantSession {
     }
 
     public boolean isCycleTradesAvailable() {
-        return TradeCycleEligibility.isAvailable(storedVillager, originalOffers, closed);
+        return TradeCycleEligibility.isAvailable(storedVillager, offers, closed);
     }
 
     public void sendCycleState(int containerId) {
@@ -223,11 +208,12 @@ public final class EasyVillagersFactionMerchantSession {
             return;
         }
 
+        priceOverlay.restore();
         menu.setSelectionHint(0);
         storedVillager.setOffers(null);
-        originalOffers = storedVillager.getOffers();
+        offers = storedVillager.getOffers();
         applyNativePlayerPrices();
-        rebuildAdjustedOffers();
+        applyFactionPrices();
         menu.setSelectionHint(0);
         menu.slotsChanged(player.getInventory());
         persistStoredVillager("trades cycled");
@@ -237,7 +223,7 @@ public final class EasyVillagersFactionMerchantSession {
         sendCycleState(menu.containerId);
         player.sendMerchantOffers(
                 menu.containerId,
-                adjustedOffers,
+                offers,
                 storedVillager.getVillagerData().getLevel(),
                 storedVillager.getVillagerXp(),
                 storedVillager.showProgressBar(),
@@ -247,7 +233,7 @@ public final class EasyVillagersFactionMerchantSession {
                 "[EASY-VILLAGERS] trades cycled player={} pos={} offers={} faction={}",
                 player.getName().getString(),
                 blockPos,
-                adjustedOffers.size(),
+                offers.size(),
                 faction
         );
     }
@@ -262,8 +248,18 @@ public final class EasyVillagersFactionMerchantSession {
         if (blockEntity.isRemoved()) {
             return;
         }
-        refreshStoredVillagerItem();
-        markBlockEntityChanged();
+        boolean wasOverlayApplied = priceOverlay != null;
+        if (wasOverlayApplied) {
+            priceOverlay.restore();
+        }
+        try {
+            refreshStoredVillagerItem();
+            markBlockEntityChanged();
+        } finally {
+            if (wasOverlayApplied && !closed) {
+                priceOverlay.apply();
+            }
+        }
         McaVampirismCompat.debugLog(
                 "[EASY-VILLAGERS] stored trader persisted player={} pos={} reason={}",
                 player.getName().getString(),
@@ -373,16 +369,8 @@ public final class EasyVillagersFactionMerchantSession {
         return storedVillager;
     }
 
-    public MerchantOffers originalOffers() {
-        return originalOffers;
-    }
-
-    public MerchantOffers adjustedOffers() {
-        return adjustedOffers;
-    }
-
-    public Map<Integer, Integer> adjustedIndexToOriginalIndex() {
-        return adjustedIndexToOriginalIndex;
+    public MerchantOffers offers() {
+        return offers;
     }
 
     public PlayerFaction faction() {
@@ -399,5 +387,15 @@ public final class EasyVillagersFactionMerchantSession {
 
     public boolean isClosed() {
         return closed;
+    }
+
+    private McaFactionTradePriceOverlay.TradeKind tradeKind() {
+        if (hunterTrade) {
+            return McaFactionTradePriceOverlay.TradeKind.HUNTER;
+        }
+        if (werewolfTrade) {
+            return McaFactionTradePriceOverlay.TradeKind.WEREWOLF;
+        }
+        return McaFactionTradePriceOverlay.TradeKind.VAMPIRE;
     }
 }

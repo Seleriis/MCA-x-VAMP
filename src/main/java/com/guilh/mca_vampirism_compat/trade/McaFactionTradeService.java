@@ -11,6 +11,7 @@ import com.guilh.mca_vampirism_compat.service.McaVampireCureService;
 import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfTradeService;
+import com.guilh.mca_vampirism_compat.social.McaFactionContextualDialogueService;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
 import net.conczin.mca.entity.VillagerEntityMCA;
@@ -58,35 +59,52 @@ public final class McaFactionTradeService {
         return null;
     }
 
-    public static boolean onMcaTradeOptionSelected(Player player, VillagerEntityMCA villager) {
+    /**
+     * Runs before MCA prepares its merchant offers. Returning {@code true}
+     * prevents the native screen from opening for an invalid faction.
+     */
+    public static boolean shouldCancelMcaTradeOpening(Player player, VillagerEntityMCA villager) {
         debugTradeState("MCA trade option selected", player, villager);
         if (!shouldHandleMcaTrade(villager)) {
             return false;
         }
         if (shouldBlockTrade(player, villager)) {
             player.displayClientMessage(Component.translatable(messageFor(player, villager)), true);
+            if (player instanceof ServerPlayer serverPlayer) {
+                McaFactionContextualDialogueService.onTradeRefused(serverPlayer, villager);
+            }
             logTradeBlocked(player, villager);
             McaTradeContextService.clearMcaTradeContext(player, villager);
             return true;
+        }
+        return false;
+    }
+
+    /**
+     * Runs after MCA has prepared reputation prices and set its trading player,
+     * immediately before MCA opens its native {@link net.minecraft.world.inventory.MerchantMenu}.
+     */
+    public static void prepareNativeMcaTrade(Player player, VillagerEntityMCA villager) {
+        if (!shouldHandleMcaTrade(villager) || shouldBlockTrade(player, villager)) {
+            return;
         }
         McaTradeContextService.markMcaTradeAttempt(player, villager);
         PlayerFaction faction = tradeFaction(player, villager);
         McaVampireFactionService.debugClassification(player, faction, "MCA_TRADE_OPTION");
         McaVampirismCompat.debugLog(
-                "[TRADE] MCA trade allowed faction={} villager={}",
+                "[TRADE] native MCA trade allowed faction={} villager={}",
                 faction,
                 villager.getUUID()
         );
         if (player instanceof ServerPlayer serverPlayer) {
-            openWrappedTrade(serverPlayer, villager);
-            return true;
+            McaFactionTradeSession.open(serverPlayer, villager, faction);
+            return;
         }
         McaVampirismCompat.debugLog(
-                "[TRADE-WRAPPER] wrapper skipped reason=NOT_SERVER_PLAYER player={} villager={}",
+                "[TRADE] native MCA session skipped reason=NOT_SERVER_PLAYER player={} villager={}",
                 player.getName().getString(),
                 villager.getUUID()
         );
-        return true;
     }
 
     public static boolean shouldBlockTrade(Player player, VillagerEntityMCA villager) {
@@ -121,7 +139,8 @@ public final class McaFactionTradeService {
 
     public static void closeWrappedTradeSession(Player player) {
         if (player != null) {
-            McaVampireMerchantSession.closeForPlayer(player.getUUID(), "player logout");
+            McaFactionTradeSession.closeForPlayer(player.getUUID(), "player logout");
+            McaNativeTradeCycleSession.closeForPlayer(player.getUUID(), "player logout");
         }
     }
 
@@ -218,16 +237,6 @@ public final class McaFactionTradeService {
             case TRANSFORMED_WEREWOLF -> "TRANSFORMED_WEREWOLF";
             case VAMPIRE, HUMAN_DISGUISED, HUMAN, UNKNOWN -> "CONFIG";
         };
-    }
-
-    private static void openWrappedTrade(ServerPlayer player, VillagerEntityMCA villager) {
-        PlayerFaction faction = tradeFaction(player, villager);
-        McaVampireMerchantSession session = McaHunterTradeService.isHunterTradeVillager(villager)
-                ? McaVampireMerchantSession.createForHunter(player, villager, faction)
-                : McaWerewolfTradeService.isWerewolfTradeVillager(villager)
-                ? McaVampireMerchantSession.createForWerewolf(player, villager, faction)
-                : McaVampireMerchantSession.create(player, villager, faction);
-        new McaVampireMerchant(session).open();
     }
 
     private static PlayerFaction tradeFaction(Player player, VillagerEntityMCA villager) {

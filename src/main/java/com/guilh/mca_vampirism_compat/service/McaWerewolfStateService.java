@@ -1,6 +1,8 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
+import com.guilh.mca_vampirism_compat.advancement.McaCompatAdvancements;
 import com.guilh.mca_vampirism_compat.attribute.McaSpecialVillagerAttributeService;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
@@ -117,6 +119,10 @@ public final class McaWerewolfStateService {
             return;
         }
         ModCapabilities.get(villager).ifPresent(state -> {
+            state.getWerewolfSourceUuid().ifPresent(playerId -> McaAdvancementService.awardOrQueue(
+                    ((net.minecraft.server.level.ServerLevel) villager.level()).getServer(),
+                    playerId,
+                    McaCompatAdvancements.WEREWOLF_CONVERSION));
             villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
             state.finishWerewolfConversion(villager.level().getGameTime());
             state.clearPendingInfection();

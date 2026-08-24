@@ -1,6 +1,7 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.inheritance.McaVampireInheritanceHandler;
+import com.guilh.mca_vampirism_compat.advancement.McaInheritanceAdvancementService;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.ai.Pregnancy;
 import net.conczin.mca.entity.ai.relationship.Gender;
@@ -27,6 +28,7 @@ public abstract class McaPregnancyMixin {
         VillagerEntityMCA child = cir.getReturnValue();
         if (child != null && !child.level().isClientSide) {
             McaVampireInheritanceHandler.applyInheritance(child, mother, father);
+            McaInheritanceAdvancementService.recordNaturalBirth(child);
         }
     }
 }

@@ -20,14 +20,19 @@ This mod adds vampire, hunter and werewolf faction behavior to MCA Reborn villag
 - Safe Vampirism village capture handling.
 - Monster ignore and panic suppression for special villagers.
 - MCA guards that become special villagers can still defend villages against common hostile mobs when configured.
+- MCA's Villager Editor applies and removes Vampire, Hunter and Werewolf transformations when their matching traits are edited and saved.
 - Player vampires can drain blood from MCA villagers through Vampirism's standard bite/feed flow, with a compat fallback whenever no valid 1.21.1 blood entry was initialized.
 - Balanced configurable attributes and combat movement.
+- Vampire Experts, Hunter Experts and Werewolf Experts can use their faction's progression altar as an additional workstation; their original faction totems remain valid workstations.
 - Easy Villagers support through mca-ev-compat.
 - An MCA-style Book of Occult Arts that explains the compatibility gameplay to players.
+- Optional special-village favors: residents ask for supplies or urgent aid through MCA conversation and reward their helper with MCA relationship hearts.
+- OP level-2 diagnostics for villager faction state and special-village bounds, plus a private temporary village outline.
+- Optional short faction dialogue lines that add atmosphere without changing MCA social outcomes.
 
 ## Book of Occult Arts
 
-The non-stackable guide uses MCA's native book screen and contains 30 short pages in Brazilian Portuguese, European Portuguese and English. Each player receives it once after entering an active Vampire-, Hunter- or Werewolf-controlled village. The discovery also reveals its replacement recipe: a normal book, a vampire fang and garlic.
+The non-stackable guide uses MCA's native book screen and contains 31 short pages in Brazilian Portuguese, European Portuguese and English. Each player receives it once after entering an active Vampire-, Hunter- or Werewolf-controlled village. The discovery also reveals its replacement recipe: a normal book, a vampire fang and garlic.
 
 Automatic delivery can be disabled without disabling the item or recipe:
 
@@ -68,7 +73,7 @@ giveOccultArtsBookOnSpecialVillageDiscovery = true
 - Vampire, hunter and werewolf villagers apply faction-aware trade and social behavior.
 - Player disguise and werewolf transformation state are handled separately.
 - Non-transformed werewolf players are not treated as transformed werewolves.
-- Trade price changes are applied only to copied temporary offers.
+- Trade price changes use the villager's real offers with a temporary price overlay that is restored when the trade session closes.
 - Existing discounts such as zombie-cure/reputation discounts stack with faction modifiers.
 
 ## Easy Villagers Compatibility
@@ -136,6 +141,9 @@ Release-facing categories:
 - `mca_commands`
 - `monster_behavior`
 - `village_capture`
+- `mcaVillageEffects`
+- `village_missions`
+- `dialogues`
 - `debug`
 - `advanced`
 
@@ -175,6 +183,18 @@ vampirePlayerBiteDamageToMcaVillagers = 0.0
 oneWerewolfParentInheritanceChance = 0.45
 twoWerewolfParentsInheritanceChance = 1.0
 
+[mcaVillageEffects]
+mcaVillageEffectsFollowMcaBounds = true
+mcaVillageFogBorderMarginBlocks = 4
+
+[village_missions]
+enableOccultVillageMissions = true
+occultVillageMissionCooldownTicks = 24000
+occultVillageMissionDeadlineTicks = 48000
+
+[dialogues]
+enableFactionContextualDialogues = true
+
 [debug]
 enableDebugLogs = false
 enableVerboseAiDebugLogs = false
@@ -183,6 +203,25 @@ enableVerboseNbtDebugLogs = false
 
 `vampirePlayerBiteDealsDamageToMcaVillagers=false` makes player vampire bite interactions avoid normal physical attack damage against MCA villagers. The bite can still drain blood through Vampirism and apply the compat infection/poison rules, but it will not accidentally kill the villager as a regular attack. If enabled, the physical bite damage is allowed and can be capped with `vampirePlayerBiteDamageToMcaVillagers`.
 
+`mcaVillageEffectsFollowMcaBounds=true` makes vampire fog and compat-owned special-village effects use the complete editable MCA village footprint when the faction totem is inside that village; there is no artificial horizontal size cap. `mcaVillageFogBorderMarginBlocks=4` keeps Vampire fog four blocks beyond that border while Hunter control, Occult Arts discovery and the outline stay on the exact MCA area. Capture, raids, POIs and spawning remain controlled by Vampirism's own village area.
+
+`enableOccultVillageMissions=true` lets an eligible adult MCA resident in an active special village offer a favor through MCA's normal conversation menu. Choose **Could you use a hand?** to hear the request, then accept it in that same conversation; the deadline begins only after acceptance. Speak with the same resident again to check progress or give up the favor. There are no automatic chat invitations or player mission commands. A player has one request per village totem during `occultVillageMissionCooldownTicks` (24,000 ticks by default); canceled and expired requests begin the normal cooldown without a reward. After acceptance, only that player sees the requesting resident outlined. Successful help awards five hearts only with the resident who asked. Hunter villages can instead let an infected human resident ask directly for confirmed milk treatment. Missions are never created for enemies, do not affect trade or capture, and are stored separately from villager data. Supply quantities are chosen once per request and remain fixed: Crimson Reserve requests 2–4 full Vampirism Blood Bottles (`vampirism:blood_bottle`) from anywhere in the inventory, while Garlic and Raw Mutton requests use 4–10 items.
+
+## Administrative Commands
+
+All compat administration commands require OP permission level 2 and only repair state already indicated by a villager's saved data; they never manually grant or remove a faction.
+
+```text
+/mca_vamp_compat inspect <villager>
+/mca_vamp_compat resync <targets>
+/mca_vamp_compat village info [totem_position]
+/mca_vamp_compat village outline [totem_position] [seconds]
+```
+
+`inspect` reports faction, canonical traits, conversion/infection and cure state, appearance, night schedule, Hunter pitchfork state, profession and Cycle Trades eligibility. `resync` runs the same safe reconciliation used when an MCA villager enters the world. Village information shows both the logical MCA area and the separately expanded fog range; the temporary outline stays on the exact logical area used by Hunter control and Occult Arts discovery. The outline is visible only to the OP who started it, refreshes every 10 ticks and lasts 30 seconds by default (5–60 seconds when specified).
+
+`enableFactionContextualDialogues=true` adds short localized lines to normal MCA greetings and to existing faction trade/social refusals and cure milestones. Functional refusal and cure messages remain unchanged.
+
 Version 2.0.9 removed settings that had no active implementation, including the old pickup matrix, obsolete Vampirism-eye renderer switches and architectural mca-ev-compat bridge toggles. Existing worlds and legacy villager payloads remain supported. Regenerate `mca_vamp_compat-common.toml` if you want a compact file containing only current options.
 
 ## Requirements
@@ -190,7 +229,7 @@ Version 2.0.9 removed settings that had no active implementation, including the 
 - Minecraft 1.21.1
 - NeoForge 21.1.234+
 - Java 21
-- MCA Reborn 7.7.25+1.21.1 or newer compatible build
+- MCA Reborn 7.7.36-beta.3+1.21.1 (exact required version)
 - Vampirism 1.21-1.10.12 or newer compatible build
 
 Optional:
@@ -207,7 +246,11 @@ Optional:
 - Java packages still use the historical internal package name `com.guilh.mca_vampirism_compat`; this is internal and not the public mod id.
 - MCA trait ids still use the legacy `vampirism_mca_compat` namespace to preserve existing villager data.
 - The public mod id is `mca_vamp_compat`.
-- The final jar name is `mca-vamp-compat-1.21.1-2.0.12.jar`.
+- The final jar name is `mca-vamp-compat-1.21.1-2.1.2.jar`.
+
+## Arts Occultes Progress
+
+The normal Minecraft advancement screen now includes the **Arts Occultes** tab. It begins with the Book of Occult Arts discovery and records faction infection, conversion, discounted trade, cure, inherited children, compatible Easy Villagers actions and special-village favors. Werewolves and Easy Villagers leaves are hidden when their optional mods are unavailable. Faction refusals keep their regular localized messages.
 
 ## Safety Guarantees
 
@@ -221,13 +264,17 @@ This addon does not intentionally use:
 - `AggressiveVillagerEntity`
 - manual FamilyTree edits
 - manual Relationship edits
-- persistent mutation of real villager `MerchantOffers`
+- persistent mutation of real villager `MerchantOffers` outside an active faction trade screen
+
+When Werewolves is installed, native Werewolves entity replacement is also disabled only for `VillagerEntityMCA`. A native marker therefore cannot turn an MCA villager into a physical beast or create a replacement villager later; the compat's bite, inheritance and Editor flows remain the sole werewolf-conversion paths for MCA villagers.
 
 ## CurseForge Summary
 
 MCA Reborn x Vampirism Compat is a compatibility addon that makes MCA Reborn villagers work safely with Vampirism, Werewolves, Vampirism Integrations and Easy Villagers. MCA villagers can become vampires, hunters or werewolves without being replaced, keeping their identity, appearance, family, relationships and MCA social data.
 
 The mod adds faction-aware trade, social interactions, curing, pickup permissions, MCA command permissions, monster behavior, village capture safety and Easy Villagers support through mca-ev-compat.
+
+Faction gift tastes remain subject to MCA's normal GiftSaturation: special villagers can value blood, meat, garlic, equipment and faction materials, but repeating a favorite cannot produce unlimited relationship points. Enemy factions still cannot give ordinary presents. Vampires recover with blood bottles, Werewolves with their raw or cooked food, and Humans and Hunters keep MCA's normal recovery food.
 
 ## Resumo em Português
 
@@ -240,10 +287,10 @@ O mod adiciona trocas e interações sociais por facção, cura, herança, permi
 This repository does not version third-party mod jars. Before building, create a local `local-mods/` folder in the project root and download these 1.21.1 development dependencies from their official project pages:
 
 - `Vampirism-1.21-1.10.12.jar`
-- `mca-neoforge-7.7.25+1.21.1.jar`
+- `mca-neoforge-7.7.36-beta.3+1.21.1.jar`
 - `Werewolves-1.21-2.0.3.3.jar`
 - `easy-villagers-neoforge-1.21.1-1.1.42.jar`
-- `mca-ev-compat-1.21.1-2.0.0.jar`
+- `mca-ev-compat-1.21.1-2.1.0.jar`
 
 Werewolves, Easy Villagers and mca-ev-compat remain optional at runtime, but their development jars are needed to compile and test the optional compatibility hooks. The `local-mods/` folder, generated JARs and local test worlds are intentionally ignored by Git.
 
@@ -256,13 +303,13 @@ gradlew.bat clean test releaseBundle
 The distributable jar is generated at:
 
 ```text
-build/libs/mca-vamp-compat-1.21.1-2.0.12.jar
+build/libs/mca-vamp-compat-1.21.1-2.1.2.jar
 ```
 
 The complete release bundle, including sources, notes and SHA-256 hashes, is generated at:
 
 ```text
-build/release/mca-vamp-compat-1.21.1-2.0.12/
+build/release/mca-vamp-compat-1.21.1-2.1.2/
 ```
 
 ## Runtime Marker
@@ -270,13 +317,13 @@ build/release/mca-vamp-compat-1.21.1-2.0.12/
 Current implementation marker:
 
 ```text
-BUILD_MARKER = 2.0.12-neoforge-1.21.1
+BUILD_MARKER = 2.1.2-neoforge-1.21.1-mca-7.7.36
 ```
 
 The log should show:
 
 ```text
-[MCA Reborn x Vampirism Compat] BUILD_MARKER = 2.0.12-neoforge-1.21.1
+[MCA Reborn x Vampirism Compat] BUILD_MARKER = 2.1.2-neoforge-1.21.1-mca-7.7.36
 ```
 
 ## Feedback and Bug Reports

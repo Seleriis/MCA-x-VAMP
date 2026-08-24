@@ -63,27 +63,31 @@ public final class McaHunterSocialService {
     }
 
     private static SocialDecision vampireDecision(McaSocialActionType actionType) {
-        boolean blocked = actionType.isRomanticOrMarriage()
-                && McaVampirismCompatConfig.hunterVillagersBlockVampireRomance();
+        boolean blocked = (actionType.isRomanticOrMarriage()
+                && McaVampirismCompatConfig.hunterVillagersBlockVampireRomance())
+                || (actionType == McaSocialActionType.GIFT
+                && McaVampirismCompatConfig.hunterVillagersBlockVampireTrading());
         return new SocialDecision(
                 blocked,
                 blocked ? vampireBlockMessage(actionType) : null,
                 PlayerFaction.VAMPIRE,
                 McaVampirismCompatConfig.hunterVillagerVampireSocialPenalty(),
-                blocked ? "VAMPIRE_ROMANCE_BLOCKED" : "VAMPIRE",
+                blocked ? "VAMPIRE_FACTION_GIFT_OR_ROMANCE_BLOCKED" : "VAMPIRE",
                 false
         );
     }
 
     private static SocialDecision werewolfDecision(McaSocialActionType actionType) {
-        boolean blocked = actionType.isRomanticOrMarriage()
-                && McaVampirismCompatConfig.hunterVillagersBlockTransformedWerewolfRomance();
+        boolean blocked = (actionType.isRomanticOrMarriage()
+                && McaVampirismCompatConfig.hunterVillagersBlockTransformedWerewolfRomance())
+                || (actionType == McaSocialActionType.GIFT
+                && McaVampirismCompatConfig.hunterVillagersBlockTransformedWerewolfTrading());
         return new SocialDecision(
                 blocked,
                 blocked ? werewolfBlockMessage(actionType) : null,
                 PlayerFaction.TRANSFORMED_WEREWOLF,
                 McaVampirismCompatConfig.hunterVillagerWerewolfSocialPenalty(),
-                blocked ? "TRANSFORMED_WEREWOLF_ROMANCE_BLOCKED" : "TRANSFORMED_WEREWOLF",
+                blocked ? "TRANSFORMED_WEREWOLF_FACTION_GIFT_OR_ROMANCE_BLOCKED" : "TRANSFORMED_WEREWOLF",
                 false
         );
     }

@@ -1,7 +1,10 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.trade.EntityBackedMerchant;
+import com.guilh.mca_vampirism_compat.trade.McaFactionTradeSession;
+import com.guilh.mca_vampirism_compat.trade.McaNativeTradeCycleSession;
 import com.guilh.mca_vampirism_compat.trade.MerchantMenuTradeAccess;
+import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.inventory.MerchantContainer;
@@ -49,5 +52,14 @@ public abstract class MerchantMenuMixin implements MerchantMenuTradeAccess {
             );
         }
         ci.cancel();
+    }
+
+    @Inject(method = "removed", at = @At("TAIL"))
+    private void mcaVampirismCompat$closeNativeMcaFactionSession(net.minecraft.world.entity.player.Player player,
+                                                                 CallbackInfo ci) {
+        if (trader instanceof VillagerEntityMCA villager) {
+            McaFactionTradeSession.closeForMenu(player, villager, "merchant menu removed");
+            McaNativeTradeCycleSession.closeForMenu(player, villager, "merchant menu removed");
+        }
     }
 }

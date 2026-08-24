@@ -15,6 +15,7 @@ public final class McaVampirismCompatConfig {
     private static final ModConfigSpec.DoubleValue CONVERSION_CHANCE_ON_BITE;
     private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_AVOID_SUN;
     private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_BURN_IN_SUN;
+    private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_USE_NIGHT_SCHEDULE;
     private static final ModConfigSpec.BooleanValue NON_LETHAL_BITE_AGAINST_VILLAGERS;
     private static final ModConfigSpec.DoubleValue VILLAGER_BITE_DAMAGE;
     private static final ModConfigSpec.IntValue RECENTLY_BITTEN_TARGET_COOLDOWN_TICKS;
@@ -303,6 +304,14 @@ public final class McaVampirismCompatConfig {
     private static final ModConfigSpec.BooleanValue BLOCK_UNKNOWN_MCA_COMMANDS_FOR_ENEMY_FACTIONS;
 
     private static final ModConfigSpec.BooleanValue GIVE_OCCULT_ARTS_BOOK_ON_SPECIAL_VILLAGE_DISCOVERY;
+    private static final ModConfigSpec.BooleanValue ENABLE_OCCULT_VILLAGE_MISSIONS;
+    private static final ModConfigSpec.IntValue OCCULT_VILLAGE_MISSION_COOLDOWN_TICKS;
+    private static final ModConfigSpec.IntValue OCCULT_VILLAGE_MISSION_DEADLINE_TICKS;
+    private static final ModConfigSpec.BooleanValue MCA_VILLAGE_EFFECTS_FOLLOW_MCA_BOUNDS;
+    private static final ModConfigSpec.IntValue MCA_VILLAGE_FOG_BORDER_MARGIN_BLOCKS;
+    private static final ModConfigSpec.BooleanValue ENABLE_FACTION_CONTEXTUAL_DIALOGUES;
+    private static final ModConfigSpec.BooleanValue ENABLE_FACTION_GIFT_PREFERENCES;
+    private static final ModConfigSpec.BooleanValue ENABLE_FACTION_RECOVERY_DIET;
 
     private static final ModConfigSpec.BooleanValue ENABLE_DEBUG_LOGS;
     private static final ModConfigSpec.BooleanValue ENABLE_VERBOSE_AI_DEBUG_LOGS;
@@ -325,6 +334,9 @@ public final class McaVampirismCompatConfig {
         NIGHT_ATTACK_CHANCE = builder.defineInRange("nightAttackChance", 0.18D, 0.0D, 1.0D);
         builder.comment("Chance that a valid vampire bite applies Sanguinare.");
         CONVERSION_CHANCE_ON_BITE = builder.defineInRange("conversionChanceOnBite", 0.65D, 0.0D, 1.0D);
+        builder.comment("If true, adult MCA vampire villagers use MCA's night schedule: they rest during the day and work at night.");
+        VAMPIRE_VILLAGERS_USE_NIGHT_SCHEDULE = builder.define("vampireVillagersUseNightSchedule", true);
+        builder.comment("If true, MCA vampire villagers seek shade when exposed to daylight.");
         VAMPIRE_VILLAGERS_AVOID_SUN = builder.define("vampireVillagersAvoidSun", true);
         builder.comment("If true, MCA vampire villagers take sunlight damage when exposed.");
         VAMPIRE_VILLAGERS_BURN_IN_SUN = builder.define("vampireVillagersBurnInSun", false);
@@ -762,6 +774,38 @@ public final class McaVampirismCompatConfig {
                 builder.define("giveOccultArtsBookOnSpecialVillageDiscovery", true);
         builder.pop();
 
+        builder.push("village_missions");
+        builder.comment("If true, eligible residents of special villages can offer supplies or urgent aid through MCA conversations.");
+        ENABLE_OCCULT_VILLAGE_MISSIONS = builder.define("enableOccultVillageMissions", true);
+        builder.comment("Minimum time between village requests for the same player and totem. 24000 ticks is one Minecraft day.");
+        OCCULT_VILLAGE_MISSION_COOLDOWN_TICKS = builder.defineInRange(
+                "occultVillageMissionCooldownTicks", 24000, 1200, 240000
+        );
+        builder.comment("Time allowed to finish an accepted village request. 48000 ticks is two Minecraft days. Expired or canceled requests begin a new cooldown.");
+        OCCULT_VILLAGE_MISSION_DEADLINE_TICKS = builder.defineInRange(
+                "occultVillageMissionDeadlineTicks", 48000, 1200, 480000
+        );
+        builder.pop();
+
+        builder.push("mcaVillageEffects");
+        builder.comment("If true, vampire fog and compat-owned special-village effects follow the editable MCA village bounds when the totem is inside that village. Vampirism capture, raids and spawning stay native.");
+        MCA_VILLAGE_EFFECTS_FOLLOW_MCA_BOUNDS = builder.define("mcaVillageEffectsFollowMcaBounds", true);
+        builder.comment("Horizontal fog-only margin beyond an MCA village border. 0 ends fog at the final MCA village block; Hunter control, book discovery and outlines remain on the exact MCA border.");
+        MCA_VILLAGE_FOG_BORDER_MARGIN_BLOCKS = builder.defineInRange("mcaVillageFogBorderMarginBlocks", 4, 0, 64);
+        builder.pop();
+
+        builder.push("dialogues");
+        builder.comment("If true, short faction-themed lines accompany existing MCA conversations, faction refusals and cure milestones. These lines never change gameplay outcomes.");
+        ENABLE_FACTION_CONTEXTUAL_DIALOGUES = builder.define("enableFactionContextualDialogues", true);
+        builder.pop();
+
+        builder.push("gifts");
+        builder.comment("If true, Vampire, Hunter and Werewolf villagers use their faction-specific gift tastes. Gifts still use MCA's native saturation and relationship rules.");
+        ENABLE_FACTION_GIFT_PREFERENCES = builder.define("enableFactionGiftPreferences", true);
+        builder.comment("If true, Vampire and Werewolf villagers use their faction-specific recovery diets. Humans and Hunters keep MCA's normal recovery food.");
+        ENABLE_FACTION_RECOVERY_DIET = builder.define("enableFactionRecoveryDiet", true);
+        builder.pop();
+
         builder.push("debug");
         builder.comment("Enables compact diagnostic logs for trade, faction, bite, state and Easy Villagers integration.");
         ENABLE_DEBUG_LOGS = builder.define("enableDebugLogs", false);
@@ -784,6 +828,7 @@ public final class McaVampirismCompatConfig {
     public static long biteCooldownTicks() { return BITE_COOLDOWN_TICKS.get(); }
     public static double nightAttackChance() { return NIGHT_ATTACK_CHANCE.get(); }
     public static double conversionChanceOnBite() { return CONVERSION_CHANCE_ON_BITE.get(); }
+    public static boolean vampireVillagersUseNightSchedule() { return VAMPIRE_VILLAGERS_USE_NIGHT_SCHEDULE.get(); }
     public static boolean vampireVillagersAvoidSun() { return VAMPIRE_VILLAGERS_AVOID_SUN.get(); }
     public static boolean vampireVillagersBurnInSun() { return VAMPIRE_VILLAGERS_BURN_IN_SUN.get(); }
     public static boolean nonLethalBiteAgainstVillagers() { return NON_LETHAL_BITE_AGAINST_VILLAGERS.get(); }
@@ -915,6 +960,14 @@ public final class McaVampirismCompatConfig {
     public static boolean milkTreatmentConsumesMilk() { return MILK_TREATMENT_CONSUMES_MILK.get(); }
     public static boolean milkTreatmentReturnsBucket() { return MILK_TREATMENT_RETURNS_BUCKET.get(); }
     public static boolean milkTreatmentOnlyBeforeConversion() { return MILK_TREATMENT_ONLY_BEFORE_CONVERSION.get(); }
+    public static boolean mcaVillageEffectsFollowMcaBounds() { return MCA_VILLAGE_EFFECTS_FOLLOW_MCA_BOUNDS.get(); }
+    public static int mcaVillageFogBorderMarginBlocks() { return MCA_VILLAGE_FOG_BORDER_MARGIN_BLOCKS.get(); }
+    public static boolean enableOccultVillageMissions() { return ENABLE_OCCULT_VILLAGE_MISSIONS.get(); }
+    public static int occultVillageMissionCooldownTicks() { return OCCULT_VILLAGE_MISSION_COOLDOWN_TICKS.get(); }
+    public static int occultVillageMissionDeadlineTicks() { return OCCULT_VILLAGE_MISSION_DEADLINE_TICKS.get(); }
+    public static boolean enableFactionContextualDialogues() { return ENABLE_FACTION_CONTEXTUAL_DIALOGUES.get(); }
+    public static boolean enableFactionGiftPreferences() { return ENABLE_FACTION_GIFT_PREFERENCES.get(); }
+    public static boolean enableFactionRecoveryDiet() { return ENABLE_FACTION_RECOVERY_DIET.get(); }
     public static boolean vampireCureRequiresWeakness() { return VAMPIRE_CURE_REQUIRES_WEAKNESS.get(); }
     public static boolean vampireCureRequiresGoldenApple() { return VAMPIRE_CURE_REQUIRES_GOLDEN_APPLE.get(); }
     public static boolean vampireCureRequiresGarlicInjection() { return VAMPIRE_CURE_REQUIRES_GARLIC_INJECTION.get(); }

@@ -1,6 +1,7 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.inheritance.McaBabyInheritancePayload;
+import com.guilh.mca_vampirism_compat.advancement.McaInheritanceAdvancementService;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.item.BabyItem;
 import net.minecraft.server.level.ServerLevel;
@@ -24,5 +25,6 @@ public abstract class McaBabyItemMixin {
     private void mcaVampirismCompat$restoreInheritance(ItemStack stack, ServerLevel level, ServerPlayer player,
                                                        CallbackInfoReturnable<VillagerEntityMCA> cir) {
         McaBabyInheritancePayload.apply(stack, cir.getReturnValue());
+        McaInheritanceAdvancementService.onBabyItemBirth(player, cir.getReturnValue());
     }
 }

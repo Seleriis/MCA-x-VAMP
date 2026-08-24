@@ -1,5 +1,6 @@
 {
   "display": {
+    "background": "mca_vamp_compat:textures/gui/advancements/occult_arts_background.png",
     "title": {
       "translate": "advancement.mca_vamp_compat.discover_occult_village"
     },
@@ -14,7 +15,6 @@
     "announce_to_chat": true,
     "hidden": false
   },
-  "parent": "minecraft:adventure/root",
   "criteria": {
     "discovered": {
       "trigger": "minecraft:impossible"

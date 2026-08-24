@@ -2,6 +2,11 @@ package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.easyvillagers.McaFactionPickupPermissionService;
 import com.guilh.mca_vampirism_compat.easyvillagers.McaEvStatePayload;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.npc.Villager;
@@ -51,5 +56,36 @@ public abstract class McaEvCompatCaptureMixin {
     private static void vampirismMcaCompat$restoreFactionPayload(Level level, ItemStack stack,
                                                                  CallbackInfoReturnable<Villager> cir) {
         McaEvStatePayload.restore(stack, cir.getReturnValue());
+    }
+
+    /**
+     * mca-ev-compat builds the entity used by actual item placement in its
+     * private spawnStoredMcaVillager path instead of createStoredMcaVillagerEntity.
+     * Restore before it joins the level so MCA's join work sees the correct
+     * faction state on its first tick and before a player can open its trades.
+     */
+    @WrapOperation(
+            method = "spawnStoredMcaVillager(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/BlockPos;FLjava/lang/String;)Z",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/server/level/ServerLevel;addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z"
+            ),
+            require = 1,
+            remap = false
+    )
+    private static boolean vampirismMcaCompat$restoreFactionPayloadBeforePlacement(
+            ServerLevel level,
+            Entity entity,
+            Operation<Boolean> original,
+            ServerLevel ignoredLevel,
+            ItemStack stack,
+            BlockPos ignoredPos,
+            float ignoredYaw,
+            String ignoredAction
+    ) {
+        if (entity instanceof Villager villager) {
+            McaEvStatePayload.restore(stack, villager);
+        }
+        return original.call(level, entity);
     }
 }

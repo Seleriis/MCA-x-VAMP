@@ -27,7 +27,6 @@ public abstract class EasyVillagersCycleTradesButtonMixin {
         if (EasyVillagersCycleClientState.hasStateFor(menu.containerId)) {
             cir.setReturnValue(
                     EasyVillagersCycleClientState.isEnabledFor(menu.containerId)
-                            && menu.showProgressBar()
                             && !TradeCycleEligibility.hasActiveOffer(menu)
             );
         }

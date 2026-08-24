@@ -1,6 +1,8 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
+import com.guilh.mca_vampirism_compat.advancement.McaCompatAdvancements;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
@@ -55,6 +57,9 @@ public final class McaVampireInfectionService {
             McaVampireStateService.markInfected(villager, sourceUuid, target.level().getGameTime());
             if (source instanceof Player player && sourceType == InfectionSourceType.PLAYER) {
                 McaVampireBiteService.recordPlayerConversionBite(player, villager);
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    McaAdvancementService.award(serverPlayer, McaCompatAdvancements.VAMPIRE_INFECTION);
+                }
             }
         }
         McaVillageVampireThreatService.recordVampireThreat(source, target, sourceType.logName());

@@ -8,25 +8,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TradeCycleEligibilityTest {
     @Test
-    void allowsFreshVanillaAndSyntheticMcaProfessionXp() {
+    void allowsAnUntradedProfessionalVillagerAtAnyXpValue() {
         MerchantOffers offers = new MerchantOffers();
 
-        assertTrue(TradeCycleEligibility.isAvailable(false, true, 0, false, offers));
-        assertTrue(TradeCycleEligibility.isAvailable(false, true, 1, false, offers));
+        assertTrue(TradeCycleEligibility.isAvailable(false, false, offers));
     }
 
     @Test
-    void rejectsRealProgressClosedMenusAndExplicitTradeLock() {
+    void rejectsUsedOffersClosedMenusAndExplicitTradeLock() {
         MerchantOffers offers = new MerchantOffers();
 
-        assertFalse(TradeCycleEligibility.isAvailable(false, true, 2, false, offers));
-        assertFalse(TradeCycleEligibility.isAvailable(true, true, 0, false, offers));
-        assertFalse(TradeCycleEligibility.isAvailable(false, true, 0, true, offers));
-        assertFalse(TradeCycleEligibility.isAvailable(false, false, 0, false, offers));
+        assertFalse(TradeCycleEligibility.isAvailable(true, false, offers));
+        assertFalse(TradeCycleEligibility.isAvailable(false, true, offers));
     }
 
     @Test
     void rejectsMissingOfferState() {
-        assertFalse(TradeCycleEligibility.isAvailable(false, true, 0, false, null));
+        assertFalse(TradeCycleEligibility.isAvailable(false, false, null));
     }
 }

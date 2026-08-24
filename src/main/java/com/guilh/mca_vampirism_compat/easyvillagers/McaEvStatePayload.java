@@ -93,7 +93,8 @@ public final class McaEvStatePayload {
             }).orElse(false);
         }
         boolean restoredInheritance = McaBabyInheritancePayload.apply(stack, mcaVillager);
-        return restoredState || restoredInheritance;
+        boolean restoredFactionTrait = restoreFactionTrait(stack, mcaVillager);
+        return restoredState || restoredInheritance || restoredFactionTrait;
     }
 
     public static Optional<FactionSnapshot> readFaction(ItemStack stack) {
@@ -119,7 +120,58 @@ public final class McaEvStatePayload {
         if (payload == null || !payload.contains(STATE_KEY, Tag.TAG_COMPOUND)) {
             return Optional.empty();
         }
-        return Optional.of(payload.getCompound(STATE_KEY).copy());
+        CompoundTag state = payload.getCompound(STATE_KEY).copy();
+        LegacyEmptyItemStackSanitizer.sanitize(state);
+        return Optional.of(state);
+    }
+
+    /**
+     * Permanently rewrites the compat-owned state when an old stored stack is
+     * otherwise being normalized by mca-ev-compat. This never rewrites its
+     * owner snapshot.
+     */
+    public static boolean sanitizeLegacyStatePayload(ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return false;
+        }
+        CompoundTag root = customData(stack);
+        if (!root.contains(PAYLOAD_KEY, Tag.TAG_COMPOUND)) {
+            return false;
+        }
+        CompoundTag payload = root.getCompound(PAYLOAD_KEY);
+        if (!payload.contains(STATE_KEY, Tag.TAG_COMPOUND)
+                || !LegacyEmptyItemStackSanitizer.sanitize(payload.getCompound(STATE_KEY))) {
+            return false;
+        }
+        root.put(PAYLOAD_KEY, payload);
+        CustomData.set(DataComponents.CUSTOM_DATA, stack, root);
+        return true;
+    }
+
+    /**
+     * The visual MCA snapshot is deliberately separate from the sanitized
+     * Easy Villagers entity. Recreate the canonical trait from our own payload
+     * before placement so MCA can initialize the placed villager correctly.
+     */
+    private static boolean restoreFactionTrait(ItemStack stack, VillagerEntityMCA villager) {
+        Optional<FactionSnapshot> optionalFaction = readFaction(stack);
+        if (optionalFaction.isEmpty()) {
+            return false;
+        }
+        FactionSnapshot faction = optionalFaction.get();
+        if (faction.vampire()) {
+            McaTraitBridge.addVampireTrait(villager);
+            return true;
+        }
+        if (faction.hunter()) {
+            McaTraitBridge.addHunterTrait(villager);
+            return true;
+        }
+        if (faction.werewolf()) {
+            McaTraitBridge.addWerewolfTrait(villager);
+            return true;
+        }
+        return false;
     }
 
     private static CompoundTag payload(ItemStack stack) {

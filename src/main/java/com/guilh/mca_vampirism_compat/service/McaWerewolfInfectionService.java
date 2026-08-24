@@ -1,6 +1,8 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
+import com.guilh.mca_vampirism_compat.advancement.McaCompatAdvancements;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import net.conczin.mca.entity.VillagerEntityMCA;
@@ -61,6 +63,9 @@ public final class McaWerewolfInfectionService {
         UUID sourceUuid = source == null ? null : source.getUUID();
         ModCapabilities.get(target)
                 .ifPresent(state -> state.startWerewolfInfection(target.level().getGameTime(), duration, sourceUuid));
+        if (source instanceof net.minecraft.server.level.ServerPlayer player) {
+            McaAdvancementService.award(player, McaCompatAdvancements.WEREWOLF_INFECTION);
+        }
         McaVampirismCompat.debugLog(
                 "[WEREWOLF-CONVERSION] infection applied target={} source={} duration={} effectFound={}",
                 target.getUUID(),
