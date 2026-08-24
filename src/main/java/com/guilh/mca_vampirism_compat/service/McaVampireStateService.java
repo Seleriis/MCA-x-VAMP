@@ -11,6 +11,7 @@ import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.faction.hunter.McaHunterAggressionPolicy;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
+import com.guilh.mca_vampirism_compat.trade.McaVampireSpecialTradeService;
 import de.teamlapen.vampirism.core.ModEffects;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.VillagerLike;
@@ -311,6 +312,7 @@ public final class McaVampireStateService {
             return;
         }
         McaVampireAppearanceHandler.restoreOriginalAppearance(villager);
+        McaVampireSpecialTradeService.removeForNoLongerVampire(villager);
         ModCapabilities.get(villager).ifPresent(state -> state.clearVampirismAfterCure());
         McaTraitBridge.removeVampireTrait(villager);
         villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());

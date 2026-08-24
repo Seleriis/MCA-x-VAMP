@@ -6,6 +6,7 @@ import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.network.EasyVillagersCycleStatePayload;
 import com.guilh.mca_vampirism_compat.service.McaHunterTradeService;
 import com.guilh.mca_vampirism_compat.service.McaTradeContextService;
+import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfTradeService;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.server.level.ServerPlayer;
@@ -153,8 +154,15 @@ public final class McaFactionTradeSession {
         }
 
         priceOverlay.restore();
+        boolean vampireTrade = McaVampireStateService.isVampire(villager);
+        if (vampireTrade) {
+            McaVampireSpecialTradeService.resetForOfferReroll(villager);
+        }
         villager.setOffers(null);
         McaOfferPreparation.prepare(villager, player);
+        if (vampireTrade) {
+            McaVampireSpecialTradeService.ensureForVampire(villager);
+        }
         priceOverlay = McaFactionTradePriceOverlay.create(villager.getOffers(), faction, tradeKind);
         priceOverlay.apply();
 

@@ -351,7 +351,7 @@ public final class McaVampirismCompatConfig {
         VAMPIRE_VILLAGERS_USE_NON_LETHAL_BITE_ON_HUMANS = builder.define("vampireVillagersUseNonLethalBiteOnHumans", true);
         RETALIATION_MEMORY_TICKS = builder.defineInRange("retaliationMemoryTicks", 2400, 20, 72000);
         ATTACK_ONLY_TRANSFORMED_WEREWOLVES = builder.define("attackOnlyTransformedWerewolves", true);
-        builder.comment("Player vampire bites that infect MCA villagers should not count as normal damaging attacks.");
+        builder.comment("Legacy option retained for existing TOMLs. Player melee attacks are never classified as bites.");
         VAMPIRE_PLAYER_BITE_DEALS_DAMAGE_TO_MCA_VILLAGERS = builder.define("vampirePlayerBiteDealsDamageToMcaVillagers", false);
         VAMPIRE_PLAYER_BITE_DAMAGE_TO_MCA_VILLAGERS = builder.defineInRange("vampirePlayerBiteDamageToMcaVillagers", 0.0D, 0.0D, 40.0D);
         builder.pop();
@@ -493,13 +493,16 @@ public final class McaVampirismCompatConfig {
         HUNTER_VILLAGER_FALLBACK_TO_VANILLA_POISON = builder.define("hunterVillagerFallbackToVanillaPoison", true);
         builder.comment("If true, MCA hunter-aligned villagers resist compat-controlled werewolf infection/conversion.");
         HUNTER_VILLAGERS_IMMUNE_TO_WEREWOLF_TRANSFORMATION = builder.define("hunterVillagersImmuneToWerewolfTransformation", true);
+        builder.comment("If true, hunter-aligned MCA villagers target revealed vampire players. Disguised vampires remain safe unless hunterVillagersIgnoreVampireDisguise is enabled.");
         HUNTER_VILLAGERS_ATTACK_VAMPIRE_PLAYERS = builder.define("hunterVillagersAttackVampirePlayers", true);
         HUNTER_VILLAGERS_ATTACK_MCA_VAMPIRE_VILLAGERS = builder.define("hunterVillagersAttackMcaVampireVillagers", false);
         HUNTER_VILLAGERS_ATTACK_TRANSFORMED_WEREWOLVES = builder.define("hunterVillagersAttackTransformedWerewolves", true);
         HUNTER_VILLAGERS_ATTACK_VAMPIRE_MOBS = builder.define("hunterVillagersAttackVampireMobs", true);
-        HUNTER_VILLAGERS_ATTACK_ONLY_WHILE_DEFENSIVE = builder.define("hunterVillagersAttackOnlyWhileDefensive", true);
+        builder.comment("If true, hunters only acquire faction targets while defensive, in a hunter village, or retaliating. Default false lets them actively hunt revealed enemies within their normal range.");
+        HUNTER_VILLAGERS_ATTACK_ONLY_WHILE_DEFENSIVE = builder.define("hunterVillagersAttackOnlyWhileDefensive", false);
         HUNTER_VILLAGERS_IGNORE_VAMPIRE_DISGUISE = builder.define("hunterVillagersIgnoreVampireDisguise", false);
-        HUNTER_VILLAGER_ATTACK_DAMAGE = builder.defineInRange("hunterVillagerAttackDamage", 3.0D, 0.0D, 20.0D);
+        builder.comment("Base melee damage dealt by a hunter villager. Default 2.0 equals one heart before armor, resistance and other damage modifiers.");
+        HUNTER_VILLAGER_ATTACK_DAMAGE = builder.defineInRange("hunterVillagerAttackDamage", 2.0D, 0.0D, 20.0D);
         HUNTER_VILLAGER_ATTACK_COOLDOWN_TICKS = builder.defineInRange("hunterVillagerAttackCooldownTicks", 35, 1, 72000);
         HUNTER_VILLAGER_FOLLOW_RANGE = builder.defineInRange("hunterVillagerFollowRange", 24.0D, 1.0D, 128.0D);
         builder.comment("If true, hunter-controlled villages grant MCA villagers the addon hunter trait and hunter alignment.");
@@ -842,7 +845,11 @@ public final class McaVampirismCompatConfig {
     public static boolean vampireVillagersUseNonLethalBiteOnHumans() { return VAMPIRE_VILLAGERS_USE_NON_LETHAL_BITE_ON_HUMANS.get(); }
     public static long retaliationMemoryTicks() { return RETALIATION_MEMORY_TICKS.get(); }
     public static boolean attackOnlyTransformedWerewolves() { return ATTACK_ONLY_TRANSFORMED_WEREWOLVES.get(); }
+    /** @deprecated Actual feeding is handled by Vampirism's bite events; this legacy TOML key is ignored. */
+    @Deprecated(forRemoval = false)
     public static boolean vampirePlayerBiteDealsDamageToMcaVillagers() { return VAMPIRE_PLAYER_BITE_DEALS_DAMAGE_TO_MCA_VILLAGERS.get(); }
+    /** @deprecated Actual feeding is handled by Vampirism's bite events; this legacy TOML key is ignored. */
+    @Deprecated(forRemoval = false)
     public static double vampirePlayerBiteDamageToMcaVillagers() { return VAMPIRE_PLAYER_BITE_DAMAGE_TO_MCA_VILLAGERS.get(); }
     public static double maxHealthMultiplier() { return MAX_HEALTH_MULTIPLIER.get(); }
     public static double attackDamageBonus() { return ATTACK_DAMAGE_BONUS.get(); }

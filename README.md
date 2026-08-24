@@ -179,6 +179,12 @@ vampireEyesEnabled = true
 vampirePlayerBiteDealsDamageToMcaVillagers = false
 vampirePlayerBiteDamageToMcaVillagers = 0.0
 
+[hunter]
+hunterVillagersAttackVampirePlayers = true
+hunterVillagersAttackOnlyWhileDefensive = false
+hunterVillagersIgnoreVampireDisguise = false
+hunterVillagerAttackDamage = 2.0
+
 [werewolf]
 oneWerewolfParentInheritanceChance = 0.45
 twoWerewolfParentsInheritanceChance = 1.0
@@ -201,7 +207,11 @@ enableVerboseAiDebugLogs = false
 enableVerboseNbtDebugLogs = false
 ```
 
-`vampirePlayerBiteDealsDamageToMcaVillagers=false` makes player vampire bite interactions avoid normal physical attack damage against MCA villagers. The bite can still drain blood through Vampirism and apply the compat infection/poison rules, but it will not accidentally kill the villager as a regular attack. If enabled, the physical bite damage is allowed and can be capped with `vampirePlayerBiteDamageToMcaVillagers`.
+`vampirePlayerBiteDealsDamageToMcaVillagers` and `vampirePlayerBiteDamageToMcaVillagers` remain accepted only for old TOML files. Since 2.1.3, player melee hits are never treated as bites; actual feeding, infection and Hunter blood poison use Vampirism's native bite flow.
+
+Since 2.1.4, fresh installations let Hunter-aligned MCA villagers actively pursue revealed Vampire players. They respect Vampire disguises by default and deal 2.0 damage (one heart) per hit before normal Minecraft modifiers. Existing TOML files are never overwritten: set `hunterVillagersAttackOnlyWhileDefensive=false` and `hunterVillagerAttackDamage=2.0` yourself to adopt these defaults.
+
+Since 2.1.7, MCA villagers converted to Vampires use Vampirism's native one-in-three special-offer opportunity whenever their professional offers are generated. This can add the native heart, emerald and blood-bottle trades without replacing MCA's offers or its real merchant transaction. Cycle Trades rerolls this opportunity before the first completed trade, including in the Easy Villagers Trader.
 
 `mcaVillageEffectsFollowMcaBounds=true` makes vampire fog and compat-owned special-village effects use the complete editable MCA village footprint when the faction totem is inside that village; there is no artificial horizontal size cap. `mcaVillageFogBorderMarginBlocks=4` keeps Vampire fog four blocks beyond that border while Hunter control, Occult Arts discovery and the outline stay on the exact MCA area. Capture, raids, POIs and spawning remain controlled by Vampirism's own village area.
 
@@ -246,7 +256,7 @@ Optional:
 - Java packages still use the historical internal package name `com.guilh.mca_vampirism_compat`; this is internal and not the public mod id.
 - MCA trait ids still use the legacy `vampirism_mca_compat` namespace to preserve existing villager data.
 - The public mod id is `mca_vamp_compat`.
-- The final jar name is `mca-vamp-compat-1.21.1-2.1.2.jar`.
+- The final jar name is `mca-vamp-compat-1.21.1-2.1.7.jar`.
 
 ## Arts Occultes Progress
 
@@ -303,13 +313,13 @@ gradlew.bat clean test releaseBundle
 The distributable jar is generated at:
 
 ```text
-build/libs/mca-vamp-compat-1.21.1-2.1.2.jar
+build/libs/mca-vamp-compat-1.21.1-2.1.7.jar
 ```
 
 The complete release bundle, including sources, notes and SHA-256 hashes, is generated at:
 
 ```text
-build/release/mca-vamp-compat-1.21.1-2.1.2/
+build/release/mca-vamp-compat-1.21.1-2.1.7/
 ```
 
 ## Runtime Marker
@@ -317,13 +327,13 @@ build/release/mca-vamp-compat-1.21.1-2.1.2/
 Current implementation marker:
 
 ```text
-BUILD_MARKER = 2.1.2-neoforge-1.21.1-mca-7.7.36
+BUILD_MARKER = 2.1.7-neoforge-1.21.1-mca-7.7.36
 ```
 
 The log should show:
 
 ```text
-[MCA Reborn x Vampirism Compat] BUILD_MARKER = 2.1.2-neoforge-1.21.1-mca-7.7.36
+[MCA Reborn x Vampirism Compat] BUILD_MARKER = 2.1.7-neoforge-1.21.1-mca-7.7.36
 ```
 
 ## Feedback and Bug Reports

@@ -19,4 +19,5 @@ public interface VillagerTradeAccessor {
 
     @Invoker("updateSpecialPrices")
     void mcaVampCompat$updateSpecialPrices(Player player);
+
 }

@@ -46,7 +46,6 @@ import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
 import com.guilh.mca_vampirism_compat.util.McaVampireTargetUtil;
 import com.guilh.mca_vampirism_compat.util.McaVillagerUtil;
-import com.guilh.mca_vampirism_compat.util.VampirismUtil;
 import de.teamlapen.vampirism.api.event.BloodDrinkEvent;
 import de.teamlapen.vampirism.api.event.VampirismVillageEvent;
 import de.teamlapen.vampirism.core.ModEffects;
@@ -325,27 +324,10 @@ public final class VampiricVillagerEvents {
             event.setCanceled(true);
             return;
         }
-        if (target.level().isClientSide || !McaVillagerUtil.isMcaVillager(target)) {
-            return;
-        }
-
-        if (McaVillagerUtil.isMcaVampire(attacker)) {
-            return;
-        }
-        if (!VampirismUtil.isVampiric(attacker) || !VampirismUtil.isCloseLivingAttack(attacker, target)) {
-            return;
-        }
-
-        LivingEntity livingAttacker = attacker instanceof LivingEntity value ? value : null;
-        McaVampireBiteService.applySanguinareInfection(target, livingAttacker);
-        if (McaVampireBiteService.shouldCancelBiteDamage(attacker, target)) {
-            McaVampirismCompat.debugLog(
-                    "[BITE] canceling vampire player attack damage target={} attacker={} event=LivingAttackEvent",
-                    target.getUUID(),
-                    attacker == null ? null : attacker.getUUID()
-            );
-            event.setCanceled(true);
-        }
+        // Player melee damage is deliberately left untouched here.  The actual
+        // Vampirism bite flow emits BloodDrinkEvent and is handled above; using
+        // proximity as a bite signal made every sword or Better Combat hit look
+        // like blood feeding.
     }
 
     @SubscribeEvent
@@ -412,23 +394,6 @@ public final class VampiricVillagerEvents {
                     "[CURE] attack blocked source={} reason=CURING",
                     source == null ? null : source.getUUID()
             );
-            return;
-        }
-        if (source instanceof LivingEntity livingSource && McaVampireBiteService.shouldCancelBiteDamage(source, target)) {
-            McaVampireBiteService.applySanguinareInfection(target, livingSource);
-            float damage = (float) McaVampirismCompatConfig.vampirePlayerBiteDamageToMcaVillagers();
-            McaVampirismCompat.debugLog(
-                    "[BITE] neutralizing vampire player bite damage target={} attacker={} originalAmount={} configuredAmount={}",
-                    target.getUUID(),
-                    source.getUUID(),
-                    event.getAmount(),
-                    damage
-            );
-            if (damage <= 0.0F) {
-                event.setCanceled(true);
-            } else {
-                event.setAmount(Math.min(event.getAmount(), damage));
-            }
             return;
         }
         if (target.level().isClientSide || !(source instanceof PathfinderMob vampire)) {

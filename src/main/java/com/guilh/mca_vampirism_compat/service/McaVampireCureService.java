@@ -13,6 +13,7 @@ import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.social.McaSocialActionType;
 import com.guilh.mca_vampirism_compat.social.McaFactionContextualDialogueService;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
+import com.guilh.mca_vampirism_compat.trade.McaVampireSpecialTradeService;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
 import de.teamlapen.vampirism.core.ModEffects;
 import net.conczin.mca.entity.VillagerEntityMCA;
@@ -532,6 +533,7 @@ public final class McaVampireCureService {
     private static void cleanupVampireCureState(VillagerEntityMCA villager) {
         villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
         villager.removeEffect(MobEffects.WEAKNESS);
+        McaVampireSpecialTradeService.removeForNoLongerVampire(villager);
         ModCapabilities.get(villager)
                 .ifPresent(state -> {
                     state.clearVampirismAfterCure();

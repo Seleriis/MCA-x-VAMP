@@ -6,6 +6,7 @@ import com.guilh.mca_vampirism_compat.easyvillagers.readonly.StoredMcaVillagerIn
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.network.EasyVillagersCycleStatePayload;
 import com.guilh.mca_vampirism_compat.trade.McaFactionTradePriceOverlay;
+import com.guilh.mca_vampirism_compat.trade.McaVampireSpecialTradeService;
 import com.guilh.mca_vampirism_compat.trade.TradeCycleEligibility;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -56,6 +57,10 @@ public final class EasyVillagersFactionMerchantSession {
         this.hunterTrade = hunterTrade;
         this.werewolfTrade = werewolfTrade;
 
+        if (storedVillagerInfo.isVampire()) {
+            McaVampireSpecialTradeService.ensureForVampire(storedVillager);
+            this.offers = storedVillager.getOffers();
+        }
         applyNativePlayerPrices();
         applyFactionPrices();
     }
@@ -210,8 +215,15 @@ public final class EasyVillagersFactionMerchantSession {
 
         priceOverlay.restore();
         menu.setSelectionHint(0);
+        if (storedVillagerInfo.isVampire()) {
+            McaVampireSpecialTradeService.resetForOfferReroll(storedVillager);
+        }
         storedVillager.setOffers(null);
         offers = storedVillager.getOffers();
+        if (storedVillagerInfo.isVampire()) {
+            McaVampireSpecialTradeService.ensureForVampire(storedVillager);
+            offers = storedVillager.getOffers();
+        }
         applyNativePlayerPrices();
         applyFactionPrices();
         menu.setSelectionHint(0);

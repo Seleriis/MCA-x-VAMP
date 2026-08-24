@@ -3,13 +3,10 @@ package com.guilh.mca_vampirism_compat.service;
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
-import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.util.McaVampireTargetUtil;
-import com.guilh.mca_vampirism_compat.util.VampirismUtil;
 import de.teamlapen.vampirism.core.ModEffects;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.ai.relationship.AgeState;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
@@ -95,24 +92,6 @@ public final class McaVampireBiteService {
                 target,
                 McaVampireInfectionService.sourceTypeFor(source)
         );
-    }
-
-    public static boolean shouldCancelBiteDamage(Entity attacker, LivingEntity target) {
-        if (target.level().isClientSide
-                || McaVampirismCompatConfig.vampirePlayerBiteDealsDamageToMcaVillagers()
-                || !(target instanceof VillagerEntityMCA)
-                || McaVampireStateService.isVampire(target)
-                || !(attacker instanceof Player player)
-                || McaVampireFactionService.classifyPlayer(player) != PlayerFaction.VAMPIRE
-                || !VampirismUtil.isCloseLivingAttack(attacker, target)) {
-            return false;
-        }
-        return McaHunterBloodService.isPoisonousBloodTarget(target)
-                || canMcaVillagerReceiveInfection(target)
-                || target.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())
-                || ModCapabilities.get(target)
-                .map(state -> state.isInfected())
-                .orElse(false);
     }
 
     public static boolean wasRecentlyBitten(LivingEntity target) {

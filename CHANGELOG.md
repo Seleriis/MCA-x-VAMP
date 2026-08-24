@@ -1,5 +1,59 @@
 # Changelog
 
+## 2.1.7 - Reliable MCA Vampire offer generation
+
+- Moves the native Vampirism special-offer roll to MCA's own `getOffers`
+  generation boundary. Professional MCA Vampires are now considered whenever
+  MCA actually produces its live offer list, including a Cycle Trades reroll
+  and a profession refresh.
+- Keeps the menu-opening call only as a safe fallback. The roll remains native:
+  one special Vampirism offer has a one-in-three chance per generated list.
+
+## 2.1.6 - Startup repair for special Vampirism offers
+
+- Fixes a startup crash in 2.1.5 caused by an invalid inherited-method Mixin
+  accessor on `Villager`.
+- Uses the public `ItemListing#getOffer` API to select the native Vampirism
+  converted-villager offer directly, preserving the same one-in-three chance
+  without an additional Mixin.
+
+## 2.1.5 - Vampirism special offers for MCA vampires
+
+- MCA villagers converted to Vampires now use Vampirism's native one-in-three
+  special-offer roll when their profession offers are generated. This can add
+  the same heart, emerald and blood-bottle opportunities offered by native
+  converted Vampirism villagers.
+- Keeps MCA's live offers and real merchant transaction intact; faction prices
+  still apply only as the temporary session overlay.
+- Re-rolls the special-offer opportunity together with Cycle Trades and
+  persists the outcome while the same offers remain active, so reopening a
+  merchant cannot duplicate special offers.
+- Makes the same offer pool available in the Easy Villagers Trader and removes
+  compat-added special offers when a Vampire is cured or edited back to human.
+
+## 2.1.4 - Active Hunter patrols
+
+- New installations let Hunter-aligned MCA villagers actively target revealed
+  Vampire players, instead of limiting their faction combat to defensive
+  situations.
+- Reduces the default Hunter melee damage from 3.0 to 2.0 (one heart) per
+  hit, before normal Minecraft damage modifiers.
+- Keeps Vampire disguises safe by default and never targets players who are no
+  longer Vampires.
+- Existing TOML files are intentionally preserved. Set
+  `hunterVillagersAttackOnlyWhileDefensive=false` and
+  `hunterVillagerAttackDamage=2.0` to opt into the new defaults.
+
+## 2.1.3 - Player attacks are no longer bites
+
+- Stops treating generic player melee damage as Vampirism blood feeding.
+  Sword, fist and Better Combat hits now retain their normal damage against
+  MCA villagers.
+- Leaves infection, blood drinking and Hunter toxicant exclusively to
+  Vampirism's native bite and blood-drinking flows.
+- Keeps the two legacy player-bite damage TOML keys readable but marks them as
+  obsolete, so existing configuration files remain valid.
+
 ## 2.1.2 - Stability and localisation polish
 
 - Resolves active village-mission residents directly by UUID rather than

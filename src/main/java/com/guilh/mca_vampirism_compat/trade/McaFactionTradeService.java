@@ -90,6 +90,13 @@ public final class McaFactionTradeService {
         }
         McaTradeContextService.markMcaTradeAttempt(player, villager);
         PlayerFaction faction = tradeFaction(player, villager);
+        // MCA deliberately keeps a transformed villager as VillagerEntityMCA,
+        // so Vampirism's ConvertedVillagerEntity#updateTrades never runs for
+        // it. Add the native converted-villager opportunity before the live
+        // faction price overlay is opened.
+        if (McaVampireStateService.isVampire(villager)) {
+            McaVampireSpecialTradeService.ensureForVampire(villager);
+        }
         McaVampireFactionService.debugClassification(player, faction, "MCA_TRADE_OPTION");
         McaVampirismCompat.debugLog(
                 "[TRADE] native MCA trade allowed faction={} villager={}",
