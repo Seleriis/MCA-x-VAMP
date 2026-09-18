@@ -20,15 +20,12 @@ public final class McaVampirismCompatConfig {
     private static final ModConfigSpec.DoubleValue VILLAGER_BITE_DAMAGE;
     private static final ModConfigSpec.IntValue RECENTLY_BITTEN_TARGET_COOLDOWN_TICKS;
     private static final ModConfigSpec.BooleanValue BLOOD_DRAIN_STOPS_COMBAT;
-    private static final ModConfigSpec.BooleanValue PREVENT_VAMPIRES_BITING_VAMPIRES;
     private static final ModConfigSpec.BooleanValue PREVENT_VAMPIRES_BITING_MCA_VAMPIRES;
     private static final ModConfigSpec.BooleanValue SHOW_ALREADY_VAMPIRE_BITE_MESSAGE;
     private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_INFECT_HUMANS_AT_NIGHT;
     private static final ModConfigSpec.BooleanValue VAMPIRE_VILLAGERS_USE_NON_LETHAL_BITE_ON_HUMANS;
     private static final ModConfigSpec.IntValue RETALIATION_MEMORY_TICKS;
     private static final ModConfigSpec.BooleanValue ATTACK_ONLY_TRANSFORMED_WEREWOLVES;
-    private static final ModConfigSpec.BooleanValue VAMPIRE_PLAYER_BITE_DEALS_DAMAGE_TO_MCA_VILLAGERS;
-    private static final ModConfigSpec.DoubleValue VAMPIRE_PLAYER_BITE_DAMAGE_TO_MCA_VILLAGERS;
 
     private static final ModConfigSpec.DoubleValue MAX_HEALTH_MULTIPLIER;
     private static final ModConfigSpec.DoubleValue ATTACK_DAMAGE_BONUS;
@@ -118,6 +115,7 @@ public final class McaVampirismCompatConfig {
     private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_ATTACK_ONLY_WHILE_DEFENSIVE;
     private static final ModConfigSpec.BooleanValue HUNTER_VILLAGERS_IGNORE_VAMPIRE_DISGUISE;
     private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_ATTACK_DAMAGE;
+    private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_STAKE_CHANCE;
     private static final ModConfigSpec.IntValue HUNTER_VILLAGER_ATTACK_COOLDOWN_TICKS;
     private static final ModConfigSpec.DoubleValue HUNTER_VILLAGER_FOLLOW_RANGE;
     private static final ModConfigSpec.BooleanValue HUNTER_VILLAGE_CONTROL_GRANTS_HUNTER_TRAIT;
@@ -287,6 +285,7 @@ public final class McaVampirismCompatConfig {
     private static final ModConfigSpec.DoubleValue ONE_VAMPIRE_PARENT_TRAIT_INHERITANCE_CHANCE;
     private static final ModConfigSpec.DoubleValue TWO_VAMPIRE_PARENTS_TRAIT_INHERITANCE_CHANCE;
 
+    private static final ModConfigSpec.BooleanValue RESPECT_MCA_RELATIONSHIPS_IN_COMBAT;
     private static final ModConfigSpec.BooleanValue RESPECT_MCA_PLAYER_COMMANDS;
     private static final ModConfigSpec.BooleanValue SUPPRESS_AUTONOMOUS_COMBAT_WHILE_FOLLOWING;
     private static final ModConfigSpec.BooleanValue SUPPRESS_AUTONOMOUS_COMBAT_WHILE_STAYING;
@@ -304,6 +303,7 @@ public final class McaVampirismCompatConfig {
     private static final ModConfigSpec.BooleanValue BLOCK_UNKNOWN_MCA_COMMANDS_FOR_ENEMY_FACTIONS;
 
     private static final ModConfigSpec.BooleanValue GIVE_OCCULT_ARTS_BOOK_ON_SPECIAL_VILLAGE_DISCOVERY;
+    private static final java.util.Map<com.guilh.mca_vampirism_compat.mission.OccultVillageMissionType, ModConfigSpec.IntValue> MISSION_REWARDS = new java.util.EnumMap<>(com.guilh.mca_vampirism_compat.mission.OccultVillageMissionType.class);
     private static final ModConfigSpec.BooleanValue ENABLE_OCCULT_VILLAGE_MISSIONS;
     private static final ModConfigSpec.IntValue OCCULT_VILLAGE_MISSION_COOLDOWN_TICKS;
     private static final ModConfigSpec.IntValue OCCULT_VILLAGE_MISSION_DEADLINE_TICKS;
@@ -344,16 +344,14 @@ public final class McaVampirismCompatConfig {
         VILLAGER_BITE_DAMAGE = builder.defineInRange("villagerBiteDamage", 0.0D, 0.0D, 40.0D);
         RECENTLY_BITTEN_TARGET_COOLDOWN_TICKS = builder.defineInRange("recentlyBittenTargetCooldownTicks", 12000, 20, 72000);
         BLOOD_DRAIN_STOPS_COMBAT = builder.define("bloodDrainStopsCombat", true);
-        PREVENT_VAMPIRES_BITING_VAMPIRES = builder.define("preventVampiresBitingVampires", true);
+        McaLegacyBiteToml.defineVampireFeedingOption(builder);
         PREVENT_VAMPIRES_BITING_MCA_VAMPIRES = builder.define("preventVampiresBitingMcaVampires", true);
         SHOW_ALREADY_VAMPIRE_BITE_MESSAGE = builder.define("showAlreadyVampireBiteMessage", true);
         VAMPIRE_VILLAGERS_INFECT_HUMANS_AT_NIGHT = builder.define("vampireVillagersInfectHumansAtNight", true);
         VAMPIRE_VILLAGERS_USE_NON_LETHAL_BITE_ON_HUMANS = builder.define("vampireVillagersUseNonLethalBiteOnHumans", true);
         RETALIATION_MEMORY_TICKS = builder.defineInRange("retaliationMemoryTicks", 2400, 20, 72000);
         ATTACK_ONLY_TRANSFORMED_WEREWOLVES = builder.define("attackOnlyTransformedWerewolves", true);
-        builder.comment("Legacy option retained for existing TOMLs. Player melee attacks are never classified as bites.");
-        VAMPIRE_PLAYER_BITE_DEALS_DAMAGE_TO_MCA_VILLAGERS = builder.define("vampirePlayerBiteDealsDamageToMcaVillagers", false);
-        VAMPIRE_PLAYER_BITE_DAMAGE_TO_MCA_VILLAGERS = builder.defineInRange("vampirePlayerBiteDamageToMcaVillagers", 0.0D, 0.0D, 40.0D);
+        McaLegacyBiteToml.definePlayerMeleeOptions(builder);
         builder.pop();
 
         builder.push("balance");
@@ -503,6 +501,8 @@ public final class McaVampirismCompatConfig {
         HUNTER_VILLAGERS_IGNORE_VAMPIRE_DISGUISE = builder.define("hunterVillagersIgnoreVampireDisguise", false);
         builder.comment("Base melee damage dealt by a hunter villager. Default 2.0 equals one heart before armor, resistance and other damage modifiers.");
         HUNTER_VILLAGER_ATTACK_DAMAGE = builder.defineInRange("hunterVillagerAttackDamage", 2.0D, 0.0D, 20.0D);
+        builder.comment("Chance for a real Hunter villager to receive a Vampirism stake instead of a pitchfork. The chosen weapon is persisted per villager.");
+        HUNTER_VILLAGER_STAKE_CHANCE = builder.defineInRange("hunterVillagerStakeChance", 0.25D, 0.0D, 1.0D);
         HUNTER_VILLAGER_ATTACK_COOLDOWN_TICKS = builder.defineInRange("hunterVillagerAttackCooldownTicks", 35, 1, 72000);
         HUNTER_VILLAGER_FOLLOW_RANGE = builder.defineInRange("hunterVillagerFollowRange", 24.0D, 1.0D, 128.0D);
         builder.comment("If true, hunter-controlled villages grant MCA villagers the addon hunter trait and hunter alignment.");
@@ -746,6 +746,8 @@ public final class McaVampirismCompatConfig {
 
         builder.push("mca_commands");
         builder.comment("If true, special vampire/hunter/werewolf AI reads MCA movement commands and avoids overriding explicit player orders.");
+        builder.comment("Protect MCA spouses, parents, children, siblings and player friends from automatic combat. Confirmed aggression permits retaliation.");
+        RESPECT_MCA_RELATIONSHIPS_IN_COMBAT = builder.define("respectMcaRelationshipsInCombat", false);
         RESPECT_MCA_PLAYER_COMMANDS = builder.define("respectMcaPlayerCommands", true);
         builder.comment("If true, special villagers do not start autonomous combat while following a player through MCA commands.");
         SUPPRESS_AUTONOMOUS_COMBAT_WHILE_FOLLOWING = builder.define("suppressAutonomousCombatWhileFollowing", true);
@@ -778,6 +780,11 @@ public final class McaVampirismCompatConfig {
         builder.pop();
 
         builder.push("village_missions");
+        builder.push("rewards");
+        for (var type : com.guilh.mca_vampirism_compat.mission.OccultVillageMissionType.values()) {
+            MISSION_REWARDS.put(type, builder.defineInRange(type.name().toLowerCase(java.util.Locale.ROOT), type.defaultReward(), 0, 100));
+        }
+        builder.pop();
         builder.comment("If true, eligible residents of special villages can offer supplies or urgent aid through MCA conversations.");
         ENABLE_OCCULT_VILLAGE_MISSIONS = builder.define("enableOccultVillageMissions", true);
         builder.comment("Minimum time between village requests for the same player and totem. 24000 ticks is one Minecraft day.");
@@ -838,19 +845,12 @@ public final class McaVampirismCompatConfig {
     public static double villagerBiteDamage() { return VILLAGER_BITE_DAMAGE.get(); }
     public static long recentlyBittenTargetCooldownTicks() { return RECENTLY_BITTEN_TARGET_COOLDOWN_TICKS.get(); }
     public static boolean bloodDrainStopsCombat() { return BLOOD_DRAIN_STOPS_COMBAT.get(); }
-    public static boolean preventVampiresBitingVampires() { return PREVENT_VAMPIRES_BITING_VAMPIRES.get(); }
     public static boolean preventVampiresBitingMcaVampires() { return PREVENT_VAMPIRES_BITING_MCA_VAMPIRES.get(); }
     public static boolean showAlreadyVampireBiteMessage() { return SHOW_ALREADY_VAMPIRE_BITE_MESSAGE.get(); }
     public static boolean vampireVillagersInfectHumansAtNight() { return VAMPIRE_VILLAGERS_INFECT_HUMANS_AT_NIGHT.get(); }
     public static boolean vampireVillagersUseNonLethalBiteOnHumans() { return VAMPIRE_VILLAGERS_USE_NON_LETHAL_BITE_ON_HUMANS.get(); }
     public static long retaliationMemoryTicks() { return RETALIATION_MEMORY_TICKS.get(); }
     public static boolean attackOnlyTransformedWerewolves() { return ATTACK_ONLY_TRANSFORMED_WEREWOLVES.get(); }
-    /** @deprecated Actual feeding is handled by Vampirism's bite events; this legacy TOML key is ignored. */
-    @Deprecated(forRemoval = false)
-    public static boolean vampirePlayerBiteDealsDamageToMcaVillagers() { return VAMPIRE_PLAYER_BITE_DEALS_DAMAGE_TO_MCA_VILLAGERS.get(); }
-    /** @deprecated Actual feeding is handled by Vampirism's bite events; this legacy TOML key is ignored. */
-    @Deprecated(forRemoval = false)
-    public static double vampirePlayerBiteDamageToMcaVillagers() { return VAMPIRE_PLAYER_BITE_DAMAGE_TO_MCA_VILLAGERS.get(); }
     public static double maxHealthMultiplier() { return MAX_HEALTH_MULTIPLIER.get(); }
     public static double attackDamageBonus() { return ATTACK_DAMAGE_BONUS.get(); }
     public static double armorBonus() { return ARMOR_BONUS.get(); }
@@ -932,6 +932,7 @@ public final class McaVampirismCompatConfig {
     public static boolean hunterVillagersAttackOnlyWhileDefensive() { return HUNTER_VILLAGERS_ATTACK_ONLY_WHILE_DEFENSIVE.get(); }
     public static boolean hunterVillagersIgnoreVampireDisguise() { return HUNTER_VILLAGERS_IGNORE_VAMPIRE_DISGUISE.get(); }
     public static double hunterVillagerAttackDamage() { return HUNTER_VILLAGER_ATTACK_DAMAGE.get(); }
+    public static double hunterVillagerStakeChance() { return HUNTER_VILLAGER_STAKE_CHANCE.get(); }
     public static int hunterVillagerAttackCooldownTicks() { return HUNTER_VILLAGER_ATTACK_COOLDOWN_TICKS.get(); }
     public static double hunterVillagerFollowRange() { return HUNTER_VILLAGER_FOLLOW_RANGE.get(); }
     public static boolean hunterVillageControlGrantsHunterTrait() { return HUNTER_VILLAGE_CONTROL_GRANTS_HUNTER_TRAIT.get(); }
@@ -969,6 +970,7 @@ public final class McaVampirismCompatConfig {
     public static boolean milkTreatmentOnlyBeforeConversion() { return MILK_TREATMENT_ONLY_BEFORE_CONVERSION.get(); }
     public static boolean mcaVillageEffectsFollowMcaBounds() { return MCA_VILLAGE_EFFECTS_FOLLOW_MCA_BOUNDS.get(); }
     public static int mcaVillageFogBorderMarginBlocks() { return MCA_VILLAGE_FOG_BORDER_MARGIN_BLOCKS.get(); }
+    public static int missionReward(com.guilh.mca_vampirism_compat.mission.OccultVillageMissionType type) { return MISSION_REWARDS.get(type).get(); }
     public static boolean enableOccultVillageMissions() { return ENABLE_OCCULT_VILLAGE_MISSIONS.get(); }
     public static int occultVillageMissionCooldownTicks() { return OCCULT_VILLAGE_MISSION_COOLDOWN_TICKS.get(); }
     public static int occultVillageMissionDeadlineTicks() { return OCCULT_VILLAGE_MISSION_DEADLINE_TICKS.get(); }
@@ -1093,6 +1095,7 @@ public final class McaVampirismCompatConfig {
     public static boolean vampireTraitControlsInheritance() { return VAMPIRE_TRAIT_CONTROLS_INHERITANCE.get(); }
     public static double oneVampireParentTraitInheritanceChance() { return ONE_VAMPIRE_PARENT_TRAIT_INHERITANCE_CHANCE.get(); }
     public static double twoVampireParentsTraitInheritanceChance() { return TWO_VAMPIRE_PARENTS_TRAIT_INHERITANCE_CHANCE.get(); }
+    public static boolean respectMcaRelationshipsInCombat() { return RESPECT_MCA_RELATIONSHIPS_IN_COMBAT.get(); }
     public static boolean respectMcaPlayerCommands() { return RESPECT_MCA_PLAYER_COMMANDS.get(); }
     public static boolean suppressAutonomousCombatWhileFollowing() { return SUPPRESS_AUTONOMOUS_COMBAT_WHILE_FOLLOWING.get(); }
     public static boolean suppressAutonomousCombatWhileStaying() { return SUPPRESS_AUTONOMOUS_COMBAT_WHILE_STAYING.get(); }

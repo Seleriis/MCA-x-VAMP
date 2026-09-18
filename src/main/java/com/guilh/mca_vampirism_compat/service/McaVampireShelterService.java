@@ -8,11 +8,14 @@ import net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Map;
 import java.util.WeakHashMap;
 
+/** All world and navigation access runs on the server entity tick. */
 public final class McaVampireShelterService {
     private static final int SEARCH_INTERVAL_TICKS = 20;
     private static final int SEARCH_RADIUS = 12;
@@ -21,87 +24,76 @@ public final class McaVampireShelterService {
     private static final Map<VillagerEntityMCA, ShelterState> ACTIVE_SHELTERS = new WeakHashMap<>();
     private static final Map<VillagerEntityMCA, Long> LAST_NO_SHELTER_LOG = new WeakHashMap<>();
 
-    private McaVampireShelterService() {
-    }
+    private McaVampireShelterService() {}
 
     public static void process(VillagerEntityMCA villager) {
-        if (villager == null || villager.level().isClientSide
+        if (villager == null || !(villager.level() instanceof ServerLevel level)
                 || !McaVampirismCompatConfig.vampireVillagersAvoidSun()
-                || villager.getAgeState() != AgeState.ADULT
-                || !McaVillagerUtil.isMcaVampire(villager)) {
+                || villager.getAgeState() != AgeState.ADULT || !McaVillagerUtil.isMcaVampire(villager)) {
             clear(villager, false);
             return;
         }
-
-        boolean exposed = McaVampireSunlightHandler.isSunlightExposed(villager);
         ShelterState active = ACTIVE_SHELTERS.get(villager);
-        if (!exposed) {
-            if (active != null) {
-                McaVampirismCompat.debugLog(
-                        "[VAMPIRE-SUN] shelter reached villager={} shelter={}",
-                        villager.getUUID(),
-                        active.destination()
-                );
-            }
+        if (!McaVampireSunlightHandler.isSunlightExposed(villager)) {
+            if (active != null) McaVampirismCompat.debugLog("[VAMPIRE-SUN] shelter reached villager={} shelter={}", villager.getUUID(), active.destination);
             clear(villager, false);
             return;
         }
-
-        if (McaVampireNightScheduleService.isUsingNativeDayRest(villager)) {
-            clear(villager, false);
-            return;
-        }
-
-        if (villager.getTarget() != null
-                || McaCommandRespectService.getCommandState(villager)
+        if (McaVampireNightScheduleService.isUsingNativeDayRest(villager)
+                || villager.getTarget() != null || McaCommandRespectService.getCommandState(villager)
                 != McaCommandRespectService.McaCommandControlState.NONE) {
             clear(villager, false);
             return;
         }
+        // Entity phases spread expensive searches across the server's ticks.
+        long now = level.getGameTime();
+        if ((now + Math.floorMod(villager.getId(), SEARCH_INTERVAL_TICKS)) % SEARCH_INTERVAL_TICKS != 0) return;
 
-        if (villager.tickCount % SEARCH_INTERVAL_TICKS != 0) {
-            return;
-        }
-
-        if (active != null && isShelteredPosition((ServerLevel) villager.level(), active.destination())) {
-            Path path = villager.getNavigation().createPath(active.destination(), 0);
-            if (path != null && path.canReach()) {
-                villager.moveTowards(active.destination(), 0.8F, 1);
-                return;
+        if (active != null) {
+            if (isShelteredPosition(level, active.destination)) {
+                var navigation = villager.getNavigation();
+                Path existing = navigation.getPath();
+                if (villager.position().distanceToSqr(active.lastPosition) > 0.25D) {
+                    active.lastPosition = villager.position();
+                    active.lastProgress = now;
+                }
+                if (existing != null && !existing.isDone() && existing.canReach() && !navigation.isStuck()
+                        && active.destination.equals(existing.getTarget()) && now - active.lastProgress <= 40L) return;
+                Path replacement = navigation.createPath(active.destination, 0);
+                if (replacement != null && replacement.canReach()) {
+                    start(villager, active.destination, replacement);
+                    return;
+                }
             }
-            ACTIVE_SHELTERS.remove(villager);
+            clear(villager, true);
         }
 
-        BlockPos shelter = findReachableShelter(villager);
+        ShelterPath shelter = findReachableShelter(villager, level);
         if (shelter == null) {
-            logNoShelter(villager);
+            Long lastLog = LAST_NO_SHELTER_LOG.get(villager);
+            if (lastLog == null || now - lastLog >= 200L) {
+                LAST_NO_SHELTER_LOG.put(villager, now);
+                McaVampirismCompat.debugLog("[VAMPIRE-SUN] no reachable shelter villager={} pos={}", villager.getUUID(), villager.blockPosition());
+            }
             return;
         }
-        ACTIVE_SHELTERS.put(villager, new ShelterState(shelter));
-        villager.moveTowards(shelter, 0.8F, 1);
-        McaVampirismCompat.debugLog(
-                "[VAMPIRE-SUN] seeking shelter villager={} from={} shelter={}",
-                villager.getUUID(),
-                villager.blockPosition(),
-                shelter
-        );
+        ACTIVE_SHELTERS.put(villager, new ShelterState(shelter.destination, villager));
+        start(villager, shelter.destination, shelter.path);
+        McaVampirismCompat.debugLog("[VAMPIRE-SUN] seeking shelter villager={} from={} shelter={}", villager.getUUID(), villager.blockPosition(), shelter.destination);
     }
 
-    private static BlockPos findReachableShelter(VillagerEntityMCA villager) {
-        ServerLevel level = (ServerLevel) villager.level();
-        BlockPos origin = villager.blockPosition();
-        int pathChecks = 0;
-        for (BlockPos candidate : BlockPos.withinManhattan(origin, SEARCH_RADIUS, SEARCH_HEIGHT, SEARCH_RADIUS)) {
-            if (!isShelteredPosition(level, candidate)) {
-                continue;
-            }
-            if (++pathChecks > MAX_SHELTER_PATH_CHECKS) {
-                break;
-            }
+    private static void start(VillagerEntityMCA villager, BlockPos destination, Path path) {
+        villager.moveTowards(destination, 0.8F, 1);
+        villager.getNavigation().moveTo(path, 0.8D);
+    }
+
+    private static ShelterPath findReachableShelter(VillagerEntityMCA villager, ServerLevel level) {
+        int checks = 0;
+        for (BlockPos candidate : BlockPos.withinManhattan(villager.blockPosition(), SEARCH_RADIUS, SEARCH_HEIGHT, SEARCH_RADIUS)) {
+            if (!isShelteredPosition(level, candidate)) continue;
+            if (++checks > MAX_SHELTER_PATH_CHECKS) break;
             Path path = villager.getNavigation().createPath(candidate, 0);
-            if (path != null && path.canReach()) {
-                return candidate.immutable();
-            }
+            if (path != null && path.canReach()) return new ShelterPath(candidate.immutable(), path);
         }
         return null;
     }
@@ -113,31 +105,27 @@ public final class McaVampireShelterService {
                 && level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), Direction.UP);
     }
 
-    private static void logNoShelter(VillagerEntityMCA villager) {
-        long gameTime = villager.level().getGameTime();
-        Long lastLog = LAST_NO_SHELTER_LOG.get(villager);
-        if (lastLog != null && gameTime - lastLog < 200L) {
-            return;
-        }
-        LAST_NO_SHELTER_LOG.put(villager, gameTime);
-        McaVampirismCompat.debugLog(
-                "[VAMPIRE-SUN] no reachable shelter villager={} pos={}",
-                villager.getUUID(),
-                villager.blockPosition()
-        );
-    }
-
     private static void clear(VillagerEntityMCA villager, boolean stopNavigation) {
-        if (villager == null) {
-            return;
-        }
-        ACTIVE_SHELTERS.remove(villager);
+        if (villager == null) return;
+        ShelterState active = ACTIVE_SHELTERS.remove(villager);
         LAST_NO_SHELTER_LOG.remove(villager);
-        if (stopNavigation) {
+        if (stopNavigation && active != null) {
             villager.getNavigation().stop();
+            villager.getBrain().getMemory(MemoryModuleType.WALK_TARGET)
+                    .filter(target -> target.getTarget().currentBlockPosition().equals(active.destination))
+                    .ifPresent(target -> villager.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET));
         }
     }
 
-    private record ShelterState(BlockPos destination) {
+    private record ShelterPath(BlockPos destination, Path path) {}
+    private static final class ShelterState {
+        final BlockPos destination;
+        Vec3 lastPosition;
+        long lastProgress;
+        ShelterState(BlockPos destination, VillagerEntityMCA villager) {
+            this.destination = destination;
+            lastPosition = villager.position();
+            lastProgress = villager.level().getGameTime();
+        }
     }
 }

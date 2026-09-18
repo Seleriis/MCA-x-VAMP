@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceLocation;
  */
 public final class OccultArtsBook {
     public static final String TRANSLATION_PREFIX = "book.mca_vamp_compat.occult_arts";
-    public static final int CONTENT_PAGE_COUNT = 30;
+    public static final int CONTENT_PAGE_COUNT = 41;
     public static final int TOTAL_PAGE_COUNT = CONTENT_PAGE_COUNT + 1;
 
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(
@@ -23,6 +23,10 @@ public final class OccultArtsBook {
     );
 
     private OccultArtsBook() {
+    }
+
+    public static ResourceLocation background() {
+        return BACKGROUND;
     }
 
     public static Book create() {

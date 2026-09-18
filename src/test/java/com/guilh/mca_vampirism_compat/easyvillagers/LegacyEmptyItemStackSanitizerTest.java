@@ -33,7 +33,8 @@ class LegacyEmptyItemStackSanitizerTest {
         assertTrue(LegacyEmptyItemStackSanitizer.sanitize(root));
         assertFalse(root.contains("OriginalMainHandItem"));
         assertTrue(root.contains("UnrelatedEmptyData"));
-        assertEquals("minecraft:air", root.getList("HandItems", 10).getCompound(0).getString("id"));
+        assertTrue(root.getList("HandItems", 10).getCompound(0).isEmpty(),
+                "Positional equipment slots use an empty compound for ItemStack.EMPTY in 1.21.1");
         assertEquals("minecraft:stick", root.getList("HandItems", 10).getCompound(1).getString("id"));
         assertEquals(1, root.getList("Inventory", 10).size());
         assertEquals("minecraft:apple", root.getList("Inventory", 10).getCompound(0).getString("id"));

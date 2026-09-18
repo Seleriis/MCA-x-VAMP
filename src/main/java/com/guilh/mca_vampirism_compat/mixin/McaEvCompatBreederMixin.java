@@ -1,6 +1,7 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.easyvillagers.McaEvStatePayload;
+import com.guilh.mca_vampirism_compat.easyvillagers.McaEvBreedingEligibility;
 import com.guilh.mca_vampirism_compat.easyvillagers.readonly.StoredMcaFactionResolver;
 import com.guilh.mca_vampirism_compat.inheritance.McaBabyInheritancePayload;
 import net.minecraft.core.NonNullList;
@@ -22,13 +23,24 @@ public abstract class McaEvCompatBreederMixin {
     @Unique
     private static final ThreadLocal<Set<Integer>> MCA_VAMP_COMPAT_EMPTY_OUTPUTS = new ThreadLocal<>();
 
-    @Inject(method = "tryBreedMcaChild", at = @At("HEAD"), require = 0, remap = false)
+    @Inject(method = "tryBreedMcaChild", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private static void mcaVampirismCompat$captureEmptySlots(BlockEntity blockEntity,
                                                              ItemStack parentA,
                                                              ItemStack parentB,
                                                              NonNullList<ItemStack> food,
                                                              NonNullList<ItemStack> output,
                                                              CallbackInfoReturnable<Object> cir) {
+        ItemStack parentSnapshotA = StoredMcaFactionResolver.getBreederParentStack(blockEntity, 1, parentA);
+        ItemStack parentSnapshotB = StoredMcaFactionResolver.getBreederParentStack(blockEntity, 2, parentB);
+        if (McaEvBreedingEligibility.isInfertileMcaParent(parentSnapshotA)
+                || McaEvBreedingEligibility.isInfertileMcaParent(parentSnapshotB)) {
+            Object cancel = mcaVampirismCompat$cancelBreederResult();
+            if (cancel != null) {
+                cir.setReturnValue(cancel);
+                return;
+            }
+        }
+
         Set<Integer> emptySlots = new HashSet<>();
         for (int i = 0; i < output.size(); i++) {
             if (output.get(i).isEmpty()) {
@@ -36,6 +48,25 @@ public abstract class McaEvCompatBreederMixin {
             }
         }
         MCA_VAMP_COMPAT_EMPTY_OUTPUTS.set(emptySlots);
+    }
+
+    @Unique
+    private static Object mcaVampirismCompat$cancelBreederResult() {
+        try {
+            Class<?> resultType = Class.forName(
+                    "com.guilh.mcaevcompat.EasyVillagersBlockCompat$BreederResult",
+                    false,
+                    McaEvCompatBreederMixin.class.getClassLoader());
+            for (Object constant : resultType.getEnumConstants()) {
+                if ("CANCEL".equals(String.valueOf(constant))) {
+                    return constant;
+                }
+            }
+        } catch (ClassNotFoundException | LinkageError ignored) {
+            // The target mixin itself is optional.  If an incompatible addon
+            // does not expose this result enum, leave its breeder untouched.
+        }
+        return null;
     }
 
     @Inject(method = "tryBreedMcaChild", at = @At("RETURN"), require = 0, remap = false)

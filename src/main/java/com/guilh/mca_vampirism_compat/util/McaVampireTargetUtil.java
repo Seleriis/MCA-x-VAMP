@@ -24,6 +24,7 @@ public final class McaVampireTargetUtil {
     }
 
     public static boolean isValidTarget(Mob vampire, LivingEntity target) {
+        if (target==null || com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.blocksAutomaticAttack(vampire,target)) return false;
         if (!McaVillagerUtil.isMcaVampire(vampire) || McaVampireCureService.isCuring(vampire)
                 || target == vampire || !target.isAlive()) {
             return false;
@@ -31,6 +32,7 @@ public final class McaVampireTargetUtil {
         if (target instanceof VillagerEntityMCA villager && McaVampireCureService.isCuring(villager)) {
             return false;
         }
+        if (vampire instanceof VillagerEntityMCA source && com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.protectedRetaliation(source,target)) return true;
         if (target instanceof VillagerEntityMCA targetVillager) {
             if (McaVampireStateService.isVampire(targetVillager)) {
                 return isDisguisedRetaliationTarget(vampire, target);
@@ -58,6 +60,7 @@ public final class McaVampireTargetUtil {
     }
 
     public static boolean isInfectionBiteTarget(Mob vampire, LivingEntity target) {
+        if (com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.blocksAutomaticAttack(vampire,target)) return false;
         if (vampire instanceof VillagerEntityMCA villager
                 && McaCommandRespectService.shouldSuppressAutonomousBiteOrHunt(villager)) {
             return false;

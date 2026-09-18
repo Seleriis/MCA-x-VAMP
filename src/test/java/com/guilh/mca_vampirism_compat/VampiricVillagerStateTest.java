@@ -97,6 +97,22 @@ class VampiricVillagerStateTest {
     }
 
     @Test
+    void persistsHunterWeaponSelectionWithoutChangingLegacyStateKeys() {
+        VampiricVillagerState original = new VampiricVillagerState();
+        original.setHunterWeaponSelection("stake");
+        original.setHunterWeaponHand("off_hand");
+
+        CompoundTag serialized = original.serializeNBT(RegistryAccess.EMPTY);
+        assertEquals("stake", serialized.getString("HunterWeaponSelection"));
+        assertEquals("off_hand", serialized.getString("HunterWeaponHand"));
+
+        VampiricVillagerState restored = new VampiricVillagerState();
+        restored.deserializeNBT(RegistryAccess.EMPTY, serialized);
+        assertEquals("stake", restored.getHunterWeaponSelection());
+        assertEquals("off_hand", restored.getHunterWeaponHand());
+    }
+
+    @Test
     void legacyEmptyMainHandCompoundDoesNotAttemptInvalidItemDecode() {
         CompoundTag legacy = new CompoundTag();
         legacy.putBoolean("OriginalMainHandItemSaved", true);

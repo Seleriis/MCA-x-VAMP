@@ -32,6 +32,11 @@ public abstract class MerchantMenuMixin implements MerchantMenuTradeAccess {
         return tradeContainer;
     }
 
+    @Override
+    public Merchant mcaVampCompat$getTrader() {
+        return trader;
+    }
+
     @Inject(method = "playTradeSound", at = @At("HEAD"), cancellable = true)
     private void mcaVampirismCompat$playWrapperTradeSound(CallbackInfo ci) {
         if (!(trader instanceof EntityBackedMerchant entityBackedMerchant)) {

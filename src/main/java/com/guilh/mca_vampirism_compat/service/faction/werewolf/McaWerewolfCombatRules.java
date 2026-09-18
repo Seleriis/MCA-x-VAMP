@@ -19,6 +19,7 @@ public final class McaWerewolfCombatRules implements McaFactionCombatRules {
             case MCA_VAMPIRE_VILLAGER -> 1;
             case HUNTER_PLAYER, HUNTER_MOB -> 0;
             case VAMPIRE_PLAYER, VAMPIRE_MOB -> 1;
+            case PROTECTED_AGGRESSOR -> 0;
             case NONE -> 100;
         };
     }

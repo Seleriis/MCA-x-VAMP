@@ -201,6 +201,11 @@ public final class McaFactionTradeSession {
     }
 
     private void sendCycleState(int containerId) {
+        // A synthetic server player has no client connection. Keep the
+        // server-side trade session valid and simply omit UI synchronization.
+        if (player.connection == null) {
+            return;
+        }
         PacketDistributor.sendToPlayer(player, new EasyVillagersCycleStatePayload(containerId, isCycleTradesAvailable()));
     }
 

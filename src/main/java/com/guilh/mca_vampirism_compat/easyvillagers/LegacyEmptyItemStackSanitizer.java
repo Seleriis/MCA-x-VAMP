@@ -8,8 +8,11 @@ import java.util.Set;
 
 /**
  * Repairs the 1.20.1-style empty item compounds left in older MCA and
- * Easy-Villagers snapshots. In 1.21.1 an empty ItemStack cannot be encoded
- * as {@code {}}, and attempting to decode one floods the client log.
+ * Easy-Villagers snapshots. In 1.21.1 positional entity-equipment lists
+ * deliberately encode an empty slot as {@code {}}; {@code ItemStack}
+ * decodes that through its optional codec. It must therefore remain empty --
+ * rewriting it to {@code minecraft:air} is invalid in the non-air codec and
+ * floods the log.
  *
  * <p>The repair is deliberately narrow: it only touches empty compounds in
  * known item fields. All regular MCA, Easy Villagers and compat data remains
@@ -19,10 +22,6 @@ public final class LegacyEmptyItemStackSanitizer {
     private static final Set<String> OPTIONAL_ITEM_FIELDS = Set.of(
             "OriginalMainHandItem",
             "OriginalOffHandItem"
-    );
-    private static final Set<String> EQUIPMENT_LIST_FIELDS = Set.of(
-            "HandItems",
-            "ArmorItems"
     );
     private static final Set<String> INVENTORY_LIST_FIELDS = Set.of(
             "Inventory",
@@ -52,28 +51,11 @@ public final class LegacyEmptyItemStackSanitizer {
                     changed |= sanitizeCompound(nested);
                 }
             } else if (value instanceof ListTag list) {
-                if (EQUIPMENT_LIST_FIELDS.contains(key)) {
-                    changed |= sanitizeEquipmentList(list);
-                } else if (INVENTORY_LIST_FIELDS.contains(key)) {
+                if (INVENTORY_LIST_FIELDS.contains(key)) {
                     changed |= sanitizeInventoryList(list);
                 } else {
                     changed |= sanitizeNestedCompounds(list);
                 }
-            }
-        }
-        return changed;
-    }
-
-    /** Equipment lists are positional, so invalid entries become air. */
-    private static boolean sanitizeEquipmentList(ListTag list) {
-        boolean changed = false;
-        for (int index = 0; index < list.size(); index++) {
-            Tag entry = list.get(index);
-            if (isMalformedEmptyStack(entry)) {
-                list.set(index, airStackTag());
-                changed = true;
-            } else if (entry instanceof CompoundTag nested) {
-                changed |= sanitizeCompound(nested);
             }
         }
         return changed;
@@ -106,11 +88,5 @@ public final class LegacyEmptyItemStackSanitizer {
 
     private static boolean isMalformedEmptyStack(Tag tag) {
         return tag instanceof CompoundTag compound && compound.isEmpty();
-    }
-
-    private static CompoundTag airStackTag() {
-        CompoundTag air = new CompoundTag();
-        air.putString("id", "minecraft:air");
-        return air;
     }
 }

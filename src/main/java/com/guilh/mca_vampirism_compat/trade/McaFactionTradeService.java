@@ -144,6 +144,15 @@ public final class McaFactionTradeService {
                 || McaWerewolfTradeService.isWerewolfTradeVillager(villager);
     }
 
+    /**
+     * Resolves the same faction used by the normal MCA trade-opening path.
+     * The Cycle Trades packet recovery uses this only after it has validated
+     * that the active merchant is a real MCA villager.
+     */
+    public static PlayerFaction resolveTradeFaction(Player player, VillagerEntityMCA villager) {
+        return tradeFaction(player, villager);
+    }
+
     public static void closeWrappedTradeSession(Player player) {
         if (player != null) {
             McaFactionTradeSession.closeForPlayer(player.getUUID(), "player logout");

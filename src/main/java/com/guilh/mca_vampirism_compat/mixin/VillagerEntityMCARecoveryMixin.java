@@ -1,6 +1,7 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.service.McaFactionDietService;
+import com.guilh.mca_vampirism_compat.service.McaDefensiveVillagerService;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,8 +21,12 @@ public abstract class VillagerEntityMCARecoveryMixin {
     }
 
     @Inject(method = "startRecoveryFoodUse()Z", at = @At("HEAD"), cancellable = true)
-    private void mcaVampirismCompat$startVampireBloodRecovery(CallbackInfoReturnable<Boolean> cir) {
+    private void mcaVampirismCompat$startSpecialRecovery(CallbackInfoReturnable<Boolean> cir) {
         VillagerEntityMCA villager = (VillagerEntityMCA) (Object) this;
+        if (McaDefensiveVillagerService.consumeHunterRecoveryFoodWithoutChangingHand(villager)) {
+            cir.setReturnValue(true);
+            return;
+        }
         if (McaFactionDietService.usesVampireRecoveryDiet(villager)) {
             cir.setReturnValue(McaFactionDietService.startVampireRecovery(villager));
         }

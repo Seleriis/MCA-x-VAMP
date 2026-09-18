@@ -4,11 +4,13 @@ import net.conczin.mca.entity.ai.Traits;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.Bootstrap;
+import com.guilh.mca_vampirism_compat.service.McaWerewolvesCompat;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class McaTraitBridgeTest {
     @BeforeAll
@@ -25,10 +27,16 @@ class McaTraitBridgeTest {
         Traits.Trait hunter = Traits.get(ResourceLocation.parse("vampirism_mca_compat:hunter")).orElse(null);
 
         assertNotNull(vampire);
-        assertNotNull(werewolf);
+        if (McaWerewolvesCompat.isAvailable()) {
+            assertNotNull(werewolf);
+        } else {
+            assertNull(werewolf, "Werewolf must remain unregistered without its optional addon");
+        }
         assertNotNull(hunter);
         assertEquals("vampirism_mca_compat:vampire", vampire.getId().toString());
-        assertEquals("vampirism_mca_compat:werewolf", werewolf.getId().toString());
+        if (werewolf != null) {
+            assertEquals("vampirism_mca_compat:werewolf", werewolf.getId().toString());
+        }
         assertEquals("vampirism_mca_compat:hunter", hunter.getId().toString());
     }
 

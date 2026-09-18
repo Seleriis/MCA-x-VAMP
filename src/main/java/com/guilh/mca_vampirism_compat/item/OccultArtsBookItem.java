@@ -27,6 +27,8 @@ public final class OccultArtsBookItem extends ExtendedWrittenBookItem {
             }
             return InteractionResultHolder.fail(stack);
         }
-        return super.use(level, player, hand);
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
+            com.guilh.mca_vampirism_compat.mission.OccultVillageMissionService.openJournalBook(serverPlayer);
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
 }

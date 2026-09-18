@@ -64,6 +64,60 @@ public final class OccultVillageMissionService {
     private static final String PROGRESS_ANSWER = "progress";
     private static final String CANCEL_ANSWER = "cancel";
 
+    private static final java.util.Map<ServerPlayer, JournalSession> JOURNALS = new java.util.WeakHashMap<>();
+    private static final java.security.SecureRandom JOURNAL_RANDOM = new java.security.SecureRandom();
+    private static final class JournalSession {
+        final long token = JOURNAL_RANDOM.nextLong();
+        long lastRequest = Long.MIN_VALUE / 2;
+    }
+    public static void openJournalBook(ServerPlayer player) {
+        JournalSession session = new JournalSession();
+        JOURNALS.put(player, session);
+        sendJournalPage(player, session, 0, true);
+    }
+    public static void journalRequest(ServerPlayer player, com.guilh.mca_vampirism_compat.network.MissionJournalRequest request) {
+        JournalSession session = JOURNALS.get(player);
+        long now = player.server.overworld().getGameTime();
+        if (session == null || session.token != request.session() || !player.isAlive()
+                || player.containerMenu != player.inventoryMenu || request.page() < 0 || request.page() > 100000
+                || !(player.getMainHandItem().getItem() instanceof com.guilh.mca_vampirism_compat.item.OccultArtsBookItem)) return;
+        if (now - session.lastRequest < (request.select() ? 4 : 20)) return;
+        session.lastRequest = now;
+        if (request.select()) selectTrackedMission(player, request.target());
+        sendJournalPage(player, session, request.page(), false);
+    }
+    private static void sendJournalPage(ServerPlayer player, JournalSession session, int requestedPage, boolean open) {
+        OccultVillageMissionSavedData saved = data(player.server);
+        long now = player.server.overworld().getGameTime();
+        expirePastMissions(player, saved, now);
+        var entries = saved.activeMissions(player.getUUID()).stream().filter(entry -> entry.record().isAccepted())
+                .sorted(java.util.Comparator.comparingLong((OccultVillageMissionSavedData.MissionEntry entry) -> entry.record().createdTick())
+                        .thenComparing(entry -> entry.key().dimension().toString()).thenComparingLong(entry -> entry.key().totemPosition().asLong())).toList();
+        int page = Math.max(0, Math.min(requestedPage, entries.size()-1));
+        java.util.List<Component> lines = new java.util.ArrayList<>();
+        UUID targetId = null;
+        if (!entries.isEmpty()) {
+            var entry = entries.get(page); var record = entry.record(); targetId = record.target();
+            ServerLevel level = player.server.getLevel(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, entry.key().dimension()));
+            Entity target = level == null ? null : level.getEntity(record.target());
+            Component name = target == null ? (record.targetName().isBlank() ? Component.translatable("mca_vamp_compat.journal.unknown") : Component.literal(record.targetName())) : target.getName();
+            lines.add(Component.translatable("mca_vamp_compat.journal.requester", name));
+            if (target == null) lines.add(Component.translatable("mca_vamp_compat.journal.unavailable"));
+            var pos = entry.key().totemPosition();
+            lines.add(Component.translatable("mca_vamp_compat.journal.location", pos.getX(), pos.getY(), pos.getZ()));
+            if (!record.villageName().isBlank()) lines.add(Component.literal(record.villageName()));
+            lines.add(Component.translatable("mca_vamp_compat.journal.dimension", entry.key().dimension().toString()));
+            lines.add(record.type().isUrgentAid() ? Component.translatable("mca_vamp_compat.journal.treatment")
+                    : Component.translatable("mca_vamp_compat.journal.delivery", record.requiredCount(), requiredItemName(record.type(), item(record.type()))));
+            lines.add(Component.translatable("mca_vamp_compat.village_mission.reward", record.reward()));
+            lines.add(Component.translatable("mca_vamp_compat.journal.deadline", record.hasDeadline()
+                    ? Component.translatable("mca_vamp_compat.journal.minutes", Math.max(0L, (record.expiresAtTick()-now+1199L)/1200L))
+                    : Component.translatable("mca_vamp_compat.village_mission.time.none")));
+        } else lines.add(Component.translatable("mca_vamp_compat.journal.empty"));
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, new com.guilh.mca_vampirism_compat.network.MissionJournalPayload(session.token, open, page, entries.size(), targetId,
+                targetId != null && targetId.equals(saved.tracked(player.getUUID())), java.util.List.copyOf(lines)));
+    }
+
     private OccultVillageMissionService() {
     }
 
@@ -89,7 +143,7 @@ public final class OccultVillageMissionService {
                 return;
             }
             if (isMissionValid(player, level, totem.get(), existing.get(), true)) {
-                if (existing.get().isAccepted()) {
+                if (existing.get().isAccepted() && existing.get().target().equals(data.tracked(player.getUUID()))) {
                     syncHighlight(player, existing.get().target(), true);
                 }
             } else {
@@ -255,7 +309,8 @@ public final class OccultVillageMissionService {
         OccultVillageMissionSavedData.MissionRecord offer = new OccultVillageMissionSavedData.MissionRecord(
                 context.offerType(), villager.getUUID(), now,
                 now + McaVampirismCompatConfig.occultVillageMissionCooldownTicks(), false,
-                context.offerType().randomRequiredCount(player.getRandom()), -1L
+                context.offerType().randomRequiredCount(player.getRandom()), -1L,
+                McaVampirismCompatConfig.missionReward(context.offerType()), villager.getName().getString(), ""
         );
         data(player.server).put(player.getUUID(), context.key(), offer);
         showDialogue(player, villager, PENDING_DIALOGUE, offerNarration(offer));
@@ -277,10 +332,11 @@ public final class OccultVillageMissionService {
         OccultVillageMissionSavedData.MissionRecord accepted = new OccultVillageMissionSavedData.MissionRecord(
                 context.record().type(), context.record().target(), context.record().createdTick(),
                 context.record().nextAvailableTick(), true, context.record().requiredCount(),
-                now + McaVampirismCompatConfig.occultVillageMissionDeadlineTicks()
+                now + McaVampirismCompatConfig.occultVillageMissionDeadlineTicks(),
+                context.record().reward(), villager.getName().getString(), context.record().villageName()
         );
         data(player.server).put(player.getUUID(), context.key(), accepted);
-        syncHighlight(player, villager.getUUID(), true);
+        selectTrackedMission(player, villager.getUUID());
         sendChatAndClose(player, villager, acceptedNarration(accepted, now));
         return true;
     }
@@ -340,19 +396,19 @@ public final class OccultVillageMissionService {
     private static void rewardAndComplete(ServerPlayer player, VillagerEntityMCA villager,
                                           OccultVillageMissionSavedData.MissionKey key,
                                           OccultVillageMissionSavedData.MissionRecord mission) {
-        villager.getVillagerBrain().rewardHearts(player, HEART_REWARD);
         OccultVillageMissionSavedData data = data(player.server);
         data.put(player.getUUID(), key, new OccultVillageMissionSavedData.MissionRecord(
                 null, null, mission.createdTick(), mission.nextAvailableTick(), false, 0
         ));
+        villager.getVillagerBrain().rewardHearts(player, mission.reward());
         syncHighlight(player, villager.getUUID(), false);
         McaAdvancementService.award(player, mission.type().advancementId());
         player.displayClientMessage(Component.translatable(
-                "mca_vamp_compat.village_mission.completed", HEART_REWARD
+                "mca_vamp_compat.village_mission.completed", mission.reward()
         ), true);
         McaVampirismCompat.debugLog(
                 "[VILLAGE-MISSION] completed player={} totem={} type={} target={} hearts={}",
-                player.getUUID(), key.totemPosition(), mission.type(), villager.getUUID(), HEART_REWARD
+                player.getUUID(), key.totemPosition(), mission.type(), villager.getUUID(), mission.reward()
         );
     }
 
@@ -405,11 +461,14 @@ public final class OccultVillageMissionService {
             if (!faction.equals(type.villageFactionId()) || !isTypeAvailable(type) || !isCandidate(villager, type)) {
                 continue;
             }
+            if (type.isAfterAttack() && !data(player.server).attackedRecently(key(level, totem.getBlockPos()), level.getGameTime())) continue;
             available.add(type);
         }
         if (available.isEmpty()) {
             return Optional.empty();
         }
+        int priority = available.stream().mapToInt(OccultVillageMissionType::priority).max().orElse(0);
+        available.removeIf(type -> type.priority() != priority);
         return Optional.of(available.get(player.getRandom().nextInt(available.size())));
     }
 
@@ -458,7 +517,8 @@ public final class OccultVillageMissionService {
             ServerPlayer player, DialogueContext context, VillagerEntityMCA villager) {
         OccultVillageMissionSavedData.MissionRecord migrated = new OccultVillageMissionSavedData.MissionRecord(
                 context.record().type(), villager.getUUID(), context.record().createdTick(),
-                context.record().nextAvailableTick(), false, context.record().requiredCount(), -1L
+                context.record().nextAvailableTick(), false, context.record().requiredCount(), -1L,
+                context.record().reward(), villager.getName().getString(), context.record().villageName()
         );
         data(player.server).put(player.getUUID(), context.key(), migrated);
         McaVampirismCompat.debugLog(
@@ -484,8 +544,10 @@ public final class OccultVillageMissionService {
         // whole village footprint, which is especially costly now that MCA
         // villages deliberately have no artificial horizontal size limit.
         Entity entity = level.getEntity(mission.target());
+        // A UUID lookup never loads a chunk. Absence is not evidence of death.
+        if (entity == null) return true;
         if (!(entity instanceof VillagerEntityMCA target)
-                || target.isRemoved()
+                || !target.isAlive() || target.isRemoved()
                 || !contains(area, target.blockPosition())) {
             return false;
         }
@@ -497,10 +559,14 @@ public final class OccultVillageMissionService {
                 || villager.getAgeState() != AgeState.ADULT) {
             return false;
         }
+        if (type.isSpecialist()) {
+            String expected = type.villageFactionId().replace(":vampire", ":vampire_expert").replace(":hunter", ":hunter_expert").replace(":werewolf", ":werewolf_expert");
+            if (!expected.equals(BuiltInRegistries.VILLAGER_PROFESSION.getKey(villager.getVillagerData().getProfession()).toString())) return false;
+        }
         return switch (type) {
-            case VAMPIRE_BLOOD, VAMPIRE_FANG -> McaVampireStateService.isVampire(villager);
-            case HUNTER_GARLIC, HUNTER_GARLIC_INJECTION -> McaHunterAlignmentService.isMcaHunterVillager(villager);
-            case WEREWOLF_MUTTON -> McaWerewolfStateService.isWerewolf(villager);
+            case VAMPIRE_BLOOD, VAMPIRE_FANG, VAMPIRE_AFTER_ATTACK, VAMPIRE_SPECIALIST -> McaVampireStateService.isVampire(villager);
+            case HUNTER_GARLIC, HUNTER_GARLIC_INJECTION, HUNTER_AFTER_ATTACK, HUNTER_SPECIALIST -> McaHunterAlignmentService.isMcaHunterVillager(villager);
+            case WEREWOLF_MUTTON, WEREWOLF_AFTER_ATTACK, WEREWOLF_SPECIALIST -> McaWerewolfStateService.isWerewolf(villager);
             case HUNTER_URGENT_AID -> !McaVampireStateService.isVampire(villager)
                     && !McaWerewolfStateService.isWerewolf(villager)
                     && !McaWerewolfStateService.isWerewolfInfected(villager)
@@ -554,7 +620,8 @@ public final class OccultVillageMissionService {
         Component itemName = mission.type().isUrgentAid() || required == null
                 ? Component.empty() : requiredItemName(mission.type(), required);
         return Component.translatable(mission.type().translationKey() + ".request",
-                highlightedQuantity(mission.requiredCount()), itemName);
+                highlightedQuantity(mission.requiredCount()), itemName)
+                .append(Component.literal(" ")).append(Component.translatable("mca_vamp_compat.village_mission.reward", mission.reward()));
     }
 
     private static Component acceptedNarration(OccultVillageMissionSavedData.MissionRecord mission, long now) {
@@ -569,8 +636,9 @@ public final class OccultVillageMissionService {
                                                String suffix) {
         Item required = item(mission.type());
         Component remainingTime = mission.hasDeadline()
-                ? formattedRemainingTime(Math.max(0L, mission.expiresAtTick() - now))
-                : Component.translatable("mca_vamp_compat.village_mission.time.none");
+                ? Component.translatable("mca_vamp_compat.village_mission.time.remaining",
+                        formattedRemainingTime(Math.max(0L, mission.expiresAtTick() - now)))
+                : Component.translatable("mca_vamp_compat.village_mission.time.unlimited");
         if (mission.type().isUrgentAid()) {
             return Component.translatable(mission.type().translationKey() + suffix, remainingTime);
         }
@@ -579,13 +647,15 @@ public final class OccultVillageMissionService {
                 highlightedQuantity(mission.requiredCount()), itemName, remainingTime);
     }
 
-    private static Component formattedRemainingTime(long remainingTicks) {
-        long days = (remainingTicks + 23_999L) / 24_000L;
-        if (days >= 1L) {
-            return Component.translatable("mca_vamp_compat.village_mission.time.days", highlightedQuantity(days));
-        }
-        long minutes = Math.max(1L, (remainingTicks + 1_199L) / 1_200L);
-        return Component.translatable("mca_vamp_compat.village_mission.time.minutes", highlightedQuantity(minutes));
+    // Presentation only: the accepted deadline is neither rounded nor changed.
+    static Component formattedRemainingTime(long remainingTicks) {
+        boolean days = remainingTicks >= 24_000L;
+        long unit = days ? 24_000L : 1_200L;
+        long ticks = Math.max(0L, remainingTicks);
+        long amount = Math.max(1L, ticks / unit + (ticks % unit == 0L ? 0L : 1L));
+        String suffix = days ? (amount == 1L ? "day" : "days") : (amount == 1L ? "minute" : "minutes");
+        return Component.translatable("mca_vamp_compat.village_mission.time." + suffix,
+                highlightedQuantity(amount));
     }
 
     private static void showDialogue(ServerPlayer player, VillagerEntityMCA villager,
@@ -618,7 +688,7 @@ public final class OccultVillageMissionService {
     }
 
     private static Component requiredItemName(OccultVillageMissionType type, Item required) {
-        if (type == OccultVillageMissionType.VAMPIRE_BLOOD) {
+        if (type.requiresFullBlood()) {
             return Component.translatable("mca_vamp_compat.village_mission.vampire_blood.item");
         }
         return required == null ? Component.empty() : new ItemStack(required).getHoverName();
@@ -652,7 +722,7 @@ public final class OccultVillageMissionService {
         if (stack == null || !stack.is(required)) {
             return false;
         }
-        if (type != OccultVillageMissionType.VAMPIRE_BLOOD) {
+        if (!type.requiresFullBlood()) {
             return true;
         }
         BottleBlood blood = stack.getOrDefault(ModDataComponents.BOTTLE_BLOOD.get(), BottleBlood.EMPTY);
@@ -661,6 +731,74 @@ public final class OccultVillageMissionService {
 
     static boolean hasRequiredBloodAmount(int bloodAmount) {
         return bloodAmount >= BloodBottleItem.AMOUNT;
+    }
+
+    public static void selectTrackedMission(ServerPlayer player, UUID target) {
+        OccultVillageMissionSavedData saved = data(player.server);
+        if (target != null && saved.activeMissions(player.getUUID()).stream().noneMatch(entry -> entry.record().isAccepted() && target.equals(entry.record().target()))) return;
+        UUID previous = saved.tracked(player.getUUID());
+        if (previous != null) syncHighlight(player, previous, false);
+        saved.track(player.getUUID(), target);
+        if (target != null) syncHighlight(player, target, true);
+    }
+
+    /** All world queries run on the server thread and explicitly avoid loading chunks. */
+    public static void serverTick(MinecraftServer server) {
+        long now = server.overworld().getGameTime();
+        if (now % 200L != 0L) return;
+        OccultVillageMissionSavedData saved = data(server);
+        saved.prune(now, 64);
+        for (var owner : saved.validationBatch(32)) {
+            var record = saved.get(owner.player(), owner.key()).orElse(null);
+            if (record == null || !record.isActive()) continue;
+            ServerLevel level = server.getLevel(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, owner.key().dimension()));
+            boolean invalid = record.isExpired(now);
+            if (!invalid && level != null && level.hasChunkAt(owner.key().totemPosition())) {
+                BlockEntity block = level.getBlockEntity(owner.key().totemPosition());
+                invalid = !(block instanceof TotemBlockEntity totem)
+                        || !McaVillageEffectBoundsService.isActiveVillageTotem(totem)
+                        || !record.type().villageFactionId().equals(McaVillageEffectBoundsService.factionId(totem));
+            }
+            if (invalid) terminate(server, saved, owner, record, now);
+        }
+    }
+
+    private static void terminate(MinecraftServer server, OccultVillageMissionSavedData saved,
+                                  OccultVillageMissionSavedData.OwnerKey owner,
+                                  OccultVillageMissionSavedData.MissionRecord record, long now) {
+        saved.put(owner.player(), owner.key(), new OccultVillageMissionSavedData.MissionRecord(
+                null, null, record.createdTick(), nextAvailableAfterCancellation(record, now), false));
+        ServerPlayer player = server.getPlayerList().getPlayer(owner.player());
+        if (player != null) syncHighlight(player, record.target(), false);
+    }
+
+    public static void confirmedDeath(VillagerEntityMCA villager) {
+        if (!(villager.level() instanceof ServerLevel level)) return;
+        OccultVillageMissionSavedData saved = data(level.getServer());
+        for (var owner : saved.missionsFor(villager.getUUID())) {
+            saved.get(owner.player(), owner.key()).ifPresent(record -> terminate(level.getServer(), saved, owner, record, level.getGameTime()));
+        }
+    }
+
+    public static void recordAttack(ServerLevel level, BlockPos totem) {
+        data(level.getServer()).recordAttack(key(level, totem), level.getGameTime());
+    }
+
+    public static void confirmedDamage(VillagerEntityMCA resident, net.minecraft.world.entity.LivingEntity attacker) {
+        if (!(resident.level() instanceof ServerLevel level) || attacker instanceof net.minecraft.world.entity.player.Player) return;
+        String faction = npcFaction(attacker);
+        if (faction.isEmpty()) return;
+        McaVillageEffectBoundsService.findActiveTotemAt(level, resident.blockPosition()).ifPresent(totem -> {
+            String village = McaVillageEffectBoundsService.factionId(totem);
+            if (OccultVillageFactionPolicy.isSupportedFactionId(village) && !village.equals(faction)) recordAttack(level, totem.getBlockPos());
+        });
+    }
+
+    private static String npcFaction(net.minecraft.world.entity.LivingEntity entity) {
+        if (com.guilh.mca_vampirism_compat.util.VampirismUtil.isVampiric(entity)) return "vampirism:vampire";
+        if (McaVampireFactionService.isHunter(entity)) return "vampirism:hunter";
+        if (McaVampireFactionService.isWerewolf(entity)) return "werewolves:werewolf";
+        return "";
     }
 
     private static void syncHighlight(ServerPlayer player, UUID villager, boolean highlighted) {

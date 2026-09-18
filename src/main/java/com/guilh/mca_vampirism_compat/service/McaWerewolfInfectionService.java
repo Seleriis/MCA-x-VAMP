@@ -26,7 +26,8 @@ public final class McaWerewolfInfectionService {
     }
 
     public static void handleWerewolfAttack(LivingEntity source, LivingEntity target) {
-        if (!(target instanceof VillagerEntityMCA villager)
+        if (!McaWerewolvesCompat.isAvailable()
+                || !(target instanceof VillagerEntityMCA villager)
                 || source == null
                 || target.level().isClientSide
                 || !McaVampireFactionService.isWerewolf(source)
@@ -77,7 +78,10 @@ public final class McaWerewolfInfectionService {
     }
 
     public static boolean canApplyWerewolfInfection(LivingEntity source, VillagerEntityMCA target) {
-        if (target == null || target.level().isClientSide || !McaVampirismCompatConfig.allowMcaVillagerWerewolfInfection()) {
+        if (!McaWerewolvesCompat.isAvailable()
+                || target == null
+                || target.level().isClientSide
+                || !McaVampirismCompatConfig.allowMcaVillagerWerewolfInfection()) {
             return false;
         }
         if (!McaVampirismCompatConfig.allowMcaChildWerewolfInfection()
@@ -120,7 +124,7 @@ public final class McaWerewolfInfectionService {
     }
 
     public static void processWerewolfTick(VillagerEntityMCA villager) {
-        if (villager == null || villager.level().isClientSide) {
+        if (!McaWerewolvesCompat.isAvailable() || villager == null || villager.level().isClientSide) {
             return;
         }
         ModCapabilities.get(villager).ifPresent(state -> {
@@ -160,11 +164,17 @@ public final class McaWerewolfInfectionService {
     }
 
     public static boolean isLupusSanguinemActive(VillagerEntityMCA villager) {
+        if (!McaWerewolvesCompat.isAvailable() || villager == null) {
+            return false;
+        }
         Holder<MobEffect> lupusSanguinem = lupusSanguinemEffect();
         return lupusSanguinem != null && villager.hasEffect(lupusSanguinem);
     }
 
     public static boolean removeLupusSanguinem(VillagerEntityMCA villager) {
+        if (!McaWerewolvesCompat.isAvailable() || villager == null) {
+            return false;
+        }
         Holder<MobEffect> lupusSanguinem = lupusSanguinemEffect();
         return lupusSanguinem != null && villager.removeEffect(lupusSanguinem);
     }
@@ -178,6 +188,9 @@ public final class McaWerewolfInfectionService {
     }
 
     private static Holder<MobEffect> lupusSanguinemEffect() {
+        if (!McaWerewolvesCompat.isAvailable()) {
+            return null;
+        }
         if (!lupusSanguinemResolved) {
             lupusSanguinemResolved = true;
             MobEffect effect = BuiltInRegistries.MOB_EFFECT.get(LUPUS_SANGUINEM_ID);

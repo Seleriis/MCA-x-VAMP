@@ -1,5 +1,6 @@
 package com.guilh.mca_vampirism_compat.event;
 
+import com.guilh.mca_vampirism_compat.mission.OccultVillageMissionService;
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
 import com.guilh.mca_vampirism_compat.advancement.McaInheritanceAdvancementService;
@@ -27,6 +28,7 @@ import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerCombatService;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerRuntimeService;
 import com.guilh.mca_vampirism_compat.service.McaVampireBiteService;
 import com.guilh.mca_vampirism_compat.service.McaVampireCureService;
+import com.guilh.mca_vampirism_compat.service.McaVampireFeedProtection;
 import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.monster.McaSpecialVillagerMonsterIgnoreService;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
@@ -75,6 +77,28 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 
 public final class VampiricVillagerEvents {
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST)
+    public static void onMissionResidentDeath(net.neoforged.neoforge.event.entity.living.LivingDeathEvent event) {
+        if (event.getEntity() instanceof VillagerEntityMCA villager) OccultVillageMissionService.confirmedDeath(villager);
+    }
+
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST)
+    public static void onConfirmedMissionDamage(net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Post event) {
+        if (event.getNewDamage() > 0 && event.getEntity() instanceof VillagerEntityMCA resident
+                && event.getSource().getEntity() instanceof net.minecraft.world.entity.LivingEntity attacker) {
+            OccultVillageMissionService.confirmedDamage(resident, attacker);
+            if (McaVampirismCompatConfig.respectMcaRelationshipsInCombat()) {
+                com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.confirmedAggression(resident, attacker);
+                McaSpecialVillagerCombatService.markRetaliation(resident, attacker, "CONFIRMED_DAMAGE");
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onRelationshipTargetChange(net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent event) {
+        if (com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.blocksAutomaticAttack(event.getEntity(), event.getNewAboutToBeSetTarget())) event.setNewAboutToBeSetTarget(null);
+    }
+
     private static boolean configProbeLogged;
 
     private VampiricVillagerEvents() {
@@ -87,6 +111,7 @@ public final class VampiricVillagerEvents {
 
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
+        OccultVillageMissionService.serverTick(event.getServer());
         McaVillageOutlineService.tick(event.getServer());
         McaInheritanceAdvancementService.observeBabyItems(event.getServer());
     }
@@ -189,6 +214,12 @@ public final class VampiricVillagerEvents {
 
     @SubscribeEvent
     public static void onVillagerCaptureFinish(VampirismVillageEvent.VillagerCaptureFinish.Post event) {
+        if (!event.isForced() && event.getCapturingFaction() != null && event.getControllingFaction() != null
+                && !event.getCapturingFaction().equals(event.getControllingFaction())
+                && event.getTotem() instanceof de.teamlapen.vampirism.blockentity.TotemBlockEntity totem
+                && totem.getLevel() instanceof net.minecraft.server.level.ServerLevel level) {
+            OccultVillageMissionService.recordAttack(level, totem.getBlockPos());
+        }
         McaVillageCaptureIntegrationService.onCaptureFinishPost(event);
     }
 
@@ -196,6 +227,11 @@ public final class VampiricVillagerEvents {
     public static void onMcaVampireInteract(PlayerInteractEvent.EntityInteract event) {
         if (McaVampireCureService.handleEntityInteract(event)) {
             return;
+        }
+        if (!event.getLevel().isClientSide && event.getHand() == InteractionHand.MAIN_HAND
+                && event.getTarget() instanceof VillagerEntityMCA resident
+                && com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.blocksAutomaticAttack(resident,event.getEntity())) {
+            event.getEntity().displayClientMessage(Component.translatable("mca_vamp_compat.relationship.protected"), false);
         }
         McaFactionTradeService.onInteractionEvent(event);
         Entity target = event.getTarget();
@@ -274,9 +310,12 @@ public final class VampiricVillagerEvents {
 
     private static void onBloodDrink(BloodDrinkEvent event) {
         event.getBloodSource().getEntity().ifPresent(target -> {
-            if (McaVampirismCompatConfig.preventVampiresBitingMcaVampires() && McaVillagerUtil.isMcaVampire(target)) {
+            LivingEntity source = event.getVampire().getRepresentingEntity();
+            if (McaVampireFeedProtection.isMcaVampireTarget(target)) {
+                if (!McaVampireFeedProtection.shouldBlockDrain(source, target)) {
+                    return;
+                }
                 blockBloodDrain(event);
-                LivingEntity source = event.getVampire().getRepresentingEntity();
                 if (source instanceof Player player && McaVampirismCompatConfig.showAlreadyVampireBiteMessage()) {
                     player.displayClientMessage(Component.translatable("mca_vamp_compat.bite.already_vampire"), true);
                 }
@@ -287,7 +326,6 @@ public final class VampiricVillagerEvents {
                 return;
             }
 
-            LivingEntity source = event.getVampire().getRepresentingEntity();
             if (McaHunterBloodService.isPoisonousBloodTarget(target)) {
                 blockBloodDrain(event);
                 McaHunterBloodService.blockHunterVampireInfection(source, target);
@@ -348,6 +386,11 @@ public final class VampiricVillagerEvents {
         }
 
         if (entity instanceof VillagerEntityMCA villager) {
+            if (com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.blocksAutomaticAttack(villager, villager.getTarget())) {
+                villager.setTarget(null);
+                villager.getNavigation().stop();
+                villager.getBrain().eraseMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET);
+            }
             McaSpecialVillagerRuntimeService.onTick(villager);
             return;
         }
@@ -380,10 +423,10 @@ public final class VampiricVillagerEvents {
                 && McaHunterAlignmentService.isMcaHunterVillager(hunter)
                 && (McaVampireFactionService.isVampire(attacker)
                 || McaVampireFactionService.isTransformedWerewolf(attacker))) {
-            McaHunterTargetUtil.markRetaliation(hunter, attacker);
+            if (!McaVampirismCompatConfig.respectMcaRelationshipsInCombat()) McaHunterTargetUtil.markRetaliation(hunter, attacker);
         }
         if (target instanceof VillagerEntityMCA specialVillager && source instanceof LivingEntity attacker) {
-            McaSpecialVillagerCombatService.markRetaliation(specialVillager, attacker, "HURT");
+            if (!McaVampirismCompatConfig.respectMcaRelationshipsInCombat()) McaSpecialVillagerCombatService.markRetaliation(specialVillager, attacker, "HURT");
         }
         if (target instanceof VillagerEntityMCA villager && source instanceof LivingEntity livingSource) {
             McaWerewolfConversionService.handleWerewolfAttack(livingSource, villager);
@@ -467,6 +510,7 @@ public final class VampiricVillagerEvents {
 
     @SubscribeEvent
     public static void onMcaVampireHurtByHuman(LivingIncomingDamageEvent event) {
+        if (McaVampirismCompatConfig.respectMcaRelationshipsInCombat()) return;
         LivingEntity vampire = event.getEntity();
         Entity source = event.getSource().getEntity();
         if (vampire.level().isClientSide || !(vampire instanceof VillagerEntityMCA)

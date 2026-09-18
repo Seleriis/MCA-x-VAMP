@@ -2,6 +2,7 @@ package com.guilh.mca_vampirism_compat.trait;
 
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
+import com.guilh.mca_vampirism_compat.service.McaWerewolvesCompat;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.ai.Traits;
 import net.minecraft.nbt.CompoundTag;
@@ -27,7 +28,10 @@ public final class McaTraitBridge {
         if (vampireTrait == null) {
             vampireTrait = registerTrait(VAMPIRE_TRAIT_ID);
         }
-        if (werewolfTrait == null) {
+        // MCA exposes every registered trait in its editor. A Werewolf trait
+        // without the optional addon has no valid mechanics behind it, so do
+        // not register (and therefore do not offer) it in that installation.
+        if (McaWerewolvesCompat.isAvailable() && werewolfTrait == null) {
             werewolfTrait = registerTrait(WEREWOLF_TRAIT_ID);
         }
         if (hunterTrait == null) {
@@ -54,11 +58,16 @@ public final class McaTraitBridge {
     }
 
     public static boolean hasWerewolfTrait(VillagerEntityMCA villager) {
-        return werewolfTrait() != null && villager.getTraits().hasTrait(werewolfTrait());
+        return McaWerewolvesCompat.isAvailable()
+                && werewolfTrait() != null
+                && villager.getTraits().hasTrait(werewolfTrait());
     }
 
     public static void addWerewolfTrait(VillagerEntityMCA villager) {
-        if (McaVampirismCompatConfig.enableMcaWerewolfTrait() && werewolfTrait() != null && !hasWerewolfTrait(villager)) {
+        if (McaWerewolvesCompat.isAvailable()
+                && McaVampirismCompatConfig.enableMcaWerewolfTrait()
+                && werewolfTrait() != null
+                && !hasWerewolfTrait(villager)) {
             villager.getTraits().addTrait(werewolfTrait());
         }
     }

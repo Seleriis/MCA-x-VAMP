@@ -1,11 +1,9 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
-import com.guilh.mca_vampirism_compat.util.McaVillagerUtil;
 import de.teamlapen.vampirism.api.VampirismAPI;
 import de.teamlapen.vampirism.api.datamaps.IEntityBlood;
 import de.teamlapen.vampirism.api.entity.IExtendedCreatureVampirism;
-import de.teamlapen.vampirism.entity.ExtendedCreature;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -25,7 +23,7 @@ public final class McaBloodValueRepairService {
     }
 
     public static void repairMcaBloodValue(PathfinderMob entity, IExtendedCreatureVampirism creature) {
-        if (!(entity instanceof VillagerEntityMCA) || creature == null || McaVillagerUtil.isMcaVampire(entity)) {
+        if (!(entity instanceof VillagerEntityMCA) || creature == null) {
             return;
         }
         if (creature.getMaxBlood() > 0 && creature.getBlood() >= 0) {
@@ -42,9 +40,8 @@ public final class McaBloodValueRepairService {
             return;
         }
 
-        CompoundTag tag = createFallbackBloodTag(bloodValue);
-        if (creature instanceof ExtendedCreature extendedCreature) {
-            extendedCreature.deserializeNBT(entity.level().registryAccess(), tag);
+        if (creature instanceof McaBloodValueMutable mutable) {
+            mutable.mcaVampirismCompat$setBloodValues(bloodValue);
         } else {
             creature.setBlood(bloodValue);
         }

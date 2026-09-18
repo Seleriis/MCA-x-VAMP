@@ -11,7 +11,14 @@ public final class ModNetwork {
 
     public static void registerPayloads(RegisterPayloadHandlersEvent event) {
         event.registrar(McaVampirismCompat.MOD_ID)
-                .versioned("3")
+                .versioned("4")
+                .playToClient(MissionJournalPayload.TYPE, MissionJournalPayload.STREAM_CODEC,
+                        (payload, context) -> context.enqueueWork(() -> MissionJournalClientBridge.receive(payload)))
+                .playToServer(MissionJournalRequest.TYPE, MissionJournalRequest.STREAM_CODEC,
+                        (payload, context) -> context.enqueueWork(() -> {
+                            if (context.player() instanceof net.minecraft.server.level.ServerPlayer player)
+                                com.guilh.mca_vampirism_compat.mission.OccultVillageMissionService.journalRequest(player, payload);
+                        }))
                 .playToClient(
                         EasyVillagersCycleStatePayload.TYPE,
                         EasyVillagersCycleStatePayload.STREAM_CODEC,

@@ -417,242 +417,130 @@ public final class StoredMcaFactionResolver {
     }
 
     private static boolean containsCapabilityMarker(Tag tag, String path, int depth, List<String> candidates) {
-        if (tag == null || depth > MAX_RECURSION_DEPTH) {
-            return false;
-        }
-        if (tag instanceof CompoundTag compoundTag) {
-            for (String key : compoundTag.getAllKeys()) {
-                Tag child = compoundTag.get(key);
-                String childPath = path + "." + key;
-                if (LEGACY_STATE_ATTACHMENT_ID.equals(key) && child instanceof CompoundTag capabilityTag) {
-                    addCandidate(candidates, childPath, child);
-                    if (capabilityTag.getBoolean("Converted") || capabilityTag.getBoolean("converted")
-                            || capabilityTag.getBoolean("VampireAppearanceApplied")) {
-                        return true;
-                    }
-                }
-                if (containsCapabilityMarker(child, childPath, depth + 1, candidates)) {
-                    return true;
-                }
+        return containsEvidence(tag, path, depth, candidates, (node, nodePath) -> {
+            if (!isLegacyStatePayload(node, nodePath)) {
+                return StoredMcaNbtEvidenceScanner.ScanResult.none();
             }
-        } else if (tag instanceof ListTag listTag) {
-            for (int i = 0; i < listTag.size(); i++) {
-                if (containsCapabilityMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+            CompoundTag capabilityTag = (CompoundTag) node;
+            return new StoredMcaNbtEvidenceScanner.ScanResult(
+                    capabilityTag.getBoolean("Converted") || capabilityTag.getBoolean("converted")
+                            || capabilityTag.getBoolean("VampireAppearanceApplied"),
+                    true
+            );
+        });
     }
 
     private static boolean containsTraitMarker(Tag tag, String path, int depth, List<String> candidates) {
-        if (tag == null || depth > MAX_RECURSION_DEPTH) {
-            return false;
-        }
-        String lowerValue = tag.getAsString().toLowerCase(Locale.ROOT);
-        if (isScalarTag(tag) && (lowerValue.contains(VAMPIRE_TRAIT_ID)
-                || lowerValue.contains(TRAIT_NAMESPACE_MARKER) && lowerValue.contains("vampire"))) {
-            addCandidate(candidates, path, tag);
-            return true;
-        }
-        if (tag instanceof CompoundTag compoundTag) {
-            for (String key : compoundTag.getAllKeys()) {
-                Tag child = compoundTag.get(key);
-                String childPath = path + "." + key;
-                if (isPositiveCanonicalTraitEntry(key, child, VAMPIRE_TRAIT_ID, "vampire")) {
-                    addCandidate(candidates, childPath, child);
-                    return true;
-                }
-                if (containsTraitMarker(child, childPath, depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        } else if (tag instanceof ListTag listTag) {
-            for (int i = 0; i < listTag.size(); i++) {
-                if (containsTraitMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return containsTraitEvidence(tag, path, depth, candidates, VAMPIRE_TRAIT_ID, "vampire");
     }
 
     private static boolean containsHunterCapabilityMarker(Tag tag, String path, int depth, List<String> candidates) {
-        if (tag == null || depth > MAX_RECURSION_DEPTH) {
-            return false;
-        }
-        if (tag instanceof CompoundTag compoundTag) {
-            for (String key : compoundTag.getAllKeys()) {
-                Tag child = compoundTag.get(key);
-                String childPath = path + "." + key;
-                if (LEGACY_STATE_ATTACHMENT_ID.equals(key) && child instanceof CompoundTag capabilityTag) {
-                    addCandidate(candidates, childPath, child);
-                    if (capabilityTag.getBoolean("HunterAligned")
+        return containsEvidence(tag, path, depth, candidates, (node, nodePath) -> {
+            if (!isLegacyStatePayload(node, nodePath)) {
+                return StoredMcaNbtEvidenceScanner.ScanResult.none();
+            }
+            CompoundTag capabilityTag = (CompoundTag) node;
+            return new StoredMcaNbtEvidenceScanner.ScanResult(
+                    capabilityTag.getBoolean("HunterAligned")
                             || capabilityTag.getBoolean("HunterTraitApplied")
-                            || capabilityTag.getBoolean("HunterVillageApplied")) {
-                        return true;
-                    }
-                }
-                if (containsHunterCapabilityMarker(child, childPath, depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        } else if (tag instanceof ListTag listTag) {
-            for (int i = 0; i < listTag.size(); i++) {
-                if (containsHunterCapabilityMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+                            || capabilityTag.getBoolean("HunterVillageApplied"),
+                    true
+            );
+        });
     }
 
     private static boolean containsHunterTraitMarker(Tag tag, String path, int depth, List<String> candidates) {
-        if (tag == null || depth > MAX_RECURSION_DEPTH) {
-            return false;
-        }
-        String lowerValue = tag.getAsString().toLowerCase(Locale.ROOT);
-        if (isScalarTag(tag) && (lowerValue.contains(HUNTER_TRAIT_ID)
-                || lowerValue.contains(TRAIT_NAMESPACE_MARKER) && lowerValue.contains("hunter"))) {
-            addCandidate(candidates, path, tag);
-            return true;
-        }
-        if (tag instanceof CompoundTag compoundTag) {
-            for (String key : compoundTag.getAllKeys()) {
-                Tag child = compoundTag.get(key);
-                String childPath = path + "." + key;
-                if (isPositiveCanonicalTraitEntry(key, child, HUNTER_TRAIT_ID, "hunter")) {
-                    addCandidate(candidates, childPath, child);
-                    return true;
-                }
-                if (containsHunterTraitMarker(child, childPath, depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        } else if (tag instanceof ListTag listTag) {
-            for (int i = 0; i < listTag.size(); i++) {
-                if (containsHunterTraitMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return containsTraitEvidence(tag, path, depth, candidates, HUNTER_TRAIT_ID, "hunter");
     }
 
     private static boolean containsHunterFlagMarker(Tag tag, String path, int depth, List<String> candidates) {
-        if (tag == null || depth > MAX_RECURSION_DEPTH) {
-            return false;
-        }
-        if (tag instanceof CompoundTag compoundTag) {
-            for (String key : compoundTag.getAllKeys()) {
-                Tag child = compoundTag.get(key);
-                String childPath = path + "." + key;
-                String lowerKey = key.toLowerCase(Locale.ROOT);
-                String childValue = child == null ? "" : child.getAsString().toLowerCase(Locale.ROOT);
-                if (isExplicitTrueHunterFlag(lowerKey, childValue)) {
-                    addCandidate(candidates, childPath, child);
-                    return true;
-                }
-                if (containsHunterFlagMarker(child, childPath, depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        } else if (tag instanceof ListTag listTag) {
-            for (int i = 0; i < listTag.size(); i++) {
-                if (containsHunterFlagMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return containsEvidence(tag, path, depth, candidates, (node, nodePath) -> {
+            String key = keyFromPath(nodePath).toLowerCase(Locale.ROOT);
+            String value = node.getAsString().toLowerCase(Locale.ROOT);
+            return isExplicitTrueHunterFlag(key, value)
+                    ? StoredMcaNbtEvidenceScanner.ScanResult.match()
+                    : StoredMcaNbtEvidenceScanner.ScanResult.none();
+        });
     }
 
     private static boolean containsHunterProfessionMarker(Tag tag, String path, int depth, List<String> candidates) {
-        if (tag == null || depth > MAX_RECURSION_DEPTH) {
-            return false;
-        }
-        String lowerValue = tag.getAsString().toLowerCase(Locale.ROOT);
-        String lowerPath = path.toLowerCase(Locale.ROOT);
-        if (isStrongHunterProfessionMarker(lowerValue) || isStrongHunterProfessionMarker(lowerPath)) {
-            addCandidate(candidates, path, tag);
-            return true;
-        }
-        if (tag instanceof CompoundTag compoundTag) {
-            for (String key : compoundTag.getAllKeys()) {
-                if (containsHunterProfessionMarker(compoundTag.get(key), path + "." + key, depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        } else if (tag instanceof ListTag listTag) {
-            for (int i = 0; i < listTag.size(); i++) {
-                if (containsHunterProfessionMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return containsEvidence(tag, path, depth, candidates, (node, nodePath) -> {
+            String lowerValue = node.getAsString().toLowerCase(Locale.ROOT);
+            String lowerPath = nodePath.toLowerCase(Locale.ROOT);
+            return isStrongHunterProfessionMarker(lowerValue) || isStrongHunterProfessionMarker(lowerPath)
+                    ? StoredMcaNbtEvidenceScanner.ScanResult.match()
+                    : StoredMcaNbtEvidenceScanner.ScanResult.none();
+        });
     }
 
     private static boolean containsWerewolfCapabilityMarker(Tag tag, String path, int depth, List<String> candidates) {
-        if (tag == null || depth > MAX_RECURSION_DEPTH) {
-            return false;
-        }
-        if (tag instanceof CompoundTag compoundTag) {
-            for (String key : compoundTag.getAllKeys()) {
-                Tag child = compoundTag.get(key);
-                String childPath = path + "." + key;
-                if (LEGACY_STATE_ATTACHMENT_ID.equals(key) && child instanceof CompoundTag capabilityTag) {
-                    addCandidate(candidates, childPath, child);
-                    if (capabilityTag.getBoolean("WerewolfConverted")
+        return containsEvidence(tag, path, depth, candidates, (node, nodePath) -> {
+            if (!isLegacyStatePayload(node, nodePath)) {
+                return StoredMcaNbtEvidenceScanner.ScanResult.none();
+            }
+            CompoundTag capabilityTag = (CompoundTag) node;
+            return new StoredMcaNbtEvidenceScanner.ScanResult(
+                    capabilityTag.getBoolean("WerewolfConverted")
                             || capabilityTag.getBoolean("WerewolfAppearanceApplied")
-                            || capabilityTag.getBoolean("WerewolfPartialForm")) {
-                        return true;
-                    }
-                }
-                if (containsWerewolfCapabilityMarker(child, childPath, depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        } else if (tag instanceof ListTag listTag) {
-            for (int i = 0; i < listTag.size(); i++) {
-                if (containsWerewolfCapabilityMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+                            || capabilityTag.getBoolean("WerewolfPartialForm"),
+                    true
+            );
+        });
     }
 
     private static boolean containsWerewolfTraitMarker(Tag tag, String path, int depth, List<String> candidates) {
-        if (tag == null || depth > MAX_RECURSION_DEPTH) {
-            return false;
-        }
-        String lowerValue = tag.getAsString().toLowerCase(Locale.ROOT);
-        if (isScalarTag(tag) && (lowerValue.contains(WEREWOLF_TRAIT_ID)
-                || lowerValue.contains(TRAIT_NAMESPACE_MARKER) && lowerValue.contains("werewolf"))) {
-            addCandidate(candidates, path, tag);
-            return true;
-        }
-        if (tag instanceof CompoundTag compoundTag) {
-            for (String key : compoundTag.getAllKeys()) {
-                Tag child = compoundTag.get(key);
-                String childPath = path + "." + key;
-                if (isPositiveCanonicalTraitEntry(key, child, WEREWOLF_TRAIT_ID, "werewolf")) {
-                    addCandidate(candidates, childPath, child);
-                    return true;
-                }
-                if (containsWerewolfTraitMarker(child, childPath, depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        } else if (tag instanceof ListTag listTag) {
-            for (int i = 0; i < listTag.size(); i++) {
-                if (containsWerewolfTraitMarker(listTag.get(i), path + "[" + i + "]", depth + 1, candidates)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return containsTraitEvidence(tag, path, depth, candidates, WEREWOLF_TRAIT_ID, "werewolf");
+    }
+
+    private static boolean containsEvidence(
+            Tag tag,
+            String path,
+            int depth,
+            List<String> candidates,
+            StoredMcaNbtEvidenceScanner.EvidenceRule rule
+    ) {
+        return StoredMcaNbtEvidenceScanner.contains(
+                tag,
+                path,
+                depth,
+                MAX_RECURSION_DEPTH,
+                candidates,
+                (candidatePath, candidateTag) -> addCandidate(candidates, candidatePath, candidateTag),
+                rule
+        );
+    }
+
+    private static boolean containsTraitEvidence(
+            Tag tag,
+            String path,
+            int depth,
+            List<String> candidates,
+            String traitId,
+            String traitName
+    ) {
+        return containsEvidence(tag, path, depth, candidates, (node, nodePath) -> {
+            String lowerValue = node.getAsString().toLowerCase(Locale.ROOT);
+            boolean scalarTrait = isScalarTag(node) && (lowerValue.contains(traitId)
+                    || lowerValue.contains(TRAIT_NAMESPACE_MARKER) && lowerValue.contains(traitName));
+            boolean canonicalTrait = isPositiveCanonicalTraitEntry(
+                    keyFromPath(nodePath),
+                    node,
+                    traitId,
+                    traitName
+            );
+            return scalarTrait || canonicalTrait
+                    ? StoredMcaNbtEvidenceScanner.ScanResult.match()
+                    : StoredMcaNbtEvidenceScanner.ScanResult.none();
+        });
+    }
+
+    private static boolean isLegacyStatePayload(Tag tag, String path) {
+        return tag instanceof CompoundTag && LEGACY_STATE_ATTACHMENT_ID.equals(keyFromPath(path));
+    }
+
+    private static String keyFromPath(String path) {
+        int separator = path.lastIndexOf('.');
+        return separator >= 0 ? path.substring(separator + 1) : path;
     }
 
     private static boolean containsWerewolfMarker(Tag tag, String path, int depth, List<String> candidates) {

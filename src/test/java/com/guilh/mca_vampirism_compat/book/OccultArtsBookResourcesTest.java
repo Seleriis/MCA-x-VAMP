@@ -32,8 +32,8 @@ class OccultArtsBookResourcesTest {
     }
 
     @Test
-    void allLanguagesContainThirtyOneCompletePages() throws IOException {
-        assertEquals(31, OccultArtsBook.TOTAL_PAGE_COUNT);
+    void allLanguagesContainFortyTwoCompletePages() throws IOException {
+        assertEquals(42, OccultArtsBook.TOTAL_PAGE_COUNT);
 
         for (String language : new String[]{"pt_br", "pt_pt", "en_us"}) {
             JsonObject translations = readJson(

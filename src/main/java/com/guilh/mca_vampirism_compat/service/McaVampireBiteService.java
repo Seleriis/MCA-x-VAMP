@@ -62,6 +62,7 @@ public final class McaVampireBiteService {
     }
 
     public static boolean applyHunterBloodBite(PathfinderMob vampire, LivingEntity target) {
+        if (McaRelationshipCombatPolicy.blocksAutomaticAttack(vampire,target)) return false;
         if (vampire.level().isClientSide
                 || target == null
                 || !McaVampireStateService.isVampire(vampire)

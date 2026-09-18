@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 public final class McaEvCompatBridge {
     private static final String[] MCA_EV_COMPAT_MOD_IDS = {"mca_ev_compat", "mcaevcompat"};
     private static final String COMPAT_LOGIC_CLASS = "com.guilh.mcaevcompat.CompatLogic";
+    private static final String EASY_VILLAGERS_MOD_ID = "easy_villagers";
     private static final String TRADER_TILEENTITY_BASE =
             "de.maxhenkel.easyvillagers.blocks.tileentity.TraderTileentityBase";
     private static boolean delegationLogged;
@@ -20,10 +21,9 @@ public final class McaEvCompatBridge {
     private static Class<?> compatLogicClass;
     private static boolean copyStoredDataMethodResolved;
     private static Method copyStoredDataMethod;
+    private static boolean copyStoredDataFailureLogged;
     private static boolean storedTypeMethodResolved;
     private static Method storedTypeMethod;
-    private static boolean tradeCyclingConfigResolved;
-    private static Object tradeCyclingConfigValue;
 
     private McaEvCompatBridge() {
     }
@@ -82,10 +82,7 @@ public final class McaEvCompatBridge {
             Object result = method.invoke(null, stack.copy());
             return result instanceof CompoundTag tag ? tag.copy() : null;
         } catch (ReflectiveOperationException | RuntimeException | LinkageError exception) {
-            McaVampirismCompat.LOGGER.debug(
-                    "[EASY-VILLAGERS] copyStoredMcaVillagerData unavailable error={}",
-                    exception.toString()
-            );
+            logCopyStoredDataFailureOnce(exception);
             return null;
         }
     }
@@ -104,16 +101,10 @@ public final class McaEvCompatBridge {
     }
 
     public static boolean isEasyVillagersTradeCyclingEnabled() {
-        Object configValue = tradeCyclingConfigValue();
-        if (configValue == null) {
-            return false;
-        }
-        try {
-            Method get = configValue.getClass().getMethod("get");
-            return Boolean.TRUE.equals(get.invoke(configValue));
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError exception) {
-            return false;
-        }
+        // Easy Villagers' Main class also declares client KeyMapping fields.
+        // The UI sends its C2S payload only while trade cycling is enabled, so
+        // server compat uses that packet as the option gate instead of Main.
+        return isEasyVillagersLoaded();
     }
 
     public static void logTradeHookInvocationOnce(Object trader) {
@@ -177,6 +168,17 @@ public final class McaEvCompatBridge {
         return false;
     }
 
+    private static boolean isEasyVillagersLoaded() {
+        try {
+            ModList modList = ModList.get();
+            return modList == null
+                    ? loadClass("de.maxhenkel.easyvillagers.net.MessageCycleTrades") != null
+                    : modList.isLoaded(EASY_VILLAGERS_MOD_ID);
+        } catch (RuntimeException | LinkageError ignored) {
+            return loadClass("de.maxhenkel.easyvillagers.net.MessageCycleTrades") != null;
+        }
+    }
+
     private static boolean isClassPresent(String className) {
         return COMPAT_LOGIC_CLASS.equals(className) ? compatLogicClass() != null : loadClass(className) != null;
     }
@@ -198,28 +200,6 @@ public final class McaEvCompatBridge {
         return storedTypeMethod;
     }
 
-    private static Object tradeCyclingConfigValue() {
-        if (tradeCyclingConfigResolved) {
-            return tradeCyclingConfigValue;
-        }
-        tradeCyclingConfigResolved = true;
-        try {
-            Class<?> mainClass = loadClass("de.maxhenkel.easyvillagers.Main");
-            if (mainClass == null) {
-                return null;
-            }
-            Object serverConfig = mainClass.getField("SERVER_CONFIG").get(null);
-            if (serverConfig != null) {
-                tradeCyclingConfigValue = serverConfig.getClass()
-                        .getField("tradeCycling")
-                        .get(serverConfig);
-            }
-        } catch (ReflectiveOperationException | RuntimeException | LinkageError ignored) {
-            tradeCyclingConfigValue = null;
-        }
-        return tradeCyclingConfigValue;
-    }
-
     private static Method copyStoredDataMethod() {
         if (copyStoredDataMethodResolved) {
             return copyStoredDataMethod;
@@ -235,6 +215,19 @@ public final class McaEvCompatBridge {
             copyStoredDataMethod = null;
         }
         return copyStoredDataMethod;
+    }
+
+    private static void logCopyStoredDataFailureOnce(Throwable exception) {
+        if (copyStoredDataFailureLogged) {
+            return;
+        }
+        copyStoredDataFailureLogged = true;
+        Throwable cause = exception.getCause();
+        McaVampirismCompat.LOGGER.debug(
+                "[EASY-VILLAGERS] copyStoredMcaVillagerData unavailable once error={} cause={}",
+                exception.toString(),
+                cause == null ? "none" : cause.toString()
+        );
     }
 
     private static Class<?> compatLogicClass() {

@@ -18,18 +18,23 @@ import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
 import com.guilh.mca_vampirism_compat.util.McaVampireTargetUtil;
 import com.guilh.mca_vampirism_compat.util.McaWerewolfTargetUtil;
 import net.conczin.mca.entity.VillagerEntityMCA;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
-
-import java.util.Comparator;
 
 public final class McaSpecialVillagerCombatService {
     private static final McaFactionCombatRules VAMPIRE_RULES = new McaVampireCombatRules();
     private static final McaFactionCombatRules HUNTER_RULES = new McaHunterCombatRules();
     private static final McaFactionCombatRules WEREWOLF_RULES = new McaWerewolfCombatRules();
+    private static final ResourceLocation HUNTER_NATIVE_ATTACK_DAMAGE_ID =
+            ResourceLocation.fromNamespaceAndPath(McaVampirismCompat.MOD_ID, "temporary_hunter_native_attack_damage");
 
     private McaSpecialVillagerCombatService() {
     }
@@ -328,7 +333,48 @@ public final class McaSpecialVillagerCombatService {
             return attacker.doHurtTarget(target);
         }
         float damage = attackDamageFor(type);
+        if (type == McaSpecialVillagerType.HUNTER) {
+            return performBoundedNativeHunterAttack(attacker, target, damage);
+        }
         return damage > 0.0F && target.hurt(attacker.damageSources().mobAttack(attacker), damage);
+    }
+
+    /**
+     * Runs the same native Mob attack flow as an MCA guard. The held
+     * Vampirism weapon remains visible and available to integrations, while a
+     * transient attribute modifier keeps its base damage at the compat config
+     * value instead of the pitchfork's player-facing value.
+     */
+    private static boolean performBoundedNativeHunterAttack(PathfinderMob attacker, LivingEntity target, float damage) {
+        if (damage <= 0.0F) {
+            return false;
+        }
+        AttributeInstance attackDamage = attacker.getAttribute(Attributes.ATTACK_DAMAGE);
+        if (attackDamage == null) {
+            return target.hurt(attacker.damageSources().mobAttack(attacker), damage);
+        }
+
+        AttributeModifier previous = attackDamage.getModifier(HUNTER_NATIVE_ATTACK_DAMAGE_ID);
+        if (previous != null) {
+            attackDamage.removeModifier(HUNTER_NATIVE_ATTACK_DAMAGE_ID);
+        }
+        attackDamage.addTransientModifier(new AttributeModifier(
+                HUNTER_NATIVE_ATTACK_DAMAGE_ID,
+                damage - attackDamage.getValue(),
+                AttributeModifier.Operation.ADD_VALUE
+        ));
+        try {
+            InteractionHand hand = attacker instanceof VillagerEntityMCA villager
+                    ? villager.getDominantHand()
+                    : InteractionHand.MAIN_HAND;
+            attacker.swing(hand);
+            return attacker.doHurtTarget(target);
+        } finally {
+            attackDamage.removeModifier(HUNTER_NATIVE_ATTACK_DAMAGE_ID);
+            if (previous != null) {
+                attackDamage.addTransientModifier(previous);
+            }
+        }
     }
 
     private static boolean registerDefensiveGoalsIfNeeded(VillagerEntityMCA villager) {
@@ -348,6 +394,7 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static boolean isValidTargetFor(McaSpecialVillagerType type, VillagerEntityMCA villager, LivingEntity target) {
+        if (McaRelationshipCombatPolicy.blocksAutomaticAttack(villager,target)) return false;
         if (target == null || target == villager || !target.isAlive()) {
             return false;
         }
@@ -359,17 +406,22 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static LivingEntity findBestTarget(McaSpecialVillagerType type, VillagerEntityMCA villager, double range) {
-        return villager.level()
-                .getEntitiesOfClass(
-                        LivingEntity.class,
-                        villager.getBoundingBox().inflate(range, 4.0D, range),
-                        candidate -> isAutomaticTargetCandidate(type, villager, candidate))
-                .stream()
-                .min(Comparator
-                        .<LivingEntity>comparingInt(candidate -> targetPriorityScore(type, villager, candidate).categoryPriority())
-                        .thenComparingInt(candidate -> targetPriorityScore(type, villager, candidate).factionPriority())
-                        .thenComparingDouble(candidate -> villager.distanceToSqr(candidate)))
-                .orElse(null);
+        LivingEntity bestTarget = null;
+        TargetPriorityScore bestScore = null;
+        for (LivingEntity candidate : villager.level().getEntitiesOfClass(
+                LivingEntity.class,
+                villager.getBoundingBox().inflate(range, 4.0D, range),
+                candidate -> isAutomaticTargetCandidate(type, villager, candidate))) {
+            // The former stream comparator recalculated this full score several
+            // times for every candidate comparison. Calculate it once and keep
+            // the exact category, faction and distance ordering.
+            TargetPriorityScore score = targetPriorityScore(type, villager, candidate);
+            if (score.isPreferredOver(bestScore)) {
+                bestTarget = candidate;
+                bestScore = score;
+            }
+        }
+        return bestTarget;
     }
 
     private static boolean shouldReplaceCurrentTarget(McaSpecialVillagerType type, VillagerEntityMCA villager,
@@ -580,21 +632,4 @@ public final class McaSpecialVillagerCombatService {
         };
     }
 
-    private record TargetPriorityScore(
-            int categoryPriority,
-            int factionPriority,
-            double distanceSqr,
-            Object reason,
-            String targetType
-    ) {
-        private boolean outranksIgnoringDistance(TargetPriorityScore other) {
-            return categoryPriority < other.categoryPriority
-                    || (categoryPriority == other.categoryPriority && factionPriority < other.factionPriority);
-        }
-
-        private int logScore() {
-            int distanceScore = (int) Math.min(99, Math.floor(Math.sqrt(Math.max(0.0D, distanceSqr))));
-            return categoryPriority * 1000 + factionPriority * 100 + distanceScore;
-        }
-    }
 }

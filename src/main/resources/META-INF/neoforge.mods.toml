@@ -57,6 +57,13 @@ side = "BOTH"
 [[dependencies.mca_vamp_compat]]
 modId = "mca_ev_compat"
 type = "optional"
-versionRange = "[${mca_ev_compat_version}]"
+versionRange = "${mca_ev_compat_version_range}"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.mca_vamp_compat]]
+modId = "bloodlines"
+type = "optional"
+versionRange = "[${bloodlines_min_version},3.1)"
 ordering = "AFTER"
 side = "BOTH"

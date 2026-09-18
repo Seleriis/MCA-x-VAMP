@@ -17,6 +17,9 @@ public final class McaWerewolfStateService {
     }
 
     public static boolean isWerewolf(Entity entity) {
+        if (!McaWerewolvesCompat.isAvailable()) {
+            return false;
+        }
         if (!(entity instanceof VillagerEntityMCA villager)) {
             return false;
         }
@@ -40,12 +43,15 @@ public final class McaWerewolfStateService {
     }
 
     public static boolean isWerewolfInfected(VillagerEntityMCA villager) {
-        return villager != null && ModCapabilities.get(villager)
+        return McaWerewolvesCompat.isAvailable() && villager != null && ModCapabilities.get(villager)
                 .map(state -> state.isWerewolfInfected())
                 .orElse(false);
     }
 
     public static void ensureWerewolfState(VillagerEntityMCA villager) {
+        if (!McaWerewolvesCompat.isAvailable()) {
+            return;
+        }
         normalizeWerewolfState(villager);
         ModCapabilities.get(villager).ifPresent(state -> {
             if (state.isCuringVampire() || state.isCuringWerewolf()) {
@@ -115,7 +121,7 @@ public final class McaWerewolfStateService {
     }
 
     public static void markConverted(VillagerEntityMCA villager) {
-        if (villager == null || villager.level().isClientSide) {
+        if (!McaWerewolvesCompat.isAvailable() || villager == null || villager.level().isClientSide) {
             return;
         }
         ModCapabilities.get(villager).ifPresent(state -> {
@@ -157,7 +163,7 @@ public final class McaWerewolfStateService {
     }
 
     public static void normalizeWerewolfState(VillagerEntityMCA villager) {
-        if (villager == null || villager.level().isClientSide) {
+        if (!McaWerewolvesCompat.isAvailable() || villager == null || villager.level().isClientSide) {
             return;
         }
         ModCapabilities.get(villager).ifPresent(state -> {

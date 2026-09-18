@@ -24,6 +24,7 @@ public final class McaWerewolfTargetUtil {
     }
 
     public static TargetReason targetReason(VillagerEntityMCA werewolf, LivingEntity target) {
+        if (com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.blocksAutomaticAttack(werewolf,target)) return TargetReason.NONE;
         if (werewolf == null
                 || target == null
                 || target == werewolf
@@ -33,6 +34,7 @@ public final class McaWerewolfTargetUtil {
                 || werewolf.getAgeState() != AgeState.ADULT) {
             return TargetReason.NONE;
         }
+        if (com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.protectedRetaliation(werewolf,target)) return TargetReason.PROTECTED_AGGRESSOR;
         if (target instanceof VillagerEntityMCA targetVillager) {
             if (targetVillager.getAgeState() != AgeState.ADULT || McaVampireCureService.isCuring(targetVillager)) {
                 return TargetReason.NONE;
@@ -105,6 +107,7 @@ public final class McaWerewolfTargetUtil {
 
     public enum TargetReason {
         NONE,
+        PROTECTED_AGGRESSOR,
         VAMPIRE_PLAYER,
         HUNTER_PLAYER,
         VAMPIRE_MOB,

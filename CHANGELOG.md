@@ -1,4 +1,219 @@
+## 2.2.3 — 2026-09-16
+
+- Guia ampliado de 31 para 42 páginas, com instruções atuais sobre favores, recompensas, diário, prazos, profissões, família e Easy Villagers.
+- Falas próprias para cada tipo de favor e texto mais natural ao aceitar, consultar e concluir pedidos; rótulos do diário simplificados.
+- Tempo restante nas conversas passa a mostrar minutos quando falta menos de um dia, com singular correto. Os prazos salvos permanecem iguais.
+- Revisão em português brasileiro, português europeu e inglês, preservando o livro e seus dois marcadores.
+
+## 2.2.2 — 2026-09-15
+
+- Dois marcadores laterais fixos: guia em cima, missões embaixo, com símbolos distintos e destaque da seção atual.
+- Numeração das missões no topo, com a mesma posição e tradução do guia; a página vazia indica 1 de 1.
+- Removido o link Guia do rodapé e restauradas as posições originais das setas.
+- Orientação do diário vazio esclarece que pedidos exigem um adulto da facção numa vila controlada por totem; um vampiro numa vila comum não atende esse requisito. As regras das missões permanecem iguais.
+
+## 2.2.1 — 2026-09-14
+
+- Marcador lateral horizontal menor, com pergaminho e cores do Livro das Artes Ocultas.
+- Missões apresentadas em páginas do livro original, preservando moldura, papel e setas.
+- Uma missão por página, acompanhamento, retorno à página anterior do guia e rolagem para campos longos sem sobrepor os controles.
+- Textos compactos e nomes traduzidos das dimensões padrão em pt_BR, pt_PT e en_US.
+- Dados, prazos, recompensas e validação permanecem no servidor, com atualização do diário a cada segundo.
+
 # Changelog
+
+## 2.2.0 — 2026-09-12
+
+- Seção de missões no Livro de Artes Ocultas, com paginação, acompanhamento, informações de localização, recompensa e prazo. Os pedidos pertencem ao jogador no servidor.
+- Suprimentos após ataques e pedidos de especialistas para vampiros, caçadores e lobisomens. Contexto de ataque dura 24.000 ticks; ajuda urgente tem prioridade.
+- Recompensas configuráveis por tipo, gravadas com o pedido. Pedidos antigos conservam cinco corações, quantidades e prazos.
+- Formato de missões versionado, índice de pedidos ativos e limpeza periódica limitada de registros encerrados cujo cooldown terminou, incluindo jogadores desconectados.
+- Moradores descarregados conservam seus pedidos. Morte confirmada, totem removido e controle incompatível encerram pedidos sem uma entrega de itens.
+- Proteção opcional de família e amizade no combate, desativada por padrão; agressão confirmada permite retaliação com os limites existentes. Falas contextuais não alteram regras de comércio.
+- Integração opcional de facção e cura nos novos tooltips do EV, mantendo suporte às versões legadas testadas.
+- Novos pacotes de diário validados no servidor e protocolo 4.
+
+## 2.1.22 - MCA x Easy Villagers Breeder fertility safety
+
+- Adds a read-only server-side guard for MCA x Easy Villagers Breeders: an MCA
+  parent with MCA's native `Infertile` trait cancels the attempt before a child
+  or food mutation. The guard also protects supported older MCA x EV releases.
+- The integration GameTest covers the real Breeder, immutable parents,
+  unconsumed food on rejection and the canonical MCA child output from two
+  fertile parents.
+- No save, trait ID, attachment, payload or TOML value changed.
+
+## 2.1.21 - MCA x Easy Villagers 2.1.1 support
+
+- Permit the optional MCA x Easy Villagers Compat `2.1.x` line, including the
+  Converter material-consumption fix in 2.1.1, instead of requiring exactly
+  version 2.1.0.
+- The converter now consumes its golden apple and weakness potion at accepted
+  start in MCA x Easy Villagers 2.1.1. The dedicated integration GameTest
+  verifies the initial payment, successful output and no second payment.
+- No MCA × Vampirism mechanic, save, trait, attachment, payload or TOML value
+  changed.
+
+## 2.1.20 - Optional Werewolves and Inventory Viewer safety
+
+- Do not register or expose the MCA Werewolf trait when the optional
+  Werewolves addon is absent. Existing Werewolf state is preserved inertly in
+  saves and becomes active again if the addon is installed later.
+- Treat the MCA x Easy Villagers Inventory Viewer's duplicate inventory
+  backing for a reserved Hunter weapon as internal-only. The viewer retains
+  the read-only equipped pitchfork or stake, but can no longer copy the
+  backing item through click, drag or extraction paths.
+- MCA x Easy Villagers 2.1.0 Converter behavior was audited; its material
+  handling is superseded by the native-aligned 2.1.1 fix documented above.
+- Saves, traits IDs, attachments, payloads and TOML values are unchanged.
+
+## 2.1.19 - Hunter weapon-slot stability hotfix
+
+- Align the NeoForge 1.21.1 Hunter weapon reservation with the stable Forge 1.20.1 model: guard MCA's actual dominant `EquipmentSlot`, not only a hand-derived path.
+- Isolate compat-owned equip, restore and legacy-migration writes in a scoped authorization guard; all MCA task, food and optional-integration writes remain unable to displace a real Hunter's weapon.
+- Remove stale recovery-stop handling that could send a transient hand update, and safely migrate an item left in the reserved hand by older recovery cycles back to MCA inventory.
+- Preserve existing Hunter weapon selection, hand ownership, traits and save payloads. No configuration, network or world-data format changed.
+
+## 2.1.18 - Compatibility audit hardening
+
+- Routes MCA Cycle Trades exclusively through Easy Villagers' server C2S
+  payload boundary. The compat no longer targets the mixed GUI event class,
+  preventing a dedicated server from loading its client-keybinding reference.
+- The dispatcher safely handles stored Traders, active MCA faction menus,
+  ordinary MCA menus and a validated MCA merchant-menu recovery path. Vanilla
+  merchants and incompatible wrappers remain under Easy Villagers' native
+  control. Each handled cycle keeps one special-offer roll and at most one
+  special offer.
+- Adds binary API-contract checks for optional bridges, one-time optional
+  reflection diagnostics and coverage for the supported Bloodlines 2.x/3.x
+  and MCA x Easy Villagers matrix.
+- Saves, traits, IDs, attachments/components, network payloads and TOML keys
+  are unchanged.
+
+## 2.1.17 - Definitive Hunter weapon reservation
+
+- A real Hunter now permanently reserves its selected pitchfork or stake in
+  the managed hand. MCA recovery, work tasks and direct equipment-slot writes
+  cannot produce an empty-hand packet or disarm an active Hunter.
+- Hunter recovery consumes valid food directly from MCA inventory without
+  moving it into the hand. Native food effects and container-item handling
+  remain intact.
+- The optional MCA x Easy Villagers bridge now protects the stored-equipment
+  backing as well as the live hand. The reserved weapon is read-only in the
+  Inventory Viewer until the Hunter state ends.
+- Corrects MCA x Easy Villagers snapshot sanitization for empty equipment
+  slots. Native empty slot compounds remain intact instead of becoming the
+  invalid `minecraft:air` item, avoiding repeated ItemStack errors while a
+  stored MCA villager is restored or rendered.
+- No saved-state key, trait id, network payload or configuration value changed.
+
+## 2.1.16 - Hunter persistent-weapon fix
+
+- A real Hunter's selected pitchfork or stake is now protected from direct
+  hand-slot clears and replacements as well as MCA's EquipmentTask refresh.
+  This removes the visible empty-hand/equip flicker and ensures native guard
+  attacks use the equipped weapon.
+- Recovery food remains explicitly allowed to replace the weapon for the
+  normal MCA eating animation; the selected weapon returns when that use ends.
+  No saved state, trait ID or configuration key changed.
+
+## 2.1.15 - Stable MCA Hunter equipment
+
+- Prevents MCA's own equipment task from clearing or replacing the dominant
+  hand of a real Hunter after the compat has equipped its persistent pitchfork
+  or stake. This removes the client-visible empty-hand/equip flicker while
+  preserving MCA armor, off-hand and recovery-food behavior.
+- Skips vampire/werewolf cure, sunlight, shelter, growth and night-schedule
+  work for Hunter-only runtime states. A newly applied conversion effect is
+  still handled on the same tick.
+- Keeps Cycle Trades diagnostics behind the existing debug setting, avoiding
+  normal server-log spam during repeated rerolls.
+
+## 2.1.14 - Packaging and maintenance refactor
+
+- Moves GameTests and their structure out of the production artifact while
+  retaining them in the development source set and source archive.
+- Centralizes the bounded read-only NBT traversal used by the optional Easy
+  Villagers bridge, preserving faction evidence precedence and diagnostics.
+- Splits cure interaction and lifecycle entry points behind the unchanged
+  public cure API, and isolates version-specific saved-hand ItemStack NBT.
+- Keeps legacy TOML entries for compatibility while removing unused NeoForge
+  accessors whose settings are intentionally no-ops after the Bloodlines fix.
+
+## 2.1.13 - Villager runtime optimization
+
+- Staggers the expensive faction/effect inspection for inactive MCA villagers
+  to once per second; villagers with saved special state still process combat,
+  curing, sunlight and conversion every tick.
+- Replaces target-list stream sorting with a single-pass selector that computes
+  each valid candidate's priority once while preserving category, faction,
+  distance and tie ordering.
+- Limits defensive-mode trait, goal and weapon reconciliation to staggered
+  maintenance ticks. Expiration remains exact and combat remains responsive.
+
+## 2.1.12 - Stable Hunter weapon ownership
+
+- Fixes a conflict between temporary defensive mode and a real Hunter's
+  persistent weapon. Real Hunters keep their selected pitchfork or stake while
+  entering or leaving defensive mode; the temporary defense cleanup no longer
+  restores the original hand and causes a visible equip/unequip loop.
+- Gives permanent Hunter ownership priority over the temporary-defense source
+  during weapon reconciliation. The persisted 75% pitchfork / 25% stake choice
+  and low native attack damage remain unchanged.
+
+## 2.1.11 - Native Hunter weapons
+
+- Real MCA Hunters now attack through the native `Mob#doHurtTarget` flow:
+  normal damage sources, combat events, knockback, enchantment hooks and
+  third-party combat-animation integrations all remain active.
+- A transient attack-damage modifier constrains the native strike to
+  `hunterVillagerAttackDamage` (2.0 by default), so a held Vampirism pitchfork
+  never applies its player-facing 9 damage to a villager attack.
+- Real Hunters choose and persist either a Vampirism pitchfork (75% default)
+  or stake (25% default, configurable through `hunterVillagerStakeChance`).
+  Equipment refreshes, saved-villager restoration and old saves do not reroll
+  the selected weapon. A custom `defensiveVillagerWeaponType` remains an
+  explicit one-weapon override, and temporary defense stays unarmed by
+  default.
+- MCA villagers never receive Vampirism advanced-Hunter skills; a stake is
+  therefore a normal low-damage melee weapon, not an instant-execution tool.
+
+## 2.1.10 - Bloodlines 3.0.9 compatibility
+
+- Adds the Bloodknight entity-drinking integration point introduced by
+  Bloodlines 1.21-3.0.9 while retaining the existing 1.21-2.0.7 handler.
+- Selects the optional mixin from Bloodlines' actual handler signature. A
+  future unsupported internal layout now skips only the MCA Bloodknight
+  enhancement instead of crashing game startup.
+- Keeps MCA Vampire classification strictly inside Bloodknight's drink event;
+  Bloodlines' native bonuses, Blood Frenzy and advancement logic remain in
+  charge, with no change to saves, traits, networking or the 1.20.1 line.
+
+## 2.1.9 - Bloodknight MCA vampire-source effects
+
+- Lets Bloodlines classify an MCA Vampire villager as a vampire only inside
+  Bloodknight's entity-drinking handler.
+- MCA Vampire villagers now receive Bloodlines' native blood and saturation
+  bonuses, Blood Frenzy and any native criteria that Bloodlines or Vampirism
+  applies to an equivalent native vampire target; the compat does not grant
+  or emulate these effects itself.
+- Keeps the 2.1.8 Bloodknight health-threshold gate and MCA protection intact;
+  no global faction, combat, targeting or Blood Extraction behavior changes.
+
+## 2.1.8 - Bloodlines Bloodknight feeding compatibility
+
+- Stops the compat from overriding Vampirism's generic vampire-versus-vampire
+  bite decision. Native Vampirism and installed addons, including Bloodlines,
+  again own those targets and their configured eligibility rules.
+- Keeps MCA Vampire villagers protected for normal vampire attackers while
+  allowing a ranked Bloodlines Bloodknight to feed when the villager is within
+  Bloodlines' current normal or Feigned Mercy health threshold.
+- Applies the same MCA-target decision before bite type selection, creature
+  blood loss and `BloodDrinkEvent`, so the successful Bloodknight flow is not
+  later cancelled or turned into an infection attempt.
+- Retains `preventVampiresBitingVampires` as an ignored legacy TOML key for
+  existing configurations; `preventVampiresBitingMcaVampires` remains the
+  active MCA protection setting.
 
 ## 2.1.7 - Reliable MCA Vampire offer generation
 

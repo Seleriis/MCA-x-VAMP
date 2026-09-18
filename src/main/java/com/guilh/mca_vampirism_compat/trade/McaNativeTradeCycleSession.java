@@ -60,6 +60,19 @@ public final class McaNativeTradeCycleSession {
         );
     }
 
+    /**
+     * Recreates only the session belonging to the active real MCA merchant.
+     * The dispatcher has already verified the menu owner; vanilla and wrapper
+     * merchants must never be converted into an MCA session here.
+     */
+    public static boolean recoverForActiveMenu(ServerPlayer player, VillagerEntityMCA villager) {
+        if (player == null || villager == null || !McaEvCompatBridge.isEasyVillagersTradeCyclingEnabled()) {
+            return false;
+        }
+        openOrRefresh(player, villager);
+        return hasActiveSessionFor(player, villager);
+    }
+
     public static boolean handleCycleTrades(ServerPlayer player) {
         McaNativeTradeCycleSession session = player == null ? null : SESSIONS_BY_PLAYER.get(player.getUUID());
         if (session == null || session.closed) {
@@ -67,6 +80,12 @@ public final class McaNativeTradeCycleSession {
         }
         session.cycleTrades();
         return true;
+    }
+
+    /** Visible to the dispatcher and its regression test without exposing mutable state. */
+    public static boolean hasActiveSessionFor(ServerPlayer player, VillagerEntityMCA villager) {
+        McaNativeTradeCycleSession session = player == null ? null : SESSIONS_BY_PLAYER.get(player.getUUID());
+        return session != null && !session.closed && session.villager == villager;
     }
 
     public static void onNativeTradeCompleted(Player player, VillagerEntityMCA villager) {
@@ -142,6 +161,12 @@ public final class McaNativeTradeCycleSession {
     }
 
     private void sendCycleState(int containerId) {
+        // GameTests and server-side synthetic players intentionally have no
+        // network listener. The session is still valid and authoritative;
+        // only the optional client button state has nowhere to be sent.
+        if (player.connection == null) {
+            return;
+        }
         PacketDistributor.sendToPlayer(player, new EasyVillagersCycleStatePayload(containerId, isAvailable()));
     }
 

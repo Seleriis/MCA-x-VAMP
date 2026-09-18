@@ -167,10 +167,11 @@ public final class McaSpecialStateNormalizer {
         }
 
         if (!McaVampirismCompatConfig.defensiveModeUsesPitchfork()
-                && state.isOriginalMainHandItemSaved()) {
+                && state.isOriginalMainHandItemSaved()
+                && McaDefensiveVillagerService.isTemporaryDefenseOnly(villager, state)) {
             McaDefensiveVillagerService.restoreDefenseWeapon(villager);
             changed = true;
-            log(villager, "clearedInvalidDefensiveMode");
+            log(villager, "restoredDefenseOnlyWeapon");
         }
 
         return changed;

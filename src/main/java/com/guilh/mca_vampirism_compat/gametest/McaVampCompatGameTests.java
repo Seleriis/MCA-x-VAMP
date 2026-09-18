@@ -5,21 +5,28 @@ import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.VampiricVillagerState;
 import com.guilh.mca_vampirism_compat.easyvillagers.EasyVillagersFactionMerchant;
 import com.guilh.mca_vampirism_compat.easyvillagers.EasyVillagersFactionMerchantSession;
+import com.guilh.mca_vampirism_compat.easyvillagers.EasyVillagersTradeCycleService;
 import com.guilh.mca_vampirism_compat.easyvillagers.McaEvCompatBridge;
 import com.guilh.mca_vampirism_compat.easyvillagers.McaEvStatePayload;
 import com.guilh.mca_vampirism_compat.easyvillagers.readonly.StoredMcaFactionResolver;
 import com.guilh.mca_vampirism_compat.easyvillagers.readonly.StoredMcaVillagerInfo;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
+import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.McaDefensiveVillagerService;
 import com.guilh.mca_vampirism_compat.service.McaEditorTraitSyncService;
 import com.guilh.mca_vampirism_compat.service.McaHunterAlignmentService;
 import com.guilh.mca_vampirism_compat.service.McaHunterTradeService;
 import com.guilh.mca_vampirism_compat.service.McaNativeWerewolfProtectionService;
+import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerCombatService;
+import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerType;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
+import com.guilh.mca_vampirism_compat.service.McaVampireFeedProtection;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfStateService;
+import com.guilh.mca_vampirism_compat.service.McaWerewolvesCompat;
 import com.guilh.mca_vampirism_compat.service.McaVillageEffectBounds;
 import com.guilh.mca_vampirism_compat.trade.McaFactionTradeService;
+import com.guilh.mca_vampirism_compat.trade.McaNativeTradeCycleSession;
 import com.guilh.mca_vampirism_compat.trade.McaOfferPreparation;
 import com.guilh.mca_vampirism_compat.trade.TradeCycleEligibility;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
@@ -27,29 +34,43 @@ import com.guilh.mca_vampirism_compat.mixin.accessor.VillagerTradeAccessor;
 import de.teamlapen.vampirism.api.VampirismAPI;
 import de.teamlapen.vampirism.api.entity.factions.IFaction;
 import de.teamlapen.vampirism.api.entity.factions.IPlayableFaction;
+import de.teamlapen.vampirism.api.entity.player.skills.ISkill;
+import de.teamlapen.vampirism.api.entity.player.vampire.IVampirePlayer;
+import de.teamlapen.vampirism.api.event.BloodDrinkEvent;
 import de.teamlapen.vampirism.core.ModBlocks;
+import de.teamlapen.vampirism.core.ModEntities;
+import de.teamlapen.vampirism.entity.ExtendedCreature;
+import de.teamlapen.vampirism.entity.vampire.DrinkBloodContext;
 import net.conczin.mca.entity.EquipmentSet;
 import net.conczin.mca.entity.VillagerEntityMCA;
 import net.conczin.mca.entity.ai.brain.tasks.EquipmentTask;
 import net.conczin.mca.entity.ai.relationship.AgeState;
+import net.conczin.mca.entity.ai.Traits;
 import net.conczin.mca.registry.EntitiesMCA;
 import net.conczin.mca.registry.ProfessionsMCA;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.npc.VillagerProfession;
@@ -62,6 +83,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
@@ -71,20 +94,28 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.fml.ModList;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
 @GameTestHolder(McaVampirismCompat.MOD_ID)
 @PrefixGameTestTemplate(false)
+@EventBusSubscriber(modid = McaVampirismCompat.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public final class McaVampCompatGameTests {
     private McaVampCompatGameTests() {
     }
 
+    @SubscribeEvent
     public static void register(RegisterGameTestsEvent event) {
         event.register(McaVampCompatGameTests.class);
+        event.register(McaRelationshipGameTests.class);
     }
 
     @GameTest(template = "gametest/empty")
@@ -120,7 +151,8 @@ public final class McaVampCompatGameTests {
     public static void adminCommandsResolveMcaVillagerDisplayNames(GameTestHelper helper) {
         VillagerEntityMCA villager = EntitiesMCA.FEMALE_VILLAGER.create(helper.getLevel());
         helper.assertTrue(villager != null, "MCA female villager type must create an entity");
-        villager.setCustomName(Component.literal("Seleris Vale"));
+        String testName = "CommandTestSeleris" + villager.getUUID().toString().substring(0, 8);
+        villager.setCustomName(Component.literal(testName + " Vale"));
         villager.moveTo(helper.absoluteVec(new Vec3(2.5D, 2.0D, 2.5D)));
         helper.getLevel().addFreshEntity(villager);
 
@@ -128,14 +160,14 @@ public final class McaVampCompatGameTests {
             var commands = helper.getLevel().getServer().getCommands();
             var source = helper.getLevel().getServer().createCommandSourceStack();
             helper.assertTrue(commands.getDispatcher().execute(
-                            "mca_vamp_compat inspect \"Seleris Vale\"", source) == 1,
+                            "mca_vamp_compat inspect \"" + testName + " Vale\"", source) == 1,
                     "inspect must resolve a loaded MCA villager by its visible name");
             helper.assertTrue(commands.getDispatcher().execute(
-                            "mca_vamp_compat resync \"Seleris Vale\"", source) == 1,
+                            "mca_vamp_compat resync \"" + testName + " Vale\"", source) == 1,
                     "resync must resolve a loaded MCA villager by its visible name");
-            villager.setCustomName(Component.literal("Seleris"));
+            villager.setCustomName(Component.literal(testName));
             helper.assertTrue(commands.getDispatcher().execute(
-                            "mca_vamp_compat inspect Seleris", source) == 1,
+                            "mca_vamp_compat inspect " + testName, source) == 1,
                     "inspect must resolve an unquoted single-word MCA display name");
             helper.assertTrue(commands.getDispatcher().execute(
                             "mca_vamp_compat inspect " + villager.getUUID(), source) == 1,
@@ -424,6 +456,47 @@ public final class McaVampCompatGameTests {
     }
 
     @GameTest(template = "gametest/empty")
+    public static void cycleTradesMessageRecoversMissingNativeMcaSession(GameTestHelper helper) {
+        if (!ModList.get().isLoaded("easy_villagers")) {
+            helper.succeed();
+            return;
+        }
+
+        VillagerEntityMCA villager = EntitiesMCA.MALE_VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "MCA male villager type must create an entity");
+        villager.setVillagerData(villager.getVillagerData()
+                .setProfession(VillagerProfession.FARMER)
+                .setLevel(2));
+        villager.setVillagerXp(10);
+        villager.getOffers().add(new MerchantOffer(
+                new ItemCost(Items.EMERALD, 20),
+                new ItemStack(Items.BREAD),
+                12,
+                1,
+                0.05F
+        ));
+
+        ServerPlayer player = new ServerPlayer(
+                helper.getLevel().getServer(),
+                helper.getLevel(),
+                new GameProfile(UUID.randomUUID(), "test-native-cycle-recovery"),
+                ClientInformation.createDefault()
+        );
+        player.containerMenu = new MerchantMenu(1, player.getInventory(), villager);
+
+        helper.assertTrue(!McaNativeTradeCycleSession.hasActiveSessionFor(player, villager),
+                "The recovery regression must begin without a native MCA Cycle Trades session");
+        helper.assertTrue(EasyVillagersTradeCycleService.handleCycleTrades(player),
+                "The server packet dispatcher must recover a real MCA merchant session");
+        helper.assertTrue(McaNativeTradeCycleSession.hasActiveSessionFor(player, villager),
+                "The recovered real MCA merchant must remain owned by the compat session");
+
+        McaNativeTradeCycleSession.closeForPlayer(player.getUUID(), "GameTest packet recovery complete");
+        player.containerMenu = player.inventoryMenu;
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty")
     public static void realMcaDirectTradeEntryBlocksVampireForHunter(GameTestHelper helper) {
         VillagerEntityMCA villager = EntitiesMCA.MALE_VILLAGER.create(helper.getLevel());
         helper.assertTrue(villager != null, "MCA male villager type must create an entity");
@@ -613,17 +686,26 @@ public final class McaVampCompatGameTests {
                     String.class
             );
             spawn.setAccessible(true);
+            BlockPos placementPos = helper.absolutePos(new BlockPos(5, 2, 5));
             boolean placed = (Boolean) spawn.invoke(
                     null,
                     helper.getLevel(),
                     untradedStack,
-                    helper.absolutePos(new BlockPos(5, 2, 5)),
+                    placementPos,
                     0.0F,
                     "gametest"
             );
             helper.assertTrue(placed, "mca-ev-compat must place the captured MCA guard");
-            VillagerEntityMCA placedGuard = (VillagerEntityMCA) helper.getLevel().getEntity(villager.getUUID());
-            helper.assertTrue(placedGuard != null, "The placed guard must retain its stored UUID");
+            // MCA x EV creates a fresh entity UUID when it places the stored
+            // villager. UUID identity is owned by that mod; this integration
+            // must prove that its own faction and Cycle Trades payloads made
+            // the round-trip without requiring a third-party UUID policy.
+            VillagerEntityMCA placedGuard = helper.getLevel()
+                    .getEntitiesOfClass(VillagerEntityMCA.class, new AABB(placementPos).inflate(2.0D))
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+            helper.assertTrue(placedGuard != null, "mca-ev-compat must spawn an MCA guard at the placement position");
             helper.assertTrue(McaTraitBridge.hasHunterTrait(placedGuard),
                     "Actual item placement must restore the Hunter trait before MCA initializes the villager");
             helper.assertTrue(McaHunterTradeService.isHunterTradeVillager(placedGuard),
@@ -637,7 +719,7 @@ public final class McaVampCompatGameTests {
     }
 
     @GameTest(template = "gametest/empty")
-    public static void hunterPitchforkSurvivesMcaEquipmentRefresh(GameTestHelper helper) {
+    public static void hunterWeaponSelectionSurvivesMcaEquipmentRefresh(GameTestHelper helper) {
         try {
             VillagerEntityMCA villager = EntitiesMCA.MALE_VILLAGER.create(helper.getLevel());
             helper.assertTrue(villager != null, "MCA male villager type must create an entity");
@@ -646,8 +728,13 @@ public final class McaVampCompatGameTests {
             ModCapabilities.get(villager).orElseThrow().setHunterVillageApplied(true);
             McaDefensiveVillagerService.reconcileHunterWeapon(villager);
 
-            ItemStack pitchfork = villager.getItemInHand(InteractionHand.MAIN_HAND).copy();
-            helper.assertTrue(!pitchfork.isEmpty(), "A valid Hunter must start with its pitchfork equipped");
+            ItemStack weapon = villager.getItemInHand(InteractionHand.MAIN_HAND).copy();
+            ResourceLocation weaponId = BuiltInRegistries.ITEM.getKey(weapon.getItem());
+            helper.assertTrue(id("vampirism", "pitchfork").equals(weaponId)
+                            || id("vampirism", "stake").equals(weaponId),
+                    "A valid Hunter must receive a Vampirism pitchfork or stake");
+            String selection = ModCapabilities.get(villager).orElseThrow().getHunterWeaponSelection();
+            helper.assertTrue(!selection.isEmpty(), "The Hunter weapon selection must be persisted");
             helper.assertTrue(ModCapabilities.get(villager).orElseThrow().isOriginalMainHandItemSaved(),
                     "Equipping the pitchfork must preserve the original main hand before MCA refreshes equipment");
 
@@ -663,31 +750,404 @@ public final class McaVampCompatGameTests {
             start.invoke(task, helper.getLevel(), villager, helper.getLevel().getGameTime());
 
             helper.assertTrue(ItemStack.isSameItemSameComponents(
-                            villager.getItemInHand(InteractionHand.MAIN_HAND), pitchfork),
-                    "EquipmentTask must not leave a valid Hunter without its pitchfork for a synchronization interval");
+                            villager.getItemInHand(InteractionHand.MAIN_HAND), weapon),
+                    "EquipmentTask must not reroll or remove a valid Hunter weapon");
+            helper.assertTrue(selection.equals(ModCapabilities.get(villager).orElseThrow().getHunterWeaponSelection()),
+                    "Equipment refresh must keep the persisted Hunter weapon selection");
             helper.assertTrue(ModCapabilities.get(villager).orElseThrow().isOriginalMainHandItemSaved(),
                     "Equipment refresh must not replace or clear the preserved original hand");
 
+            // Invoke MCA's real recovery entry point. Previous releases
+            // allowed its inventory food handoff and then re-equipped the
+            // pitchfork later, producing an empty-hand packet in between.
+            // The reserved Hunter hand must now remain untouched while the
+            // same real inventory food is consumed through MCA's eat routine.
+            villager.setHealth(Math.max(1.0F, villager.getMaxHealth() - 5.0F));
+            villager.getInventory().addItem(new ItemStack(Items.BREAD));
+            int breadBefore = countItem(villager, Items.BREAD);
+            float healthBeforeRecovery = villager.getHealth();
+            Method startRecovery = VillagerEntityMCA.class.getDeclaredMethod("startRecoveryFoodUse");
+            startRecovery.setAccessible(true);
+            boolean startedRecovery = (Boolean) startRecovery.invoke(villager);
+            helper.assertTrue(startedRecovery,
+                    "A Hunter with real MCA inventory food must consume that food without using the weapon hand");
+            helper.assertTrue(ItemStack.isSameItemSameComponents(
+                            villager.getItemInHand(InteractionHand.MAIN_HAND), weapon),
+                    "MCA recovery must not move food into a persistent Hunter weapon hand");
+            helper.assertTrue(countItem(villager, Items.BREAD) == breadBefore - 1,
+                    "Hunter recovery must consume exactly one real inventory food item");
+            float expectedRecoveryHealth = Math.min(villager.getMaxHealth(), healthBeforeRecovery + 5.0F);
+            helper.assertTrue(Math.abs(villager.getHealth() - expectedRecoveryHealth) < 0.01F,
+                    "MCA's own food-eat routine must apply exactly one food recovery");
             Field recoveryFoodUseActive = VillagerEntityMCA.class.getDeclaredField("recoveryFoodUseActive");
             recoveryFoodUseActive.setAccessible(true);
-            recoveryFoodUseActive.setBoolean(villager, true);
-            ItemStack recoveryFood = new ItemStack(Items.BREAD);
-            villager.setItemInHand(InteractionHand.MAIN_HAND, recoveryFood);
-            McaDefensiveVillagerService.reconcileHunterWeapon(villager);
-            McaDefensiveVillagerService.reconcileHunterWeaponAfterMcaEquipmentTask(villager);
+            helper.assertTrue(!recoveryFoodUseActive.getBoolean(villager),
+                    "Direct Hunter recovery must not schedule MCA's stale hand-restoration lifecycle");
+            Method tickRecovery = VillagerEntityMCA.class.getDeclaredMethod("tickRecoveryFoodUse");
+            tickRecovery.setAccessible(true);
+            tickRecovery.invoke(villager);
+            helper.assertTrue(Math.abs(villager.getHealth() - expectedRecoveryHealth) < 0.01F,
+                    "A following MCA recovery tick must not apply a second Hunter recovery");
             helper.assertTrue(ItemStack.isSameItemSameComponents(
-                            villager.getItemInHand(InteractionHand.MAIN_HAND), recoveryFood),
-                    "Hunter pitchfork reconciliation must not interrupt MCA recovery food use");
+                            villager.getItemInHand(InteractionHand.MAIN_HAND), weapon),
+                    "The selected Hunter weapon must stay equipped after recovery");
 
-            recoveryFoodUseActive.setBoolean(villager, false);
+            // A real Hunter can also enter the temporary defensive mode.  That mode must
+            // never take ownership of, restore, or reroll the persistent Hunter weapon.
+            VampiricVillagerState hunterState = ModCapabilities.get(villager).orElseThrow();
+            hunterState.enterDefensiveMode(helper.getLevel().getGameTime(), 1_000L, "gametest", null);
+            helper.assertTrue(!McaDefensiveVillagerService.isTemporaryDefenseOnly(villager, hunterState),
+                    "A real Hunter must not be treated as a temporary-defense-only weapon owner");
             McaDefensiveVillagerService.reconcileHunterWeapon(villager);
             helper.assertTrue(ItemStack.isSameItemSameComponents(
-                            villager.getItemInHand(InteractionHand.MAIN_HAND), pitchfork),
-                    "The pitchfork must return once MCA recovery food use has finished");
+                            villager.getItemInHand(InteractionHand.MAIN_HAND), weapon),
+                    "Temporary defense must not replace a real Hunter weapon");
+            McaDefensiveVillagerService.clearDefense(villager, "gametest");
+            helper.assertTrue(ItemStack.isSameItemSameComponents(
+                            villager.getItemInHand(InteractionHand.MAIN_HAND), weapon),
+                    "Leaving temporary defense must not remove a real Hunter weapon");
             helper.succeed();
         } catch (ReflectiveOperationException | RuntimeException exception) {
             helper.fail("Could not verify Hunter pitchfork recovery after MCA equipment refresh: " + exception);
         }
+    }
+
+    @GameTest(template = "gametest/empty")
+    public static void hunterWeaponSurvivesAllEquipmentWrites(GameTestHelper helper) {
+        VillagerEntityMCA villager = EntitiesMCA.MALE_VILLAGER.create(helper.getLevel());
+        helper.assertTrue(villager != null, "MCA male villager type must create an entity");
+        villager.setAgeState(AgeState.ADULT);
+        InteractionHand weaponHand = villager.getDominantHand();
+        InteractionHand opposingHand = weaponHand == InteractionHand.MAIN_HAND
+                ? InteractionHand.OFF_HAND
+                : InteractionHand.MAIN_HAND;
+        villager.setItemInHand(weaponHand, new ItemStack(Items.BREAD));
+        villager.setItemInHand(opposingHand, new ItemStack(Items.STICK));
+        VampiricVillagerState state = ModCapabilities.get(villager).orElseThrow();
+        state.setHunterVillageApplied(true);
+        state.setHunterWeaponSelection("stake");
+
+        McaDefensiveVillagerService.reconcileHunterWeapon(villager);
+        helper.assertTrue(id("vampirism", "stake").equals(
+                        BuiltInRegistries.ITEM.getKey(villager.getItemInHand(weaponHand).getItem())),
+                "A Hunter must hold the selected weapon in MCA's combat hand");
+
+        // Emulate a hand item left by an older MCA recovery cycle. The
+        // compat-owned scope is the only legal way to cross the reservation;
+        // reconciliation must put that real item back into MCA inventory and
+        // restore the weapon without an empty-hand transition.
+        McaDefensiveVillagerService.runWithAuthorizedHunterWeaponMutation(
+                () -> villager.setItemInHand(weaponHand, new ItemStack(Items.CARROT))
+        );
+        McaDefensiveVillagerService.reconcileHunterWeapon(villager);
+        boolean migratedRecoveryItem = false;
+        for (int inventorySlot = 0; inventorySlot < villager.getInventory().getContainerSize(); inventorySlot++) {
+            if (villager.getInventory().getItem(inventorySlot).is(Items.CARROT)) {
+                migratedRecoveryItem = true;
+                break;
+            }
+        }
+        helper.assertTrue(migratedRecoveryItem,
+                "A legacy recovery item in the reserved hand must return to MCA inventory");
+
+        ItemStack weapon = villager.getItemInHand(weaponHand).copy();
+        villager.setItemInHand(weaponHand, ItemStack.EMPTY);
+        helper.assertTrue(ItemStack.isSameItemSameComponents(villager.getItemInHand(weaponHand), weapon),
+                "A persistent Hunter weapon must reject direct slot clears");
+        EquipmentSlot weaponSlot = weaponHand == InteractionHand.MAIN_HAND
+                ? EquipmentSlot.MAINHAND
+                : EquipmentSlot.OFFHAND;
+        villager.setItemSlot(weaponSlot, new ItemStack(Items.BREAD));
+        helper.assertTrue(ItemStack.isSameItemSameComponents(villager.getItemInHand(weaponHand), weapon),
+                "A direct Mob#setItemSlot food write must not displace a persistent Hunter weapon");
+        ItemStack changedWeapon = weapon.copy();
+        if (changedWeapon.isDamageableItem()) {
+            changedWeapon.setDamageValue(Math.min(1, changedWeapon.getMaxDamage()));
+        }
+        villager.setItemSlot(weaponSlot, changedWeapon);
+        helper.assertTrue(villager.getItemInHand(weaponHand).is(changedWeapon.getItem()),
+                "A same-item durability/component update must remain allowed for the reserved weapon");
+        ItemStack expectedWeaponAfterRuntimeUpdate = villager.getItemInHand(weaponHand).copy();
+        try {
+            EquipmentTask task = new EquipmentTask(ignored -> true, ignored -> EquipmentSet.GUARD_0);
+            Method start = EquipmentTask.class.getDeclaredMethod(
+                    "start",
+                    ServerLevel.class,
+                    VillagerEntityMCA.class,
+                    long.class
+            );
+            start.setAccessible(true);
+            start.invoke(task, helper.getLevel(), villager, helper.getLevel().getGameTime());
+        } catch (ReflectiveOperationException exception) {
+            helper.fail("Could not execute the MCA NeoForge equipment refresh: " + exception);
+            return;
+        }
+        helper.assertTrue(ItemStack.isSameItemSameComponents(
+                        villager.getItemInHand(weaponHand), expectedWeaponAfterRuntimeUpdate),
+                "MCA equipment refresh must not replace the persistent Hunter weapon after a runtime update");
+
+        state.setHunterVillageApplied(false);
+        McaDefensiveVillagerService.reconcileHunterWeapon(villager);
+        helper.assertTrue(villager.getItemInHand(weaponHand).is(Items.BREAD),
+                "Removing Hunter ownership must restore the original dominant-hand item");
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty")
+    public static void hunterWeaponSurvivesMcaEvInventoryViewerWrites(GameTestHelper helper) {
+        if (!McaEvCompatBridge.isMcaEvCompatLoaded()
+                || !BuiltInRegistries.BLOCK.containsKey(id("easy_villagers", "inventory_viewer"))
+                || !BuiltInRegistries.ITEM.containsKey(id("easy_villagers", "villager"))) {
+            helper.succeed();
+            return;
+        }
+
+        try {
+            VillagerEntityMCA villager = EntitiesMCA.MALE_VILLAGER.create(helper.getLevel());
+            helper.assertTrue(villager != null, "MCA male villager type must create an entity");
+            villager.setAgeState(AgeState.ADULT);
+            InteractionHand weaponHand = villager.getDominantHand();
+            EquipmentSlot weaponSlot = weaponHand == InteractionHand.MAIN_HAND
+                    ? EquipmentSlot.MAINHAND
+                    : EquipmentSlot.OFFHAND;
+            ModCapabilities.get(villager).orElseThrow().setHunterVillageApplied(true);
+            ModCapabilities.get(villager).orElseThrow().setHunterWeaponSelection("stake");
+            McaDefensiveVillagerService.reconcileHunterWeapon(villager);
+            ItemStack weapon = villager.getItemBySlot(weaponSlot).copy();
+
+            Class<?> compatLogic = Class.forName("com.guilh.mcaevcompat.CompatLogic");
+            Method save = compatLogic.getMethod(
+                    "saveMcaVillagerToStack",
+                    ItemStack.class,
+                    Villager.class,
+                    long.class
+            );
+            ItemStack storedVillager = new ItemStack(BuiltInRegistries.ITEM.get(id("easy_villagers", "villager")));
+            boolean saved = (Boolean) save.invoke(null, storedVillager, villager, helper.getLevel().getGameTime());
+            helper.assertTrue(saved, "MCA x Easy Villagers must serialize the persistent Hunter");
+
+            BlockPos viewerPos = new BlockPos(7, 1, 1);
+            helper.setBlock(viewerPos, BuiltInRegistries.BLOCK.get(id("easy_villagers", "inventory_viewer")));
+            BlockEntity viewer = helper.getBlockEntity(viewerPos);
+            helper.assertTrue(viewer != null, "The Inventory Viewer block must create its block entity");
+            viewer.getClass().getMethod("setVillager", ItemStack.class).invoke(viewer, storedVillager);
+            Container inventory = createMcaEvInventoryViewerContainer(viewer);
+            int weaponContainerSlot = weaponHand == InteractionHand.MAIN_HAND ? 31 : 32;
+
+            helper.assertTrue(ItemStack.isSameItemSameComponents(inventory.getItem(weaponContainerSlot), weapon),
+                    "The stored Hunter must expose its selected weapon through the real Inventory Viewer backing");
+            inventory.setItem(weaponContainerSlot, new ItemStack(Items.BREAD));
+            helper.assertTrue(ItemStack.isSameItemSameComponents(inventory.getItem(weaponContainerSlot), weapon),
+                    "Inventory Viewer replacement must not displace the persistent Hunter weapon");
+            helper.assertTrue(inventory.removeItem(weaponContainerSlot, 1).isEmpty(),
+                    "Inventory Viewer removal must be read-only for the persistent Hunter weapon");
+            helper.assertTrue(ItemStack.isSameItemSameComponents(inventory.getItem(weaponContainerSlot), weapon),
+                    "Inventory Viewer removal must leave the persistent Hunter weapon equipped");
+
+            inventory.clearContent();
+            helper.assertTrue(ItemStack.isSameItemSameComponents(inventory.getItem(weaponContainerSlot), weapon),
+                    "Inventory Viewer cleanup must preserve the persistent Hunter weapon");
+            boolean backingExposed = false;
+            for (int slot = 0; slot < 27; slot++) {
+                if (ItemStack.isSameItemSameComponents(inventory.getItem(slot), weapon)) {
+                    backingExposed = true;
+                    break;
+                }
+            }
+            helper.assertTrue(!backingExposed,
+                    "The Inventory Viewer must not expose the Hunter weapon's mirrored backing as a second item");
+            Field storedVillagerField = inventory.getClass().getDeclaredField("villager");
+            storedVillagerField.setAccessible(true);
+            VillagerEntityMCA viewerVillager = (VillagerEntityMCA) storedVillagerField.get(inventory);
+            int physicalBackings = countItem(viewerVillager, weapon.getItem());
+            helper.assertTrue(physicalBackings == 1,
+                    "The Viewer must retain exactly one hidden backing unit for the persistent Hunter weapon");
+            helper.succeed();
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            helper.fail("Could not verify MCA x Easy Villagers Hunter Inventory Viewer protection: " + exception);
+        }
+    }
+
+    @GameTest(template = "gametest/empty")
+    public static void mcaEvConverterConsumesIngredientsWhenMcaConversionCompletes(GameTestHelper helper) {
+        if (!McaEvCompatBridge.isMcaEvCompatLoaded()
+                || !BuiltInRegistries.BLOCK.containsKey(id("easy_villagers", "converter"))
+                || !BuiltInRegistries.ITEM.containsKey(id("easy_villagers", "villager"))) {
+            helper.succeed();
+            return;
+        }
+
+        try {
+            VillagerEntityMCA villager = EntitiesMCA.MALE_VILLAGER.create(helper.getLevel());
+            helper.assertTrue(villager != null, "MCA male villager type must create an entity");
+            CompoundTag villagerData = new CompoundTag();
+            villager.saveWithoutId(villagerData);
+            villagerData.putString("id", "mca:male_villager");
+
+            Class<?> compatLogic = Class.forName("com.guilh.mcaevcompat.CompatLogic");
+            Method createStack = compatLogic.getMethod(
+                    "createMcaVillagerStack",
+                    CompoundTag.class,
+                    CompoundTag.class
+            );
+            ItemStack storedVillager = (ItemStack) createStack.invoke(null, villagerData, new CompoundTag());
+            helper.assertTrue(!storedVillager.isEmpty(),
+                    "MCA x Easy Villagers must create a stored MCA villager for Converter testing");
+
+            BlockPos converterPos = new BlockPos(9, 1, 1);
+            helper.setBlock(converterPos, BuiltInRegistries.BLOCK.get(id("easy_villagers", "converter")));
+            BlockEntity converter = helper.getBlockEntity(converterPos);
+            helper.assertTrue(converter != null, "The Converter block must create its block entity");
+            Container input = (Container) converter.getClass().getMethod("getInputInventory").invoke(converter);
+            Container output = (Container) converter.getClass().getMethod("getOutputInventory").invoke(converter);
+            ItemStack weaknessPotion = PotionContents.createItemStack(Items.POTION, Potions.WEAKNESS);
+            input.setItem(0, storedVillager);
+            input.setItem(1, new ItemStack(Items.GOLDEN_APPLE, 2));
+            input.setItem(2, weaknessPotion);
+
+            Method tickServer = converter.getClass().getMethod("tickServer");
+            tickServer.invoke(converter);
+            String evVersion=ModList.get().getModContainerById("mca_ev_compat").orElseThrow().getModInfo().getVersion().toString();
+            boolean legacyFinishPayment=evVersion.equals("2.1.0");
+            helper.assertTrue(input.getItem(1).is(Items.GOLDEN_APPLE) && input.getItem(1).getCount()==(legacyFinishPayment?2:1),
+                    "Start must preserve the installed EV version's payment timing");
+            helper.assertTrue(legacyFinishPayment?!input.getItem(2).isEmpty():input.getItem(2).isEmpty(),
+                    "Potion reservation must match the installed EV version");
+            Field timer = findField(converter.getClass(), "timer");
+            Class<?> converterType = Class.forName("de.maxhenkel.easyvillagers.blocks.tileentity.ConverterTileentity");
+            long finalizeTime = ((Number) converterType.getMethod("getFinalizeTime").invoke(null)).longValue();
+            timer.setLong(converter, finalizeTime);
+            tickServer.invoke(converter);
+
+            helper.assertTrue(input.getItem(1).is(Items.GOLDEN_APPLE) && input.getItem(1).getCount() == 1,
+                    "Finalization must not charge a second golden apple");
+            helper.assertTrue(input.getItem(2).isEmpty(),
+                    "Finalization must not charge a second weakness potion");
+            helper.assertTrue(!output.getItem(0).isEmpty(),
+                    "A completed MCA Converter must commit the converted MCA villager to output");
+            helper.succeed();
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            helper.fail("Could not verify MCA Converter ingredient consumption: " + exception);
+        }
+    }
+
+    @GameTest(template = "gametest/empty")
+    public static void mcaEvBreederBlocksInfertileAndStoresCanonicalMcaChild(GameTestHelper helper) {
+        if (!McaEvCompatBridge.isMcaEvCompatLoaded()
+                || !BuiltInRegistries.BLOCK.containsKey(id("easy_villagers", "breeder"))
+                || !BuiltInRegistries.ITEM.containsKey(id("easy_villagers", "villager"))) {
+            helper.succeed();
+            return;
+        }
+
+        try {
+            Class<?> compatLogic = Class.forName("com.guilh.mcaevcompat.CompatLogic");
+            Method saveStack = compatLogic.getMethod(
+                    "saveMcaVillagerToStack",
+                    ItemStack.class,
+                    Villager.class,
+                    long.class
+            );
+            Method copyStoredData = compatLogic.getMethod(
+                    "copyStoredMcaVillagerData", ItemStack.class);
+            Class<?> blockCompat = Class.forName("com.guilh.mcaevcompat.EasyVillagersBlockCompat");
+            Method tryBreed = blockCompat.getMethod(
+                    "tryBreedMcaChild",
+                    BlockEntity.class,
+                    ItemStack.class,
+                    ItemStack.class,
+                    NonNullList.class,
+                    NonNullList.class
+            );
+
+            VillagerEntityMCA infertileParent = EntitiesMCA.FEMALE_VILLAGER.create(helper.getLevel());
+            VillagerEntityMCA fertileParent = EntitiesMCA.MALE_VILLAGER.create(helper.getLevel());
+            helper.assertTrue(infertileParent != null && fertileParent != null,
+                    "MCA parent entity types must create entities");
+            infertileParent.getTraits().addTrait(Traits.INFERTILE);
+            ItemStack infertileStack = saveMcaEvStack(saveStack, infertileParent, helper.getLevel().getGameTime());
+            ItemStack fertileStack = saveMcaEvStack(saveStack, fertileParent, helper.getLevel().getGameTime());
+            ItemStack infertileBefore = infertileStack.copy();
+            ItemStack fertileBefore = fertileStack.copy();
+
+            BlockPos breederPos = new BlockPos(11, 1, 1);
+            helper.setBlock(breederPos, BuiltInRegistries.BLOCK.get(id("easy_villagers", "breeder")));
+            BlockEntity breeder = helper.getBlockEntity(breederPos);
+            helper.assertTrue(breeder != null, "The Breeder block must create its block entity");
+            NonNullList<ItemStack> blockedFood = NonNullList.withSize(1, new ItemStack(Items.BREAD, 6));
+            NonNullList<ItemStack> blockedOutput = NonNullList.withSize(1, ItemStack.EMPTY);
+            Object blocked = tryBreed.invoke(
+                    null, breeder, infertileStack, fertileStack, blockedFood, blockedOutput);
+            helper.assertTrue("CANCEL".equals(String.valueOf(blocked)),
+                    "An MCA parent with Infertile must cancel the real Easy Villagers breeder");
+            helper.assertTrue(blockedOutput.get(0).isEmpty(),
+                    "A cancelled infertile breeding attempt must not create a child");
+            helper.assertTrue(blockedFood.get(0).is(Items.BREAD) && blockedFood.get(0).getCount() == 6,
+                    "A cancelled infertile breeding attempt must not consume food");
+            helper.assertTrue(ItemStack.isSameItemSameComponents(infertileStack, infertileBefore)
+                            && ItemStack.isSameItemSameComponents(fertileStack, fertileBefore),
+                    "The breeder must not mutate either stored MCA parent while checking fertility");
+
+            VillagerEntityMCA fertileMother = EntitiesMCA.FEMALE_VILLAGER.create(helper.getLevel());
+            VillagerEntityMCA fertileFather = EntitiesMCA.MALE_VILLAGER.create(helper.getLevel());
+            helper.assertTrue(fertileMother != null && fertileFather != null,
+                    "MCA fertile parent entity types must create entities");
+            ItemStack motherStack = saveMcaEvStack(saveStack, fertileMother, helper.getLevel().getGameTime());
+            ItemStack fatherStack = saveMcaEvStack(saveStack, fertileFather, helper.getLevel().getGameTime());
+            NonNullList<ItemStack> fertileFood = NonNullList.withSize(1, new ItemStack(Items.BREAD, 6));
+            NonNullList<ItemStack> fertileOutput = NonNullList.withSize(1, ItemStack.EMPTY);
+            Object success = tryBreed.invoke(
+                    null, breeder, motherStack, fatherStack, fertileFood, fertileOutput);
+            helper.assertTrue("SUCCESS".equals(String.valueOf(success)),
+                    "Two fertile MCA parents must produce a child through MCA's native breeding flow");
+            ItemStack childStack = fertileOutput.get(0);
+            helper.assertTrue(!childStack.isEmpty(),
+                    "The successful Breeder output must contain the MCA child snapshot");
+            CompoundTag childData = (CompoundTag) copyStoredData.invoke(null, childStack);
+            helper.assertTrue(childData != null
+                            && childData.getString("id").startsWith("mca:")
+                            && childData.getInt("Age") < 0
+                            && childData.contains("Gender", Tag.TAG_ANY_NUMERIC)
+                            && childData.contains("Traits", Tag.TAG_COMPOUND),
+                    "The Breeder must retain MCA's canonical baby identity, age, genetics/traits payload and family-producing flow");
+            helper.succeed();
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            Throwable cause = exception instanceof InvocationTargetException invocation
+                    && invocation.getCause() != null ? invocation.getCause() : exception;
+            helper.fail("Could not verify MCA x Easy Villagers Breeder fertility and child snapshot: " + cause);
+        }
+    }
+
+    @GameTest(template = "gametest/empty")
+    public static void hunterStakeUsesBoundedNativeMeleeAttack(GameTestHelper helper) {
+        VillagerEntityMCA villager = EntitiesMCA.MALE_VILLAGER.create(helper.getLevel());
+        LivingEntity target = EntityType.ZOMBIE.create(helper.getLevel());
+        helper.assertTrue(villager != null && target != null, "Hunter and target entities must be available");
+        villager.setAgeState(AgeState.ADULT);
+        ModCapabilities.get(villager).orElseThrow().setHunterVillageApplied(true);
+        ModCapabilities.get(villager).orElseThrow().setHunterWeaponSelection("stake");
+        McaDefensiveVillagerService.reconcileHunterWeapon(villager);
+        helper.assertTrue(id("vampirism", "stake").equals(BuiltInRegistries.ITEM.getKey(villager.getMainHandItem().getItem())),
+                "A persisted stake selection must equip the Vampirism stake");
+
+        villager.moveTo(helper.absolutePos(new BlockPos(2, 2, 2)), 0.0F, 0.0F);
+        target.moveTo(helper.absolutePos(new BlockPos(3, 2, 2)), 0.0F, 0.0F);
+        helper.getLevel().addFreshEntity(villager);
+        helper.getLevel().addFreshEntity(target);
+        double attackBefore = villager.getAttribute(Attributes.ATTACK_DAMAGE).getValue();
+        float healthBefore = target.getHealth();
+
+        helper.assertTrue(McaSpecialVillagerCombatService.performMeleeAttack(
+                        villager, target, McaSpecialVillagerType.HUNTER),
+                "A Hunter stake attack must use the native Mob attack flow");
+        float dealt = healthBefore - target.getHealth();
+        float configuredDamage = (float) McaVampirismCompatConfig.hunterVillagerAttackDamage();
+        helper.assertTrue(Math.abs(dealt - configuredDamage) <= 0.1F,
+                "The native Hunter attack must use the configured base damage, not pitchfork player damage (expected "
+                        + configuredDamage + ", got " + dealt + ")");
+        helper.assertTrue(Math.abs(villager.getAttribute(Attributes.ATTACK_DAMAGE).getValue() - attackBefore) < 0.0001D,
+                "The temporary native-attack modifier must be removed after the strike");
+        helper.succeed();
     }
 
     @GameTest(template = "gametest/empty")
@@ -748,15 +1208,97 @@ public final class McaVampCompatGameTests {
         helper.assertTrue(!McaHunterAlignmentService.isMcaHunterVillager(villager),
                 "Removing the Hunter trait in the editor must clear Hunter alignment");
 
-        McaTraitBridge.addWerewolfTrait(villager);
-        McaEditorTraitSyncService.reconcileEditedTraits(villager);
-        helper.assertTrue(McaWerewolfStateService.isWerewolf(villager),
-                "Adding the Werewolf trait in the editor must convert the villager");
+        if (McaWerewolvesCompat.isAvailable()) {
+            McaTraitBridge.addWerewolfTrait(villager);
+            McaEditorTraitSyncService.reconcileEditedTraits(villager);
+            helper.assertTrue(McaWerewolfStateService.isWerewolf(villager),
+                    "Adding the Werewolf trait in the editor must convert the villager");
 
-        McaTraitBridge.removeWerewolfTrait(villager);
-        McaEditorTraitSyncService.reconcileEditedTraits(villager);
-        helper.assertTrue(!McaWerewolfStateService.isWerewolf(villager),
-                "Removing the Werewolf trait in the editor must clear the conversion");
+            McaTraitBridge.removeWerewolfTrait(villager);
+            McaEditorTraitSyncService.reconcileEditedTraits(villager);
+            helper.assertTrue(!McaWerewolfStateService.isWerewolf(villager),
+                    "Removing the Werewolf trait in the editor must clear the conversion");
+        } else {
+            McaTraitBridge.addWerewolfTrait(villager);
+            helper.assertTrue(!McaTraitBridge.hasWerewolfTrait(villager)
+                            && !McaWerewolfStateService.isWerewolf(villager),
+                    "Werewolf must not be assignable when the optional Werewolves addon is absent");
+        }
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty")
+    public static void ordinaryVampiresRemainBlockedFromMcaVampireBlood(GameTestHelper helper) {
+        Player source = helper.makeMockPlayer(GameType.CREATIVE);
+        VillagerEntityMCA villager = createVampireVillager(helper);
+        helper.assertTrue(McaVampireFeedProtection.shouldBlockDrain(source, villager),
+                "The MCA Vampire protection must still block a non-Bloodknight source");
+        helper.succeed();
+    }
+
+    @GameTest(template = "gametest/empty")
+    public static void bloodknightFeedsEligibleMcaAndNativeVampires(GameTestHelper helper) {
+        if (!ModList.get().isLoaded("bloodlines")) {
+            helper.succeed();
+            return;
+        }
+
+        try {
+            ServerPlayer bloodknight = createConnectedGameTestPlayer(helper, "test-bloodknight-drink");
+            setPlayerFaction(bloodknight, id("vampirism", "vampire"));
+            setBloodlinesBloodknight(bloodknight, 4);
+            var vampire = VampirismAPI.getVampirePlayer(bloodknight)
+                    .orElseThrow(() -> new IllegalStateException("Bloodknight must have a VampirePlayer"));
+
+            VillagerEntityMCA mcaTarget = createVampireVillager(helper);
+            mcaTarget.setHealth(mcaTarget.getMaxHealth() * 0.25F);
+            helper.assertTrue(!McaVampireFeedProtection.shouldBlockDrain(bloodknight, mcaTarget),
+                    "A ranked Bloodknight must bypass MCA vampire protection at Bloodlines' default 25% threshold");
+            var mcaCreature = ExtendedCreature.getSafe(mcaTarget)
+                    .orElseThrow(() -> new IllegalStateException("MCA target must expose ExtendedCreature"));
+            boolean canBeBitten = mcaCreature.canBeBitten(vampire);
+            helper.assertTrue(canBeBitten,
+                    "The ExtendedCreature bite path must allow an eligible Bloodknight (blood="
+                            + mcaCreature.getBlood() + ", maxBlood=" + mcaCreature.getMaxBlood() + ')');
+
+            mcaTarget.setHealth(mcaTarget.getMaxHealth() * 0.26F);
+            helper.assertTrue(McaVampireFeedProtection.shouldBlockDrain(bloodknight, mcaTarget),
+                    "A Bloodknight above the configured health threshold must remain blocked from MCA vampire blood");
+
+            mcaTarget.setHealth(mcaTarget.getMaxHealth() * 0.25F);
+            ISkill<?> feedingFrenzy = getBloodlinesSkill("BLOODKNIGHT_FEEDING_FRENZY_1");
+            enableBloodlinesSkill(vampire, feedingFrenzy);
+            helper.assertTrue(vampire.getSkillHandler().isSkillEnabled(feedingFrenzy),
+                    "The Bloodknight Feeding Frenzy skill must be enabled for the native event test");
+
+            BloodDrinkEvent.PlayerDrinkBloodEvent mcaDrink = postBloodDrink(vampire, mcaTarget);
+            helper.assertTrue(mcaDrink.getAmount() > 10,
+                    "An MCA Vampire must receive Bloodlines' native vampire-source blood bonus");
+            helper.assertTrue(mcaDrink.getSaturation() > 1.0F,
+                    "An MCA Vampire must receive Bloodlines' native vampire-source saturation bonus");
+            var bloodFrenzy = BuiltInRegistries.MOB_EFFECT.getHolder(id("bloodlines", "blood_frenzy"));
+            helper.assertTrue(bloodFrenzy.isPresent() && bloodknight.hasEffect(bloodFrenzy.get()),
+                    "Drinking from an MCA Vampire must grant native Bloodknight Blood Frenzy when enabled");
+            LivingEntity nativeMobTarget = ModEntities.VAMPIRE.get().create(helper.getLevel());
+            helper.assertTrue(nativeMobTarget != null,
+                    "A native Vampirism vampire must be available for the Bloodknight parity test");
+            BloodDrinkEvent.PlayerDrinkBloodEvent nativeMobDrink = postBloodDrink(vampire, nativeMobTarget);
+            helper.assertTrue(mcaDrink.getAmount() == nativeMobDrink.getAmount(),
+                    "MCA and native vampire mobs must receive the same Bloodknight blood multiplier");
+            helper.assertTrue(Float.compare(mcaDrink.getSaturation(), nativeMobDrink.getSaturation()) == 0,
+                    "MCA and native vampire mobs must receive the same Bloodknight saturation multiplier");
+
+            Player nativeTarget = helper.makeMockPlayer(GameType.SURVIVAL);
+            setPlayerFaction(nativeTarget, id("vampirism", "vampire"));
+            nativeTarget.setHealth(nativeTarget.getMaxHealth() * 0.25F);
+            var nativeVampire = VampirismAPI.getVampirePlayer(nativeTarget)
+                    .orElseThrow(() -> new IllegalStateException("Native target must have a VampirePlayer"));
+            helper.assertTrue(nativeVampire.canBeBitten(vampire),
+                    "The compat must no longer cancel Bloodlines' native vampire-player bite decision");
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            helper.fail("Bloodlines Bloodknight integration must initialize safely: " + exception.getMessage());
+            return;
+        }
         helper.succeed();
     }
 
@@ -813,7 +1355,11 @@ public final class McaVampCompatGameTests {
 
             helper.assertTrue(result == villager,
                     "Native full-moon transformation must leave the original MCA villager in place");
-            helper.assertTrue(!villager.isRemoved() && helper.getLevel().getEntity(originalUuid) == villager,
+            // GameTest entity registration is deferred until the next tick,
+            // so querying the level UUID index here is timing-sensitive. The
+            // identity contract is the original live object, its UUID and its
+            // non-removed state immediately after the native call.
+            helper.assertTrue(!villager.isRemoved() && originalUuid.equals(villager.getUUID()),
                     "Native transformation must not remove or replace the MCA villager UUID");
             helper.assertTrue(originalName.equals(villager.getCustomName()),
                     "Native transformation must preserve the MCA villager name");
@@ -843,6 +1389,31 @@ public final class McaVampCompatGameTests {
         CustomData.set(DataComponents.CUSTOM_DATA, stack, root);
     }
 
+    private static ItemStack saveMcaEvStack(
+            Method saveStack,
+            VillagerEntityMCA villager,
+            long gameTime
+    ) throws ReflectiveOperationException {
+        ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(id("easy_villagers", "villager")));
+        boolean saved = (Boolean) saveStack.invoke(null, stack, villager, gameTime);
+        if (!saved) {
+            throw new IllegalStateException("MCA x Easy Villagers could not create a stored MCA parent snapshot");
+        }
+        return stack;
+    }
+
+    private static Container createMcaEvInventoryViewerContainer(BlockEntity viewer)
+            throws ReflectiveOperationException {
+        Class<?> inventoryClass = Class.forName("com.guilh.mcaevcompat.inventory.McaStoredInventory");
+        for (Constructor<?> constructor : inventoryClass.getConstructors()) {
+            Class<?>[] parameters = constructor.getParameterTypes();
+            if (parameters.length == 1 && parameters[0].isAssignableFrom(viewer.getClass())) {
+                return (Container) constructor.newInstance(viewer);
+            }
+        }
+        throw new NoSuchMethodException("McaStoredInventory InventoryViewer constructor");
+    }
+
     private static Field findNativeWerewolfMarker(VillagerEntityMCA villager) throws NoSuchFieldException {
         for (Class<?> type = villager.getClass(); type != null; type = type.getSuperclass()) {
             for (Field field : type.getDeclaredFields()) {
@@ -855,6 +1426,20 @@ public final class McaVampCompatGameTests {
             }
         }
         throw new NoSuchFieldException("Werewolves native villager marker");
+    }
+
+    private static Field findField(Class<?> type, String name) throws NoSuchFieldException {
+        for (Class<?> current = type; current != null; current = current.getSuperclass()) {
+            try {
+                Field field = current.getDeclaredField(name);
+                field.setAccessible(true);
+                return field;
+            } catch (NoSuchFieldException ignored) {
+                // The concrete MCA x Easy Villagers tile entity subclasses its
+                // common Converter implementation, so keep walking upward.
+            }
+        }
+        throw new NoSuchFieldException(name);
     }
 
     private static BlockEntity createRealHunterTrader(
@@ -977,6 +1562,17 @@ public final class McaVampCompatGameTests {
         return count;
     }
 
+    private static int countItem(VillagerEntityMCA villager, net.minecraft.world.item.Item item) {
+        int count = 0;
+        for (int slot = 0; slot < villager.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = villager.getInventory().getItem(slot);
+            if (stack.is(item)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
+    }
+
     private static void setPlayerFaction(Player player, ResourceLocation factionId) {
         IFaction<?> faction = VampirismAPI.factionRegistry().getFactionByID(factionId);
         if (!(faction instanceof IPlayableFaction<?> playableFaction)) {
@@ -985,6 +1581,87 @@ public final class McaVampCompatGameTests {
         if (!VampirismAPI.factionPlayerHandler(player).setFactionAndLevel(playableFaction, 1)) {
             throw new IllegalStateException("Could not set player faction " + factionId);
         }
+    }
+
+    private static VillagerEntityMCA createVampireVillager(GameTestHelper helper) {
+        VillagerEntityMCA villager = EntitiesMCA.MALE_VILLAGER.create(helper.getLevel());
+        if (villager == null) {
+            throw new IllegalStateException("MCA male villager type must create an entity");
+        }
+        villager.setAgeState(AgeState.ADULT);
+        McaTraitBridge.addVampireTrait(villager);
+        McaEditorTraitSyncService.reconcileEditedTraits(villager);
+        if (!McaVampireStateService.isVampire(villager)) {
+            throw new IllegalStateException("Vampire trait must convert MCA villager for bite test");
+        }
+        return villager;
+    }
+
+    private static BloodDrinkEvent.PlayerDrinkBloodEvent postBloodDrink(IVampirePlayer vampire, LivingEntity target) {
+        BloodDrinkEvent.PlayerDrinkBloodEvent event = new BloodDrinkEvent.PlayerDrinkBloodEvent(
+                vampire,
+                10,
+                1.0F,
+                false,
+                new DrinkBloodContext(target)
+        );
+        NeoForge.EVENT_BUS.post(event);
+        return event;
+    }
+
+    /**
+     * Bloodlines sends an effect packet during this event. A GameTest has no
+     * client connection, so suppress only that packet callback while retaining
+     * the native effect state, modifiers and advancement processing.
+     */
+    private static ServerPlayer createConnectedGameTestPlayer(GameTestHelper helper, String name) {
+        GameProfile profile = new GameProfile(UUID.randomUUID(), name);
+        return new ServerPlayer(
+                helper.getLevel().getServer(),
+                helper.getLevel(),
+                profile,
+                ClientInformation.createDefault()
+        ) {
+            @Override
+            protected void onEffectAdded(
+                    MobEffectInstance effect,
+                    net.minecraft.world.entity.Entity source
+            ) {
+                // The effect has already been added; only its client packet is omitted.
+            }
+        };
+    }
+
+    private static ISkill<?> getBloodlinesSkill(String fieldName) throws ReflectiveOperationException {
+        ClassLoader loader = McaVampCompatGameTests.class.getClassLoader();
+        Class<?> skillsClass = Class.forName(
+                "com.thedrofdoctoring.bloodlines.skills.BloodlineSkills", true, loader
+        );
+        Object deferredSkill = skillsClass.getField(fieldName).get(null);
+        return (ISkill<?>) deferredSkill.getClass().getMethod("get").invoke(deferredSkill);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void enableBloodlinesSkill(IVampirePlayer vampire, ISkill<?> skill) {
+        vampire.getSkillHandler().enableSkill((ISkill) skill, true);
+    }
+
+    private static void setBloodlinesBloodknight(Player player, int rank) throws ReflectiveOperationException {
+        ClassLoader loader = McaVampCompatGameTests.class.getClassLoader();
+        Class<?> managerClass = Class.forName(
+                "com.thedrofdoctoring.bloodlines.capabilities.bloodlines.BloodlineManager", true, loader
+        );
+        Class<?> registryClass = Class.forName(
+                "com.thedrofdoctoring.bloodlines.core.bloodline.BloodlineRegistry", true, loader
+        );
+        Class<?> bloodlineClass = Class.forName(
+                "com.thedrofdoctoring.bloodlines.capabilities.bloodlines.IBloodline", true, loader
+        );
+        Object manager = managerClass.getMethod("get", Player.class).invoke(null, player);
+        Object deferredBloodknight = registryClass.getField("BLOODLINE_BLOODKNIGHT").get(null);
+        Object bloodknight = deferredBloodknight.getClass().getMethod("get").invoke(deferredBloodknight);
+        managerClass.getMethod("setBloodline", bloodlineClass).invoke(manager, bloodknight);
+        managerClass.getMethod("setRank", int.class).invoke(manager, rank);
     }
 
     private static ResourceLocation id(String namespace, String path) {

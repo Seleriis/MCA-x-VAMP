@@ -89,6 +89,10 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
     private String lastAppliedVampireSchedule = "";
     private String defensiveReason = "";
     private String lastCureType = "";
+    private String hunterWeaponSelection = "";
+    // Optional migration marker. Older saves intentionally omit it, which
+    // means their saved item belongs to the historical vanilla main hand.
+    private String hunterWeaponHand = "";
     private ItemStack originalMainHandItem = ItemStack.EMPTY;
     private UUID cureInitiatorUuid;
     private UUID werewolfCureInitiatorUuid;
@@ -563,6 +567,40 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
         originalMainHandItemSaved = false;
     }
 
+    /**
+     * The real Hunter's weapon is chosen once and kept through MCA equipment
+     * refreshes, Easy Villagers capture and world reloads. An empty value is
+     * intentionally kept for old saves until their first reconciliation.
+     */
+    public String getHunterWeaponSelection() {
+        return hunterWeaponSelection;
+    }
+
+    public void setHunterWeaponSelection(String selection) {
+        hunterWeaponSelection = selection == null ? "" : selection;
+    }
+
+    public void clearHunterWeaponSelection() {
+        hunterWeaponSelection = "";
+    }
+
+    /**
+     * The MCA combat hand that owns the temporary Hunter weapon. This stays
+     * separate from the legacy OriginalMainHandItem key so existing saves can
+     * be migrated without changing their payload shape.
+     */
+    public String getHunterWeaponHand() {
+        return hunterWeaponHand;
+    }
+
+    public void setHunterWeaponHand(String hand) {
+        hunterWeaponHand = hand == null ? "" : hand;
+    }
+
+    public void clearHunterWeaponHand() {
+        hunterWeaponHand = "";
+    }
+
     public boolean isOriginalAppearanceSaved() {
         return originalAppearanceSaved;
     }
@@ -995,6 +1033,12 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
         tag.putString("LastAppliedVampireSchedule", lastAppliedVampireSchedule);
         tag.putString("DefensiveReason", defensiveReason);
         tag.putString("LastCureType", lastCureType);
+        if (!hunterWeaponSelection.isEmpty()) {
+            tag.putString("HunterWeaponSelection", hunterWeaponSelection);
+        }
+        if (!hunterWeaponHand.isEmpty()) {
+            tag.putString("HunterWeaponHand", hunterWeaponHand);
+        }
         if (source != null) {
             tag.putUUID("Source", source);
         }
@@ -1022,9 +1066,12 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
          * rejects ItemStack.EMPTY in 1.21.1, so preserve the boolean marker and
          * omit only the optional item payload.
          */
-        if (originalMainHandItemSaved && !originalMainHandItem.isEmpty()) {
-            tag.put("OriginalMainHandItem", originalMainHandItem.save(registries));
-        }
+        VampiricVillagerStateNbtCodec.writeOriginalMainHand(
+                tag,
+                originalMainHandItemSaved,
+                originalMainHandItem,
+                registries
+        );
         return tag;
     }
 
@@ -1113,6 +1160,8 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
                 : "";
         defensiveReason = tag.contains("DefensiveReason") ? tag.getString("DefensiveReason") : "";
         lastCureType = tag.contains("LastCureType") ? tag.getString("LastCureType") : "";
+        hunterWeaponSelection = tag.contains("HunterWeaponSelection") ? tag.getString("HunterWeaponSelection") : "";
+        hunterWeaponHand = tag.contains("HunterWeaponHand") ? tag.getString("HunterWeaponHand") : "";
         source = tag.hasUUID("Source") ? tag.getUUID("Source") : null;
         lastAggressorUuid = tag.hasUUID("LastAggressorUuid") ? tag.getUUID("LastAggressorUuid") : null;
         lastVampirePlayerBiteUuid = tag.hasUUID("LastVampirePlayerBiteUuid")
@@ -1122,14 +1171,7 @@ public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
         cureInitiatorUuid = tag.hasUUID("CureInitiatorUuid") ? tag.getUUID("CureInitiatorUuid") : null;
         werewolfCureInitiatorUuid = tag.hasUUID("WerewolfCureInitiatorUuid") ? tag.getUUID("WerewolfCureInitiatorUuid") : null;
         werewolfSourceUuid = tag.hasUUID("WerewolfSourceUuid") ? tag.getUUID("WerewolfSourceUuid") : null;
-        CompoundTag originalMainHandTag = tag.contains("OriginalMainHandItem", Tag.TAG_COMPOUND)
-                ? tag.getCompound("OriginalMainHandItem")
-                : null;
-        originalMainHandItem = originalMainHandTag != null
-                && !originalMainHandTag.isEmpty()
-                && originalMainHandTag.contains("id")
-                ? ItemStack.parseOptional(registries, originalMainHandTag)
-                : ItemStack.EMPTY;
+        originalMainHandItem = VampiricVillagerStateNbtCodec.readOriginalMainHand(registries, tag);
         aiGoalsAdded = false;
         defensiveGoalsAdded = false;
         hunterAiGoalsAdded = false;

@@ -10,11 +10,13 @@ import com.guilh.mca_vampirism_compat.service.McaBloodValueRepairService;
 import com.guilh.mca_vampirism_compat.service.McaHunterBloodService;
 import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.service.McaVampireInfectionService;
+import com.guilh.mca_vampirism_compat.service.McaVampireFeedProtection;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.trade.McaFactionTradeService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfStateService;
 import com.guilh.mca_vampirism_compat.service.VampireSkillIntegrationService;
 import com.guilh.mca_vampirism_compat.util.McaVillagerUtil;
+import com.guilh.mca_vampirism_compat.service.McaBloodValueMutable;
 import de.teamlapen.vampirism.api.entity.IExtendedCreatureVampirism;
 import de.teamlapen.vampirism.api.entity.convertible.IConvertedCreature;
 import de.teamlapen.vampirism.api.entity.vampire.IVampire;
@@ -34,10 +36,22 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = ExtendedCreature.class, remap = false)
-public abstract class ExtendedCreatureMixin {
+public abstract class ExtendedCreatureMixin implements McaBloodValueMutable {
     @Shadow
     @Final
     private PathfinderMob entity;
+
+    @Shadow
+    private int blood;
+
+    @Shadow
+    private int maxBlood;
+
+    @Override
+    public void mcaVampirismCompat$setBloodValues(int bloodValue) {
+        maxBlood = bloodValue;
+        blood = bloodValue;
+    }
 
     @Inject(method = "makeVampire", at = @At("HEAD"), cancellable = true)
     private void mcaVampirismCompat$keepMcaVillagerEntity(CallbackInfoReturnable<IConvertedCreature<?>> cir) {
@@ -95,7 +109,8 @@ public abstract class ExtendedCreatureMixin {
 
     @Inject(method = "canBeBitten", at = @At("HEAD"), cancellable = true)
     private void mcaVampirismCompat$blockMcaVampireBloodDrain(IVampire vampire, CallbackInfoReturnable<Boolean> cir) {
-        if (McaVampirismCompatConfig.preventVampiresBitingMcaVampires() && McaVillagerUtil.isMcaVampire(entity)) {
+        LivingEntity source = VampireSkillIntegrationService.representingEntity(vampire);
+        if (McaVampireFeedProtection.shouldBlockDrain(source, entity)) {
             if (entity.tickCount % 100 == 0) {
                 McaVampirismCompat.debugLog("[BITE] ExtendedCreature.canBeBitten blocked entity={}", entity.getUUID());
             }
@@ -107,7 +122,8 @@ public abstract class ExtendedCreatureMixin {
 
     @Inject(method = "onBite", at = @At("HEAD"), cancellable = true)
     private void mcaVampirismCompat$preventMcaVampireBloodLoss(IVampire vampire, CallbackInfoReturnable<Integer> cir) {
-        if (McaVampirismCompatConfig.preventVampiresBitingMcaVampires() && McaVillagerUtil.isMcaVampire(entity)) {
+        LivingEntity source = VampireSkillIntegrationService.representingEntity(vampire);
+        if (McaVampireFeedProtection.shouldBlockDrain(source, entity)) {
             if (entity.tickCount % 100 == 0) {
                 McaVampirismCompat.debugLog("[BITE] ExtendedCreature.onBite blocked entity={}", entity.getUUID());
             }

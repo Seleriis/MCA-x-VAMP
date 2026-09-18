@@ -1,6 +1,7 @@
 package com.guilh.mca_vampirism_compat.trade;
 
 import net.minecraft.world.inventory.MerchantContainer;
+import net.minecraft.world.item.trading.Merchant;
 
 /**
  * Read-only access to the vanilla trade container used by both live and
@@ -8,4 +9,6 @@ import net.minecraft.world.inventory.MerchantContainer;
  */
 public interface MerchantMenuTradeAccess {
     MerchantContainer mcaVampCompat$getTradeContainer();
+
+    Merchant mcaVampCompat$getTrader();
 }

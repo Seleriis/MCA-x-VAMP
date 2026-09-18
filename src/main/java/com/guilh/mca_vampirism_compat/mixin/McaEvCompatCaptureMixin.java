@@ -2,6 +2,7 @@ package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.easyvillagers.McaFactionPickupPermissionService;
 import com.guilh.mca_vampirism_compat.easyvillagers.McaEvStatePayload;
+import com.guilh.mca_vampirism_compat.service.McaDefensiveVillagerService;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.core.BlockPos;
@@ -21,6 +22,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Pseudo
 @Mixin(targets = "com.guilh.mcaevcompat.CompatLogic", priority = 2000, remap = false)
 public abstract class McaEvCompatCaptureMixin {
+    @Inject(method = "saveMcaVillagerToStack", at = @At("HEAD"), require = 0, remap = false)
+    private static void mcaVampirismCompat$reconcileReservedHunterWeaponBeforeCapture(
+            ItemStack stack,
+            Villager villager,
+            long gameTime,
+            CallbackInfoReturnable<Boolean> cir
+    ) {
+        if (villager instanceof net.conczin.mca.entity.VillagerEntityMCA mcaVillager) {
+            McaDefensiveVillagerService.reconcileHunterWeapon(mcaVillager);
+        }
+    }
+
     @Inject(method = "captureMcaVillager", at = @At("HEAD"), cancellable = true, require = 0, remap = false)
     private static void vampirismMcaCompat$denyFactionPickup(Villager villager, Player player, CallbackInfo ci) {
         if (McaFactionPickupPermissionService.denyPickupIfNeeded(villager, player, "McaEvCompat CompatLogic.captureMcaVillager")) {
@@ -56,6 +69,9 @@ public abstract class McaEvCompatCaptureMixin {
     private static void vampirismMcaCompat$restoreFactionPayload(Level level, ItemStack stack,
                                                                  CallbackInfoReturnable<Villager> cir) {
         McaEvStatePayload.restore(stack, cir.getReturnValue());
+        if (cir.getReturnValue() instanceof net.conczin.mca.entity.VillagerEntityMCA mcaVillager) {
+            McaDefensiveVillagerService.reconcileHunterWeapon(mcaVillager);
+        }
     }
 
     /**
@@ -85,6 +101,9 @@ public abstract class McaEvCompatCaptureMixin {
     ) {
         if (entity instanceof Villager villager) {
             McaEvStatePayload.restore(stack, villager);
+            if (villager instanceof net.conczin.mca.entity.VillagerEntityMCA mcaVillager) {
+                McaDefensiveVillagerService.reconcileHunterWeapon(mcaVillager);
+            }
         }
         return original.call(level, entity);
     }
