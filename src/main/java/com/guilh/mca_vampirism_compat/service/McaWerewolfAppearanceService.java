@@ -16,7 +16,7 @@ public final class McaWerewolfAppearanceService {
                 || McaVampireCureService.isInPostCureGracePeriod(villager, McaVampireCureService.CureType.WEREWOLF)) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             state.setWerewolfAppearanceApplied(true);
             state.setWerewolfPartialForm(true);
         });
@@ -27,7 +27,7 @@ public final class McaWerewolfAppearanceService {
         if (villager == null || villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             state.setWerewolfAppearanceApplied(false);
             state.setWerewolfPartialForm(false);
         });

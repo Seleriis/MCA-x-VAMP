@@ -13,6 +13,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import java.util.UUID;
 
 public final class McaVampireAttributeHandler {
+    // Keep the legacy Forge UUIDs so an existing 1.20.1 entity receives the
+    // same modifier identity after the 2.1.7 update.
     private static final UUID MAX_HEALTH_UUID = UUID.fromString("2b2ff74b-64cf-40bf-a8ec-3c9f4a1b24a1");
     private static final UUID ATTACK_DAMAGE_UUID = UUID.fromString("19e0a97f-3f07-462c-9f3c-30a3ccbb1485");
     private static final UUID ARMOR_UUID = UUID.fromString("762f9d41-0897-41cf-bf20-39c2275b7a5d");
@@ -32,9 +34,10 @@ public final class McaVampireAttributeHandler {
 
         float healthBefore = entity.getHealth();
         applyModifier(entity, Attributes.MAX_HEALTH, MAX_HEALTH_UUID, "MCA vampire max health",
-                McaVampirismCompatConfig.maxHealthMultiplier() - 1.0D, AttributeModifier.Operation.MULTIPLY_BASE);
-        applyModifier(entity, Attributes.ARMOR, ARMOR_UUID, "MCA vampire armor", McaVampirismCompatConfig.armorBonus(),
-                AttributeModifier.Operation.ADDITION);
+                McaVampirismCompatConfig.maxHealthMultiplier() - 1.0D,
+                AttributeModifier.Operation.MULTIPLY_BASE);
+        applyModifier(entity, Attributes.ARMOR, ARMOR_UUID, "MCA vampire armor",
+                McaVampirismCompatConfig.armorBonus(), AttributeModifier.Operation.ADDITION);
 
         if (shouldApplyCombatAttributes(entity)) {
             applyModifier(entity, Attributes.ATTACK_DAMAGE, ATTACK_DAMAGE_UUID, "MCA vampire attack damage",
@@ -92,7 +95,10 @@ public final class McaVampireAttributeHandler {
         }
     }
 
-    private static boolean hasModifierIfAttributeExists(LivingEntity entity, Attribute attribute, UUID uuid) {
+    private static boolean hasModifierIfAttributeExists(
+            LivingEntity entity,
+            Attribute attribute,
+            UUID uuid) {
         AttributeInstance instance = entity.getAttribute(attribute);
         return instance == null || instance.getModifier(uuid) != null;
     }

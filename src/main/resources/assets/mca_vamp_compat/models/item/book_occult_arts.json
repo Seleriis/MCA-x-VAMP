@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "mca_vamp_compat:item/book_occult_arts"
+  }
+}

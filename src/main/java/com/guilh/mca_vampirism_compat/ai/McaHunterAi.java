@@ -24,7 +24,7 @@ public final class McaHunterAi {
             return false;
         }
 
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        return ModCapabilities.get(villager).map(state -> {
             if (state.areHunterAiGoalsAdded()) {
                 return false;
             }

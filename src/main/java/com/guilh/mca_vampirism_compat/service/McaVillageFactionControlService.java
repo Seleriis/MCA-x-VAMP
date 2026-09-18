@@ -7,7 +7,6 @@ import com.guilh.mca_vampirism_compat.service.faction.hunter.McaHunterAggression
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import de.teamlapen.vampirism.api.entity.factions.IFaction;
 import de.teamlapen.vampirism.api.world.ITotem;
-import de.teamlapen.vampirism.util.TotemHelper;
 import forge.net.mca.entity.VillagerEntityMCA;
 import forge.net.mca.entity.ai.relationship.AgeState;
 import net.minecraft.core.BlockPos;
@@ -85,7 +84,7 @@ public final class McaVillageFactionControlService {
             );
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             boolean alreadyHadTrait = McaTraitBridge.hasHunterTrait(villager);
             if (McaVampirismCompatConfig.hunterVillageControlGrantsHunterTrait() && !alreadyHadTrait) {
                 McaTraitBridge.addHunterTrait(villager);
@@ -99,7 +98,7 @@ public final class McaVillageFactionControlService {
                 state.setHunterVillageApplied(true);
             }
             state.setHunterAligned(true, Long.MAX_VALUE);
-            McaDefensiveVillagerService.equipHunterWeaponIfAllowed(villager, source);
+            McaDefensiveVillagerService.reconcileHunterWeapon(villager);
             McaVampirismCompat.debugLog(
                     "[HUNTER-VILLAGE] state applied villager={} source={}",
                     villager.getUUID(),
@@ -113,7 +112,7 @@ public final class McaVillageFactionControlService {
         if (villager == null || villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             boolean hadVillageState = state.isHunterVillageApplied();
             boolean removeTrait = hadVillageState && McaVampirismCompatConfig.hunterVillagerRemoveTraitWhenVillageControlLost();
             if (removeTrait && McaTraitBridge.hasHunterTrait(villager)) {
@@ -143,9 +142,7 @@ public final class McaVillageFactionControlService {
                 return;
             }
 
-            if (!hasHunterTrait && !isActiveDefensiveMode(villager, state.getDefensiveModeUntilTick())) {
-                McaDefensiveVillagerService.restoreDefenseWeapon(villager);
-            }
+            McaDefensiveVillagerService.reconcileHunterWeapon(villager);
 
             if (!hadVillageState && !hasHunterTrait && (state.isHunterAligned()
                     || state.isHunterTraitApplied()
@@ -179,13 +176,30 @@ public final class McaVillageFactionControlService {
         }
     }
 
+    /**
+     * Reconciles only loaded MCA villagers after the compat-effective bounds
+     * change. Capture keeps calling the native-area method above on purpose.
+     */
+    public static void syncVillagersForEffectiveBoundsChange(ServerLevel level, AABB previousArea, AABB currentArea) {
+        if (level == null) {
+            return;
+        }
+        AABB affectedArea = McaVillageEffectBounds.union(previousArea, currentArea);
+        if (affectedArea == null) {
+            return;
+        }
+        for (VillagerEntityMCA villager : level.getEntitiesOfClass(VillagerEntityMCA.class, affectedArea)) {
+            syncHunterTraitFromVillageControl(villager);
+        }
+    }
+
     public static boolean isHunterControlledTotem(ITotem totem) {
         return totem != null && isHunterFaction(totem.getControllingFaction());
     }
 
     private static Optional<ITotem> findTotemNear(ServerLevel level, BlockPos pos) {
         try {
-            return TotemHelper.getTotemNearPos(level, pos, false)
+            return McaVillageEffectBoundsService.findActiveTotemAt(level, pos)
                     .map(totem -> (ITotem) totem);
         } catch (RuntimeException | LinkageError exception) {
             McaVampirismCompat.debugLog(
@@ -201,7 +215,7 @@ public final class McaVillageFactionControlService {
         if (!isHunterControlledTotem(totem)) {
             return false;
         }
-        AABB area = totem.getVillageArea();
+        AABB area = McaVillageEffectBoundsService.getEffectiveArea(totem);
         return area == null || area.contains(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
     }
 
@@ -215,12 +229,6 @@ public final class McaVillageFactionControlService {
 
     private static BlockPos totemPos(ITotem totem) {
         return totem instanceof BlockEntity blockEntity ? blockEntity.getBlockPos() : BlockPos.ZERO;
-    }
-
-    private static boolean isActiveDefensiveMode(VillagerEntityMCA villager, long untilTick) {
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
-                .map(state -> state.isDefensiveMode() && villager.level().getGameTime() <= untilTick)
-                .orElse(false);
     }
 
     private static boolean isStaleAggressiveReplacementDefense(String reason) {

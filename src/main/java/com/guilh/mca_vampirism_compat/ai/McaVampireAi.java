@@ -18,7 +18,7 @@ public final class McaVampireAi {
             return false;
         }
 
-        return entity.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        return ModCapabilities.get(entity).map(state -> {
             if (state.areAiGoalsAdded()) {
                 return false;
             }
@@ -27,7 +27,6 @@ public final class McaVampireAi {
                     McaVampirismCompatConfig.specialVillagerChaseGoalSpeed(),
                     Math.min(McaVampirismCompatConfig.specialVillagerMaxNavigationSpeed(), 1.0D)
             );
-            mob.goalSelector.addGoal(3, new McaVampireSeekShelterGoal(mob, 1.0D));
             mob.goalSelector.addGoal(4, new McaVampireInfectBiteGoal(mob, speed, true));
             mob.goalSelector.addGoal(5, new McaSpecialMeleeAttackGoal(mob));
             state.markAiGoalsAdded();

@@ -5,10 +5,19 @@ build/
 run/
 out/
 bin/
+tmp/
+logs/
+crash-reports/
 
 # Local assistant/editor metadata
 .agents/
 .codex/
+.idea/
+.vscode/
+.settings/
+*.iml
+.classpath
+.project
 
 # Local mod jars and investigation artifacts
 local-mods/
@@ -21,7 +30,16 @@ cp-test/
 *.bak
 *.old
 *.class
+hs_err_pid*
+replay_pid*
 
 # Built jars and third-party jars
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
+
+# Release work and local fixtures
+run/
+local-mods*/
+.gradle*/
+.publication/
+*.zip

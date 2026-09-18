@@ -20,7 +20,7 @@ public final class McaVampireGrowthHandler {
             return;
         }
 
-        entity.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(entity).ifPresent(state -> {
             long gameTime = entity.level().getGameTime();
             long interval = McaVampirismCompatConfig.growthProcessIntervalTicks();
             if (!state.canProcessGrowth(gameTime, interval)) {

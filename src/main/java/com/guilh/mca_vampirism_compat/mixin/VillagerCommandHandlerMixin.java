@@ -2,7 +2,9 @@ package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.service.McaFactionCommandPermissionService;
+import com.guilh.mca_vampirism_compat.service.McaFactionGiftService;
 import com.guilh.mca_vampirism_compat.service.McaVampireCureService;
+import com.guilh.mca_vampirism_compat.mission.OccultVillageMissionService;
 import com.guilh.mca_vampirism_compat.social.McaFactionSocialService;
 import com.guilh.mca_vampirism_compat.trade.McaFactionTradeService;
 import forge.net.mca.entity.VillagerEntityMCA;
@@ -32,23 +34,31 @@ public abstract class VillagerCommandHandlerMixin {
             cir.setReturnValue(true);
             return;
         }
-        if ("gift".equals(command) && McaVampireCureService.handleGiftCommand(player, villager)) {
-            ((VillagerCommandHandler) (Object) this).stopInteracting();
-            cir.setReturnValue(true);
-            return;
+        if ("gift".equals(command)) {
+            if (OccultVillageMissionService.handleGiftCommand(player, villager)
+                    || McaVampireCureService.handleGiftCommand(player, villager)) {
+                ((VillagerCommandHandler) (Object) this).stopInteracting();
+                cir.setReturnValue(true);
+                return;
+            }
         }
         if (!"trade".equals(command)) {
             if (McaFactionSocialService.handleCommandAction(player, villager, command)) {
                 cir.setReturnValue(true);
+                return;
+            }
+            if ("gift".equals(command) && McaFactionGiftService.handleGiftCommand(player, villager)) {
+                ((VillagerCommandHandler) (Object) this).stopInteracting();
+                cir.setReturnValue(true);
             }
             return;
         }
-        if (!McaFactionTradeService.shouldHandleMcaTrade(villager)) {
-            return;
-        }
-        ((VillagerCommandHandler) (Object) this).stopInteracting();
-        if (McaFactionTradeService.onMcaTradeOptionSelected(player, villager)) {
-            cir.setReturnValue(false);
+        // MCA 7.6.28-beta.10 uses MixinVillagerEntityInvoker#invokeBeginTradeWith
+        // here, which bypasses copiedBeginTradeWith. The faction gate must run
+        // before that invoker opens a native MerchantMenu.
+        if (McaFactionTradeService.shouldCancelMcaDialogueTrade(player, villager)) {
+            ((VillagerCommandHandler) (Object) this).stopInteracting();
+            cir.setReturnValue(true);
         }
     }
 

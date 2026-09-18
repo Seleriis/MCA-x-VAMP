@@ -163,6 +163,13 @@ public final class McaFactionSocialService {
             logSocial(actionType, player, villager, faction, getSocialPenalty(player, villager), "BLOCKED", blockReason(faction));
             return true;
         }
+        // Gift acceptance is item-driven. Faction enemies were already blocked
+        // above, while MCA's native GiftSaturation still decides whether the
+        // same approved gift has been repeated too often.
+        if (actionType == McaSocialActionType.GIFT) {
+            logSocial(actionType, player, villager, faction, 0.0D, "ALLOWED", "GIFT_RULES");
+            return false;
+        }
         double penalty = actionType.isPositiveSocialAction() ? getSocialPenalty(player, villager) : 0.0D;
         if (applySocialPenaltyIfSafe(player, villager, actionType)) {
             logSocial(actionType, player, villager, faction, penalty, "PENALTY_FAILED", "SOCIAL_PENALTY");
@@ -212,6 +219,10 @@ public final class McaFactionSocialService {
             logHunterSocial(actionType, player, villager, decision, "BLOCKED");
             return true;
         }
+        if (actionType == McaSocialActionType.GIFT) {
+            logHunterSocial(actionType, player, villager, decision.withPenalty(0.0D), "ALLOWED_BY_GIFT_RULES");
+            return false;
+        }
         double penalty = actionType.isPositiveSocialAction() ? decision.penalty() : 0.0D;
         if (applySocialPenaltyIfSafe(player, villager, actionType)) {
             logHunterSocial(actionType, player, villager, decision.withPenalty(penalty), "FAILED_BY_PENALTY");
@@ -233,6 +244,10 @@ public final class McaFactionSocialService {
             sendSocialMessage(player, villager, actionType, decision.messageKey());
             logWerewolfSocial(actionType, player, villager, decision, "BLOCKED");
             return true;
+        }
+        if (actionType == McaSocialActionType.GIFT) {
+            logWerewolfSocial(actionType, player, villager, decision.withPenalty(0.0D), "ALLOWED_BY_GIFT_RULES");
+            return false;
         }
         double penalty = actionType.isPositiveSocialAction() ? decision.penalty() : 0.0D;
         if (applySocialPenaltyIfSafe(player, villager, actionType)) {
@@ -419,6 +434,9 @@ public final class McaFactionSocialService {
         }
         SOCIAL_MESSAGE_COOLDOWNS.put(key, gameTime + SOCIAL_MESSAGE_COOLDOWN_TICKS);
         player.displayClientMessage(Component.translatable(messageKey), true);
+        if (messageKey.startsWith("mca_vamp_compat.social.")) {
+            McaFactionContextualDialogueService.onSocialRefused(player, villager);
+        }
     }
 
     private static void purgeSocialMessageCooldowns(long gameTime) {

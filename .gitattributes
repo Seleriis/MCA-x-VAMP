@@ -1,0 +1,13 @@
+# Keep source files consistent across Windows, Linux and GitHub.
+* text=auto
+*.java text eol=lf
+*.gradle text eol=lf
+*.properties text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+*.bat text eol=crlf
+
+# Do not attempt line-ending conversion for binary assets and the Gradle wrapper.
+*.png binary
+*.jar binary

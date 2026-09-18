@@ -24,7 +24,7 @@ public final class McaWerewolfAi {
                 || !(entity instanceof PathfinderMob mob)) {
             return false;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        return ModCapabilities.get(villager).map(state -> {
             if (state.areWerewolfAiGoalsAdded()) {
                 return false;
             }

@@ -30,7 +30,7 @@ public final class McaVampireSunlightHandler {
         entity.hurt(entity.damageSources().onFire(), SUN_DAMAGE);
     }
 
-    private static boolean isSunlightExposed(LivingEntity entity) {
+    public static boolean isSunlightExposed(LivingEntity entity) {
         Level level = entity.level();
         if (!level.dimensionType().hasSkyLight() || !level.isDay() || !level.canSeeSky(entity.blockPosition())) {
             return false;

@@ -2,6 +2,7 @@ package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
+import com.guilh.mca_vampirism_compat.service.McaBloodValueRepairService;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.guilh.mca_vampirism_compat.util.VampirismUtil;
 import de.teamlapen.vampirism.api.entity.player.vampire.IVampirePlayer;
@@ -28,6 +29,14 @@ public abstract class VampirePlayerMixin {
             );
             showBlockedMessage(target);
             cir.setReturnValue(IVampirePlayer.BITE_TYPE.NONE);
+            return;
+        }
+        if (McaBloodValueRepairService.prepareMcaBloodSourceForBite(target)) {
+            McaVampirismCompat.debugLog(
+                    "[BITE] prepared MCA human blood source before bite selection target={} targetType={}",
+                    target.getUUID(),
+                    target.getType()
+            );
         }
     }
 

@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:swords",
+    "#minecraft:axes",
+    "#minecraft:trimmable_armor",
+    "minecraft:bow",
+    "minecraft:crossbow",
+    "minecraft:trident",
+    "minecraft:shield",
+    { "id": "vampirism:hunter_axe_normal", "required": false },
+    { "id": "vampirism:hunter_axe_enhanced", "required": false },
+    { "id": "vampirism:hunter_axe_ultimate", "required": false }
+  ]
+}

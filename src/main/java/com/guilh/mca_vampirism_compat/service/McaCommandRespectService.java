@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class McaCommandRespectService {
     private static final long COMMAND_LOG_COOLDOWN_TICKS = 100L;
+    private static final int MAX_TRACKED_COMMAND_LOGS = 512;
     private static final Map<String, Long> LAST_COMMAND_LOG_TICKS = new ConcurrentHashMap<>();
 
     private McaCommandRespectService() {
@@ -182,7 +183,7 @@ public final class McaCommandRespectService {
             return false;
         }
         long gameTime = villager.level().getGameTime();
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> state.isRetaliatingAgainst(target.getUUID(), gameTime))
                 .orElse(false);
     }
@@ -192,6 +193,7 @@ public final class McaCommandRespectService {
             return;
         }
         long gameTime = villager.level().getGameTime();
+        pruneCommandLogs(gameTime);
         String key = villager.getUUID() + ":" + action;
         Long lastLog = LAST_COMMAND_LOG_TICKS.get(key);
         if (lastLog != null && gameTime - lastLog < COMMAND_LOG_COOLDOWN_TICKS) {
@@ -199,6 +201,18 @@ public final class McaCommandRespectService {
         }
         LAST_COMMAND_LOG_TICKS.put(key, gameTime);
         logger.run();
+    }
+
+    private static void pruneCommandLogs(long gameTime) {
+        if (LAST_COMMAND_LOG_TICKS.size() < MAX_TRACKED_COMMAND_LOGS) {
+            return;
+        }
+        LAST_COMMAND_LOG_TICKS.entrySet().removeIf(
+                entry -> gameTime - entry.getValue() >= COMMAND_LOG_COOLDOWN_TICKS
+        );
+        if (LAST_COMMAND_LOG_TICKS.size() >= MAX_TRACKED_COMMAND_LOGS) {
+            LAST_COMMAND_LOG_TICKS.clear();
+        }
     }
 
     private static void logCommandState(VillagerEntityMCA villager, McaCommandControlState state, MoveState moveState) {

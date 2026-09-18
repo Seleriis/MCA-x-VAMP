@@ -24,6 +24,7 @@ public final class McaVampireTargetUtil {
     }
 
     public static boolean isValidTarget(Mob vampire, LivingEntity target) {
+        if (target==null || com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.blocksAutomaticAttack(vampire,target)) return false;
         if (!McaVillagerUtil.isMcaVampire(vampire) || McaVampireCureService.isCuring(vampire)
                 || target == vampire || !target.isAlive()) {
             return false;
@@ -31,6 +32,7 @@ public final class McaVampireTargetUtil {
         if (target instanceof VillagerEntityMCA villager && McaVampireCureService.isCuring(villager)) {
             return false;
         }
+        if (vampire instanceof VillagerEntityMCA source && com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.protectedRetaliation(source,target)) return true;
         if (target instanceof VillagerEntityMCA targetVillager) {
             if (McaVampireStateService.isVampire(targetVillager)) {
                 return isDisguisedRetaliationTarget(vampire, target);
@@ -58,6 +60,7 @@ public final class McaVampireTargetUtil {
     }
 
     public static boolean isInfectionBiteTarget(Mob vampire, LivingEntity target) {
+        if (com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.blocksAutomaticAttack(vampire,target)) return false;
         if (vampire instanceof VillagerEntityMCA villager
                 && McaCommandRespectService.shouldSuppressAutonomousBiteOrHunt(villager)) {
             return false;
@@ -73,7 +76,7 @@ public final class McaVampireTargetUtil {
 
     public static boolean isRetaliationTarget(Mob vampire, LivingEntity target) {
         long gameTime = vampire.level().getGameTime();
-        return vampire.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(vampire)
                 .map(state -> state.isRetaliatingAgainst(target.getUUID(), gameTime))
                 .orElse(false);
     }
@@ -124,21 +127,21 @@ public final class McaVampireTargetUtil {
     }
 
     private static boolean canTargetHumanForInfection(LivingEntity target) {
-        if (target.hasEffect(ModEffects.SANGUINARE.get()) || McaVampireBiteService.wasRecentlyBitten(target)) {
+        if (target.hasEffect(VampirismEffectCompat.sanguinare()) || McaVampireBiteService.wasRecentlyBitten(target)) {
             return false;
         }
         if (!McaVampirismCompatConfig.allowChildInfection() && target instanceof VillagerEntityMCA villager
                 && villager.getAgeState() != AgeState.ADULT) {
             return false;
         }
-        return target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(target)
                 .map(state -> !state.isInfected() && !state.isConverted())
                 .orElse(true);
     }
 
     private static boolean canAttackerBite(Mob vampire) {
         long gameTime = vampire.level().getGameTime();
-        return vampire.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(vampire)
                 .map(state -> state.canBite(gameTime, McaVampirismCompatConfig.biteCooldownTicks()))
                 .orElse(false);
     }

@@ -29,9 +29,11 @@ public final class McaHunterTargetUtil {
     }
 
     public static TargetReason targetReason(VillagerEntityMCA hunter, LivingEntity target) {
+        if (com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.blocksAutomaticAttack(hunter,target)) return TargetReason.NONE;
         if (!canHunterFight(hunter) || target == null || target == hunter || !target.isAlive()) {
             return TargetReason.NONE;
         }
+        if (com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.protectedRetaliation(hunter,target)) return TargetReason.PROTECTED_AGGRESSOR;
         if (target instanceof VillagerEntityMCA targetVillager) {
             if (McaVampireCureService.isCuring(targetVillager)) {
                 return TargetReason.NONE;
@@ -128,7 +130,7 @@ public final class McaHunterTargetUtil {
             McaCommandRespectService.logRejectedTarget(hunter, attacker);
             return;
         }
-        hunter.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(hunter)
                 .ifPresent(state -> state.markRetaliation(
                         attacker.getUUID(),
                         hunter.level().getGameTime(),
@@ -183,7 +185,7 @@ public final class McaHunterTargetUtil {
 
     private static boolean isRetaliatingAgainst(VillagerEntityMCA hunter, LivingEntity target) {
         long gameTime = hunter.level().getGameTime();
-        return hunter.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(hunter)
                 .map(state -> state.isRetaliatingAgainst(target.getUUID(), gameTime))
                 .orElse(false);
     }
@@ -216,6 +218,7 @@ public final class McaHunterTargetUtil {
 
     public enum TargetReason {
         NONE,
+        PROTECTED_AGGRESSOR,
         RECENT_VAMPIRE_AGGRESSOR,
         VAMPIRE_PLAYER,
         VAMPIRE_MOB,

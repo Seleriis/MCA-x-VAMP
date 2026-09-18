@@ -18,6 +18,7 @@ import java.util.Optional;
 
 public final class McaFactionCommandPermissionService {
     private static final long MESSAGE_COOLDOWN_TICKS = 40L;
+    private static final int MAX_TRACKED_MESSAGE_COOLDOWNS = 512;
     private static final Map<String, Long> LAST_MESSAGE_TICKS = new HashMap<>();
 
     private McaFactionCommandPermissionService() {
@@ -161,6 +162,7 @@ public final class McaFactionCommandPermissionService {
             return;
         }
         long gameTime = villager.level().getGameTime();
+        pruneMessageCooldowns(gameTime);
         String key = player.getUUID() + "|" + villager.getUUID() + "|" + reason.name();
         Long lastTick = LAST_MESSAGE_TICKS.get(key);
         if (lastTick != null && gameTime - lastTick < MESSAGE_COOLDOWN_TICKS) {
@@ -168,6 +170,18 @@ public final class McaFactionCommandPermissionService {
         }
         LAST_MESSAGE_TICKS.put(key, gameTime);
         player.displayClientMessage(Component.translatable(messageKey(reason)), true);
+    }
+
+    private static void pruneMessageCooldowns(long gameTime) {
+        if (LAST_MESSAGE_TICKS.size() < MAX_TRACKED_MESSAGE_COOLDOWNS) {
+            return;
+        }
+        LAST_MESSAGE_TICKS.entrySet().removeIf(
+                entry -> gameTime - entry.getValue() >= MESSAGE_COOLDOWN_TICKS
+        );
+        if (LAST_MESSAGE_TICKS.size() >= MAX_TRACKED_MESSAGE_COOLDOWNS) {
+            LAST_MESSAGE_TICKS.clear();
+        }
     }
 
     private static String messageKey(CommandBlockReason reason) {

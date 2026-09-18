@@ -1,6 +1,9 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
+import com.guilh.mca_vampirism_compat.advancement.McaCompatAdvancements;
+import com.guilh.mca_vampirism_compat.mission.OccultVillageMissionService;
 import com.guilh.mca_vampirism_compat.VampiricVillagerState;
 import com.guilh.mca_vampirism_compat.appearance.McaVampireAppearanceHandler;
 import com.guilh.mca_vampirism_compat.attribute.McaSpecialVillagerAttributeService;
@@ -8,12 +11,14 @@ import com.guilh.mca_vampirism_compat.attribute.McaVampireAttributeHandler;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.social.McaSocialActionType;
+import com.guilh.mca_vampirism_compat.social.McaFactionContextualDialogueService;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
+import com.guilh.mca_vampirism_compat.trade.McaVampireSpecialTradeService;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
-import com.guilh.mca_vampirism_compat.visual.McaVampireVisualData;
 import de.teamlapen.vampirism.core.ModEffects;
 import forge.net.mca.entity.VillagerEntityMCA;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -31,15 +36,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 public final class McaVampireCureService {
-    private static final ResourceLocation GARLIC_INJECTION_ID = new ResourceLocation("vampirism", "injection_garlic");
+    private static final ResourceLocation GARLIC_INJECTION_ID =
+            new ResourceLocation("vampirism", "injection_garlic");
     private static final String WEAKNESS_ITEM = "minecraft:potion";
     private static final String GOLDEN_APPLE_ITEM = "minecraft:golden_apple";
     private static final String GARLIC_INJECTION_ITEM = "vampirism:injection_garlic";
@@ -48,42 +54,15 @@ public final class McaVampireCureService {
     }
 
     public static boolean handleEntityInteract(PlayerInteractEvent.EntityInteract event) {
-        if (event.getLevel().isClientSide || !(event.getTarget() instanceof VillagerEntityMCA villager)) {
-            return false;
-        }
-        InteractionResult result = handleDirectInteraction(event.getEntity(), villager, event.getHand());
-        if (result == null) {
-            return false;
-        }
-        event.setCancellationResult(result);
-        event.setCanceled(true);
-        return true;
+        return McaCureInteractionService.handleEntityInteract(event);
     }
 
     public static InteractionResult handleDirectInteraction(Player player, VillagerEntityMCA villager, InteractionHand hand) {
-        if (player == null || villager == null || villager.level().isClientSide) {
-            return null;
-        }
-        ItemStack stack = player.getItemInHand(hand);
-        if (stack.isEmpty()) {
-            return null;
-        }
-        if (handleHeldCureItem(player, villager, hand, stack)) {
-            return InteractionResult.SUCCESS;
-        }
-        if (shouldBlockTrade(villager)) {
-            player.displayClientMessage(Component.translatable(cureInProgressMessage(villager)), true);
-            return InteractionResult.SUCCESS;
-        }
-        return null;
+        return McaCureInteractionService.handleDirectInteraction(player, villager, hand);
     }
 
     public static boolean handleGiftCommand(ServerPlayer player, VillagerEntityMCA villager) {
-        if (player == null || villager == null || villager.level().isClientSide) {
-            return false;
-        }
-        ItemStack stack = player.getMainHandItem();
-        return !stack.isEmpty() && handleHeldCureItem(player, villager, InteractionHand.MAIN_HAND, stack);
+        return McaCureInteractionService.handleGiftCommand(player, villager);
     }
 
     public static boolean isCuring(Entity entity) {
@@ -118,90 +97,11 @@ public final class McaVampireCureService {
     }
 
     public static void processCureTick(VillagerEntityMCA villager) {
-        if (villager == null || villager.level().isClientSide) {
-            return;
-        }
-        long gameTime = villager.level().getGameTime();
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
-            state.clearExpiredCureIngredientProgress(gameTime);
-            if (state.isCuringVampire()) {
-                processVampireCureTick(villager, gameTime);
-            }
-            if (state.isCuringWerewolf()) {
-                processWerewolfCureTick(villager, gameTime);
-            }
-        });
-    }
-
-    private static void processVampireCureTick(VillagerEntityMCA villager, long gameTime) {
-        if (!McaVampirismCompatConfig.enableMcaVampireVillagerCure()) {
-            cancelCure(villager, "CONFIG_DISABLED");
-            return;
-        }
-        if (!McaVampireStateService.isVampire(villager)) {
-            cancelCure(villager, "NO_LONGER_VAMPIRE");
-            return;
-        }
-        neutralizeCombat(villager);
-        McaSpecialVillagerAttributeService.applyMovementSpeedForState(villager);
-        if (McaVampirismCompatConfig.vampireCureAppliesWeaknessDuringProcess()
-                && !villager.hasEffect(MobEffects.WEAKNESS)) {
-            villager.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 0, false, false), villager);
-        }
-        if (McaVampirismCompatConfig.vampireCureShowsParticles()) {
-            sendCureParticles(villager, gameTime);
-        }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
-            if (gameTime >= state.getCureFinishTick()) {
-                completeCure(villager, CureType.VAMPIRE);
-            }
-        });
-    }
-
-    private static void processWerewolfCureTick(VillagerEntityMCA villager, long gameTime) {
-        if (!McaVampirismCompatConfig.enableMcaWerewolfVillagerCure()) {
-            cancelWerewolfCure(villager, "CONFIG_DISABLED");
-            return;
-        }
-        if (!McaWerewolfStateService.isWerewolf(villager)) {
-            cancelWerewolfCure(villager, "NO_LONGER_WEREWOLF");
-            return;
-        }
-        neutralizeCombat(villager);
-        McaSpecialVillagerAttributeService.applyMovementSpeedForState(villager);
-        if (McaVampirismCompatConfig.werewolfCureAppliesWeaknessDuringProcess()
-                && !villager.hasEffect(MobEffects.WEAKNESS)) {
-            villager.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 0, false, false), villager);
-        }
-        if (McaVampirismCompatConfig.werewolfCureShowsParticles()) {
-            sendCureParticles(villager, gameTime);
-        }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
-            if (gameTime >= state.getWerewolfCureFinishTick()) {
-                completeCure(villager, CureType.WEREWOLF);
-            }
-        });
-    }
-
-    private static void sendCureParticles(VillagerEntityMCA villager, long gameTime) {
-        if (gameTime % 40L != 0L || !(villager.level() instanceof ServerLevel serverLevel)) {
-            return;
-        }
-        serverLevel.sendParticles(
-                ParticleTypes.HAPPY_VILLAGER,
-                villager.getX(),
-                villager.getY() + 1.0D,
-                villager.getZ(),
-                6,
-                0.35D,
-                0.45D,
-                0.35D,
-                0.02D
-        );
+        McaCureLifecycleService.processCureTick(villager);
     }
 
     public static void cancelCure(VillagerEntityMCA villager, String reason) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             if (!state.isCuringVampire()) {
                 return;
             }
@@ -215,7 +115,7 @@ public final class McaVampireCureService {
     }
 
     public static void cancelWerewolfCure(VillagerEntityMCA villager, String reason) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             if (!state.isCuringWerewolf()) {
                 return;
             }
@@ -232,7 +132,7 @@ public final class McaVampireCureService {
         if (villager == null || villager.level().isClientSide || !McaVampireStateService.isVampire(villager)) {
             return false;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        return ModCapabilities.get(villager).map(state -> {
             if (state.isCuringVampire()) {
                 return true;
             }
@@ -265,12 +165,12 @@ public final class McaVampireCureService {
         }
         long gameTime = villager.level().getGameTime();
         int windowTicks = McaVampirismCompatConfig.postCureResyncBlockTicks();
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> state.wasCureRecentlyCompleted(gameTime, type.name(), windowTicks))
                 .orElse(false);
     }
 
-    private static boolean handleHeldCureItem(Player player, VillagerEntityMCA villager, InteractionHand hand, ItemStack stack) {
+    static boolean handleHeldCureItem(Player player, VillagerEntityMCA villager, InteractionHand hand, ItemStack stack) {
         if (stack.is(Items.MILK_BUCKET)) {
             return handleMilk(player, villager, hand, stack);
         }
@@ -303,12 +203,16 @@ public final class McaVampireCureService {
         if (!isInfectedBeforeConversion(villager)) {
             return false;
         }
-        boolean removedSanguinare = villager.removeEffect(ModEffects.SANGUINARE.get());
+        boolean removedSanguinare = villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
         if (McaVampirismCompatConfig.milkTreatmentRemovesNegativeEffects()) {
             removeNegativeEffects(villager);
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.clearPendingInfection());
+        if (player instanceof ServerPlayer serverPlayer) {
+            McaAdvancementService.award(serverPlayer, McaCompatAdvancements.EARLY_INFECTION_TREATMENT);
+            OccultVillageMissionService.onMilkTreatment(serverPlayer, villager);
+        }
         if (McaVampirismCompatConfig.milkTreatmentConsumesMilk()) {
             ItemStack returned = McaVampirismCompatConfig.milkTreatmentReturnsBucket()
                     ? new ItemStack(Items.BUCKET)
@@ -325,6 +229,14 @@ public final class McaVampireCureService {
                 removedSanguinare
         );
         return true;
+    }
+
+    /** True only while a milk bucket can still stop a pending Sanguinare infection. */
+    public static boolean canTreatInitialInfection(VillagerEntityMCA villager) {
+        return villager != null
+                && McaVampirismCompatConfig.allowMilkToTreatMcaVillagerSanguinare()
+                && !McaVampireStateService.isVampire(villager)
+                && isInfectedBeforeConversion(villager);
     }
 
     private static boolean handleWeaknessPotion(Player player, VillagerEntityMCA villager, InteractionHand hand, ItemStack stack) {
@@ -347,7 +259,7 @@ public final class McaVampireCureService {
         }
         villager.addEffect(new MobEffectInstance(weakness.get()), player);
         long gameTime = villager.level().getGameTime();
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.markCureWeakness(
                         gameTime,
                         cureIngredientProgressTicks(villager),
@@ -371,7 +283,7 @@ public final class McaVampireCureService {
             player.displayClientMessage(Component.translatable(cureInProgressMessage(villager)), true);
             return true;
         }
-        boolean consumed = villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        boolean consumed = ModCapabilities.get(villager).map(state -> {
             long gameTime = villager.level().getGameTime();
             long progressTicks = cureIngredientProgressTicks(villager);
             boolean werewolf = type == CureType.WEREWOLF;
@@ -390,6 +302,13 @@ public final class McaVampireCureService {
         }).orElse(false);
         if (consumed) {
             consumeOne(player, hand, stack, ItemStack.EMPTY);
+            if (ingredient == CureIngredient.GARLIC_INJECTION && player instanceof ServerPlayer serverPlayer) {
+                villager.getVillagerBrain().rewardHearts(serverPlayer, -10);
+                player.displayClientMessage(
+                        Component.translatable(McaCompatMessages.CURE_GARLIC_RELATION_LOSS, 10),
+                        true
+                );
+            }
         }
         logIngredientProgress(villager, type, ingredient);
         tryStartCure(player, villager);
@@ -402,7 +321,7 @@ public final class McaVampireCureService {
             return false;
         }
         long gameTime = villager.level().getGameTime();
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        return ModCapabilities.get(villager).map(state -> {
             if (state.isCuringVampire() || state.isCuringWerewolf()) {
                 logAlreadyCuring(villager, type);
                 return true;
@@ -430,6 +349,9 @@ public final class McaVampireCureService {
                             villager.getName().getString()),
                     true
             );
+            if (player instanceof ServerPlayer serverPlayer) {
+                McaFactionContextualDialogueService.onCureStarted(serverPlayer, villager, type == CureType.WEREWOLF);
+            }
             McaVampirismCompat.debugLog(
                     "[CURE] started villager={} type={} finishTick={}",
                     villager.getUUID(),
@@ -442,6 +364,10 @@ public final class McaVampireCureService {
 
     private static void completeCureInternal(VillagerEntityMCA villager, CureType type) {
         Optional<UUID> initiator = cureInitiator(villager, type);
+        if (villager.level() instanceof ServerLevel level) {
+            initiator.ifPresent(playerId -> McaAdvancementService.awardOrQueue(
+                    level.getServer(), playerId, McaCompatAdvancements.COMPLETE_CURE));
+        }
         boolean hadVisual = hadCureVisual(villager, type);
         McaVampirismCompat.debugLog(
                 "[CURE] completing type={} villager={}",
@@ -473,7 +399,7 @@ public final class McaVampireCureService {
     }
 
     private static Optional<UUID> cureInitiator(VillagerEntityMCA villager, CureType type) {
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> type == CureType.WEREWOLF
                         ? state.getWerewolfCureInitiatorUuid()
                         : state.getCureInitiatorUuid())
@@ -481,7 +407,7 @@ public final class McaVampireCureService {
     }
 
     private static boolean hadCureVisual(VillagerEntityMCA villager, CureType type) {
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> type == CureType.WEREWOLF
                         ? state.isWerewolfAppearanceApplied() || state.isWerewolfPartialForm()
                         : state.isOriginalAppearanceSaved() || state.isVampireAppearanceApplied())
@@ -489,7 +415,7 @@ public final class McaVampireCureService {
     }
 
     private static boolean hasCureVisual(VillagerEntityMCA villager, CureType type) {
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> type == CureType.WEREWOLF
                         ? state.isWerewolfAppearanceApplied() || state.isWerewolfPartialForm()
                         : state.isVampireAppearanceApplied())
@@ -497,9 +423,10 @@ public final class McaVampireCureService {
     }
 
     private static void cleanupVampireCureState(VillagerEntityMCA villager) {
-        villager.removeEffect(ModEffects.SANGUINARE.get());
+        villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
         villager.removeEffect(MobEffects.WEAKNESS);
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        McaVampireSpecialTradeService.removeForNoLongerVampire(villager);
+        ModCapabilities.get(villager)
                 .ifPresent(state -> {
                     state.clearVampirismAfterCure();
                     state.markCureCompleted(villager.level().getGameTime(), CureType.VAMPIRE.name());
@@ -507,13 +434,12 @@ public final class McaVampireCureService {
         McaTraitBridge.removeVampireTrait(villager);
         McaVampireAppearanceHandler.restoreOriginalAppearance(villager);
         McaVampireAttributeHandler.removeVampireAttributes(villager);
-        McaVampireVisualData.syncFromCapability(villager);
     }
 
     private static void cleanupWerewolfCureState(VillagerEntityMCA villager) {
         McaWerewolfConversionService.removeLupusSanguinem(villager);
         villager.removeEffect(MobEffects.WEAKNESS);
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> {
                     state.clearWerewolfAfterCure();
                     state.markCureCompleted(villager.level().getGameTime(), CureType.WEREWOLF.name());
@@ -556,7 +482,7 @@ public final class McaVampireCureService {
     }
 
     private static boolean postVampireCureFailed(VillagerEntityMCA villager) {
-        boolean rawStateFailed = villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        boolean rawStateFailed = ModCapabilities.get(villager)
                 .map(state -> state.isConverted()
                         || state.isInfected()
                         || state.wasSanguinareActive()
@@ -564,13 +490,13 @@ public final class McaVampireCureService {
                         || state.isVampireAppearanceApplied())
                 .orElse(false);
         return rawStateFailed
-                || villager.hasEffect(ModEffects.SANGUINARE.get())
+                || villager.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())
                 || McaTraitBridge.hasVampireTrait(villager)
                 || McaSpecialVillagerClassifier.classify(villager) == McaSpecialVillagerType.VAMPIRE;
     }
 
     private static boolean postWerewolfCureFailed(VillagerEntityMCA villager) {
-        boolean rawStateFailed = villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        boolean rawStateFailed = ModCapabilities.get(villager)
                 .map(state -> state.isWerewolfConverted()
                         || state.isWerewolfInfected()
                         || state.isCuringWerewolf()
@@ -587,8 +513,8 @@ public final class McaVampireCureService {
         if (McaVampireStateService.isVampire(villager)) {
             return false;
         }
-        return villager.hasEffect(ModEffects.SANGUINARE.get())
-                || villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return villager.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())
+                || ModCapabilities.get(villager)
                 .map(state -> state.isInfected())
                 .orElse(false);
     }
@@ -599,7 +525,7 @@ public final class McaVampireCureService {
             return false;
         }
         long gameTime = villager.level().getGameTime();
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> state.hasCureWeakness(gameTime, type == CureType.WEREWOLF))
                 .orElse(false)
                 || hasActiveRequiredWeakness(villager, type);
@@ -609,7 +535,7 @@ public final class McaVampireCureService {
         if (villager == null) {
             return CureType.NONE;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> {
                     if (state.isConverted()) {
                         return CureType.VAMPIRE;
@@ -734,7 +660,7 @@ public final class McaVampireCureService {
     }
 
     private static boolean isGarlicInjection(ItemStack stack) {
-        ResourceLocation id = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return GARLIC_INJECTION_ID.equals(id);
     }
 
@@ -770,11 +696,11 @@ public final class McaVampireCureService {
         Mob mob = villager;
         mob.setTarget(null);
         mob.getNavigation().stop();
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.clearRetaliation());
     }
 
-    private static void neutralizeCombat(VillagerEntityMCA villager) {
+    static void neutralizeCombat(VillagerEntityMCA villager) {
         boolean blockAttack = (isCuringVampire(villager) && McaVampirismCompatConfig.vampireCureVillagerCannotAttack())
                 || (isCuringWerewolf(villager) && McaVampirismCompatConfig.werewolfCureVillagerCannotAttack())
                 || (!isCuring(villager) && McaVampirismCompatConfig.vampireCureVillagerCannotAttack());
@@ -797,10 +723,13 @@ public final class McaVampireCureService {
             return;
         }
         initiator.map(uuid -> serverLevel.getServer().getPlayerList().getPlayer(uuid))
-                .ifPresent(player -> player.displayClientMessage(
-                        Component.translatable(McaCompatMessages.CURE_COMPLETED, villager.getName().getString()),
-                        true
-                ));
+                .ifPresent(player -> {
+                    player.displayClientMessage(
+                            Component.translatable(McaCompatMessages.CURE_COMPLETED, villager.getName().getString()),
+                            true
+                    );
+                    McaFactionContextualDialogueService.onCureCompleted(player, villager, false);
+                });
     }
 
     private static void notifyWerewolfCureCompleted(VillagerEntityMCA villager, Optional<UUID> initiator) {
@@ -808,19 +737,22 @@ public final class McaVampireCureService {
             return;
         }
         initiator.map(uuid -> serverLevel.getServer().getPlayerList().getPlayer(uuid))
-                .ifPresent(player -> player.displayClientMessage(
-                        Component.translatable(McaCompatMessages.WEREWOLF_CURE_COMPLETED, villager.getName().getString()),
-                        true
-                ));
+                .ifPresent(player -> {
+                    player.displayClientMessage(
+                            Component.translatable(McaCompatMessages.WEREWOLF_CURE_COMPLETED, villager.getName().getString()),
+                            true
+                    );
+                    McaFactionContextualDialogueService.onCureCompleted(player, villager, true);
+                });
     }
 
-    private static String cureInProgressMessage(VillagerEntityMCA villager) {
+    static String cureInProgressMessage(VillagerEntityMCA villager) {
         return isCuringWerewolf(villager) ? McaCompatMessages.WEREWOLF_CURE_IN_PROGRESS : McaCompatMessages.CURE_IN_PROGRESS;
     }
 
     private static void logIngredientProgress(VillagerEntityMCA villager, CureType type, CureIngredient ingredient) {
         long gameTime = villager.level().getGameTime();
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             boolean werewolf = type == CureType.WEREWOLF;
             int progress = cureProgress(villager, state, gameTime, type);
             List<String> missing = missingIngredients(villager, state, gameTime, type);

@@ -369,7 +369,7 @@ public final class McaVillageCaptureIntegrationService {
         if (!McaVampirismCompatConfig.vampireVillageCaptureAcceleratesExistingSanguinare()) {
             return;
         }
-        MobEffectInstance current = villager.getEffect(ModEffects.SANGUINARE.get());
+        MobEffectInstance current = villager.getEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
         if (current == null) {
             return;
         }
@@ -378,9 +378,9 @@ public final class McaVillageCaptureIntegrationService {
         if (newDuration >= currentDuration) {
             return;
         }
-        villager.removeEffect(ModEffects.SANGUINARE.get());
+        villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
         villager.addEffect(new MobEffectInstance(
-                ModEffects.SANGUINARE.get(),
+                com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare(),
                 newDuration,
                 current.getAmplifier(),
                 current.isAmbient(),
@@ -396,8 +396,8 @@ public final class McaVillageCaptureIntegrationService {
     }
 
     private static void clearSanguinare(VillagerEntityMCA villager, String reason) {
-        boolean removed = villager.removeEffect(ModEffects.SANGUINARE.get());
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        boolean removed = villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.clearPendingInfection());
         McaVampirismCompat.debugLog(
                 "[VILLAGE-CAPTURE] sanguinare cleared villager={} removed={} reason={}",
@@ -408,8 +408,8 @@ public final class McaVillageCaptureIntegrationService {
     }
 
     private static boolean isInfected(VillagerEntityMCA villager) {
-        return villager.hasEffect(ModEffects.SANGUINARE.get())
-                || villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return villager.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())
+                || ModCapabilities.get(villager)
                 .map(state -> state.isInfected())
                 .orElse(false);
     }

@@ -44,7 +44,7 @@ public final class McaHunterAlignmentService {
             return false;
         }
         long gameTime = villager.level().getGameTime();
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> (state.isDefensiveMode() && gameTime <= state.getDefensiveModeUntilTick())
                         || (state.isHunterAligned() && gameTime <= state.getHunterAlignmentUntilTick()))
                 .orElse(false);
@@ -54,7 +54,7 @@ public final class McaHunterAlignmentService {
         if (villager == null) {
             return false;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> state.isHunterVillageApplied())
                 .orElse(false);
     }
@@ -69,7 +69,7 @@ public final class McaHunterAlignmentService {
         if (isHunterAligned(villager)) {
             return true;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> state.isDefensiveMode()
                         && villager.level().getGameTime() <= state.getDefensiveModeUntilTick()
                         && McaHunterAggressionPolicy.canEnterDefensiveAggressiveMode(

@@ -30,7 +30,7 @@ public final class McaVillageVampireThreatService {
             if (villager == center || !McaDefensiveVillagerService.canEnterDefensiveMode(villager)) {
                 continue;
             }
-            villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+            ModCapabilities.get(villager).ifPresent(state -> {
                 int count = state.recordVampireThreat(
                         villager.level().getGameTime(),
                         McaVampirismCompatConfig.vampireThreatWindowTicks()

@@ -11,6 +11,7 @@ import com.guilh.mca_vampirism_compat.service.McaVampireCureService;
 import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfTradeService;
+import com.guilh.mca_vampirism_compat.social.McaFactionContextualDialogueService;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
 import forge.net.mca.entity.VillagerEntityMCA;
@@ -36,6 +37,14 @@ public final class McaFactionTradeService {
         if (event.getLevel().isClientSide || !(event.getTarget() instanceof VillagerEntityMCA villager)) {
             return;
         }
+        InteractionResult blockedResult = tryCancelDirectMcaTradeInteraction(
+                event.getEntity(), villager, event.getHand(), "ENTITY_INTERACT"
+        );
+        if (blockedResult != null) {
+            event.setCancellationResult(blockedResult);
+            event.setCanceled(true);
+            return;
+        }
         if (isSneaking(event.getEntity())) {
             if (McaVampireStateService.isVampire(villager)) {
                 McaVampireStateService.ensureVampireState(villager);
@@ -49,6 +58,10 @@ public final class McaFactionTradeService {
     }
 
     public static InteractionResult onMobInteractHead(Player player, VillagerEntityMCA villager, InteractionHand hand) {
+        InteractionResult blockedResult = tryCancelDirectMcaTradeInteraction(player, villager, hand, "MOB_INTERACT");
+        if (blockedResult != null) {
+            return blockedResult;
+        }
         if (isSneaking(player)) {
             return null;
         }
@@ -58,61 +71,123 @@ public final class McaFactionTradeService {
         return null;
     }
 
-    public static boolean onMcaTradeOptionSelected(Player player, VillagerEntityMCA villager) {
+    /**
+     * Gates MCA's dialogue action before {@code VillagerCommandHandler} calls
+     * its vanilla {@code beginTradeWith} invoker.
+     *
+     * <p>That route deliberately bypasses MCA's {@code copiedBeginTradeWith}
+     * method, so it must be checked here instead of relying on the merchant
+     * mixin alone.</p>
+     */
+    public static boolean shouldCancelMcaDialogueTrade(ServerPlayer player, VillagerEntityMCA villager) {
+        if (player == null || villager == null || player.level().isClientSide || !shouldHandleMcaTrade(villager)) {
+            return false;
+        }
+        boolean blocked = shouldCancelMcaTradeOpening(player, villager);
+        logTradeGate("DIALOGUE_COMMAND", player, villager, blocked);
+        return blocked;
+    }
+
+    /**
+     * First-line protection for MCA's normal empty-hand merchant gesture.
+     *
+     * <p>MCA 7.6.28 can route that gesture through its interaction method
+     * before the copied merchant helper.  We keep the narrower helper mixin
+     * as a second line of defence for every other route, while this gate makes
+     * the Forge event and the method head agree on the same faction policy.</p>
+     */
+    private static InteractionResult tryCancelDirectMcaTradeInteraction(Player player,
+                                                                          VillagerEntityMCA villager,
+                                                                          InteractionHand hand,
+                                                                          String route) {
+        if (player == null
+                || villager == null
+                || player.level().isClientSide
+                || hand != InteractionHand.MAIN_HAND
+                || isSneaking(player)
+                || !player.getItemInHand(hand).isEmpty()
+                || !shouldHandleMcaTrade(villager)) {
+            return null;
+        }
+        boolean blocked = shouldCancelMcaTradeOpening(player, villager);
+        logTradeGate(route, player, villager, blocked);
+        return blocked ? InteractionResult.CONSUME : null;
+    }
+
+    private static void logTradeGate(String route, Player player, VillagerEntityMCA villager, boolean blocked) {
+        PlayerFactionContext context = McaVampireFactionService.classifyPlayerContext(player);
+        McaVampirismCompat.LOGGER.info(
+                "[MCA Reborn x Vampirism Compat] TRADE_GATE route={} player={} realFaction={} effectiveFaction={} villager={} hunter={} werewolf={} vampire={} blocked={}",
+                route,
+                player.getName().getString(),
+                context.realFaction(),
+                context.effectiveFaction(),
+                villager.getUUID(),
+                McaHunterTradeService.isHunterTradeVillager(villager),
+                McaWerewolfTradeService.isWerewolfTradeVillager(villager),
+                McaVampireStateService.isVampire(villager),
+                blocked
+        );
+    }
+
+    /**
+     * Runs before MCA prepares its merchant offers. Returning {@code true}
+     * prevents the native screen from opening for an invalid faction.
+     */
+    public static boolean shouldCancelMcaTradeOpening(Player player, VillagerEntityMCA villager) {
         debugTradeState("MCA trade option selected", player, villager);
         if (!shouldHandleMcaTrade(villager)) {
             return false;
         }
         if (shouldBlockTrade(player, villager)) {
-            player.displayClientMessage(Component.translatable(messageFor(player, villager)), true);
+            // Forge GameTest players and server-side automation may not have a
+            // packet listener. The authoritative refusal must still happen;
+            // only client-facing feedback requires an attached connection.
+            if (!(player instanceof ServerPlayer serverPlayer) || serverPlayer.connection != null) {
+                player.displayClientMessage(Component.translatable(messageFor(player, villager)), true);
+            }
+            if (player instanceof ServerPlayer serverPlayer && serverPlayer.connection != null) {
+                McaFactionContextualDialogueService.onTradeRefused(serverPlayer, villager);
+            }
             logTradeBlocked(player, villager);
             McaTradeContextService.clearMcaTradeContext(player, villager);
             return true;
         }
+        return false;
+    }
+
+    /**
+     * Runs after MCA has prepared reputation prices and before it opens its
+     * native {@link net.minecraft.world.inventory.MerchantMenu}.
+     */
+    public static void prepareNativeMcaTrade(Player player, VillagerEntityMCA villager) {
+        if (!shouldHandleMcaTrade(villager) || shouldBlockTrade(player, villager)) {
+            return;
+        }
         McaTradeContextService.markMcaTradeAttempt(player, villager);
-        PlayerFaction faction = tradeFaction(player, villager);
+        PlayerFaction faction = resolveTradeFaction(player, villager);
+        // MCA deliberately keeps a transformed villager as VillagerEntityMCA,
+        // so Vampirism's ConvertedVillagerEntity#updateTrades never runs for
+        // it. Add the native converted-villager opportunity before the live
+        // faction price overlay is opened.
+        if (McaVampireStateService.isVampire(villager)) {
+            McaVampireSpecialTradeService.ensureForVampire(villager);
+        }
         McaVampireFactionService.debugClassification(player, faction, "MCA_TRADE_OPTION");
         McaVampirismCompat.debugLog(
-                "[TRADE] MCA trade allowed faction={} villager={}",
+                "[TRADE] native MCA trade allowed faction={} villager={}",
                 faction,
                 villager.getUUID()
         );
         if (player instanceof ServerPlayer serverPlayer) {
-            openWrappedTrade(serverPlayer, villager);
-            return true;
+            McaFactionTradeSession.open(serverPlayer, villager, faction);
+            return;
         }
         McaVampirismCompat.debugLog(
-                "[TRADE-WRAPPER] wrapper skipped reason=NOT_SERVER_PLAYER player={} villager={}",
+                "[TRADE] native MCA session skipped reason=NOT_SERVER_PLAYER player={} villager={}",
                 player.getName().getString(),
                 villager.getUUID()
         );
-        return true;
-    }
-
-    public static boolean onTradeAttempt(Player player, VillagerEntityMCA villager, String method) {
-        debugTradeState(method, player, villager);
-        if (!McaTradeContextService.isRecentMcaTradeContext(player, villager)) {
-            McaVampirismCompat.debugLog(
-                    "[TRADE] copiedBeginTradeWith ignored without MCA trade context method={} player={} villager={}",
-                    method,
-                    player.getName().getString(),
-                    villager.getUUID()
-            );
-            return false;
-        }
-        if (shouldBlockTrade(player, villager)) {
-            player.displayClientMessage(Component.translatable(messageFor(player, villager)), true);
-            logTradeBlocked(player, villager);
-            McaVampirismCompat.debugLog(
-                    "[TRADE] trade blocked method={} player={} faction={} villager={}",
-                    method,
-                    player.getName().getString(),
-                    tradeFaction(player, villager),
-                    villager.getUUID()
-            );
-            return true;
-        }
-        return false;
     }
 
     public static boolean shouldBlockTrade(Player player, VillagerEntityMCA villager) {
@@ -147,7 +222,8 @@ public final class McaFactionTradeService {
 
     public static void closeWrappedTradeSession(Player player) {
         if (player != null) {
-            McaVampireMerchantSession.closeForPlayer(player.getUUID(), "player logout");
+            McaFactionTradeSession.closeForPlayer(player.getUUID(), "player logout");
+            McaNativeTradeCycleSession.closeForPlayer(player.getUUID(), "player logout");
         }
     }
 
@@ -157,17 +233,21 @@ public final class McaFactionTradeService {
 
     public static void debugTradeState(String method, Player player, VillagerEntityMCA villager) {
         logPlayerFactionContext(player);
-        boolean vampireConverted = villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        // AbstractVillager#getOffers deliberately throws on the logical client in
+        // 1.21.1. mobInteract runs on both sides, so even debug arguments must not
+        // query offers there.
+        boolean hasTradeOffers = !villager.level().isClientSide && villager.hasTradeOffers();
+        boolean vampireConverted = ModCapabilities.get(villager)
                 .map(state -> state.isConverted())
                 .orElse(false);
-        boolean werewolfConverted = villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        boolean werewolfConverted = ModCapabilities.get(villager)
                 .map(state -> state.isWerewolfConverted())
                 .orElse(false);
         McaVampirismCompat.debugLog(
                 "[TRADE] method={} player={} faction={} villager={} isVampire={} isHunter={} isWerewolf={} vampireTrait={} vampireConverted={} werewolfTrait={} werewolfConverted={} hasTradeOffers={}",
                 method,
                 player.getName().getString(),
-                tradeFaction(player, villager),
+                resolveTradeFaction(player, villager),
                 villager.getUUID(),
                 McaVampireStateService.isVampire(villager),
                 McaHunterTradeService.isHunterTradeVillager(villager),
@@ -176,7 +256,7 @@ public final class McaFactionTradeService {
                 vampireConverted,
                 McaTraitBridge.hasWerewolfTrait(villager),
                 werewolfConverted,
-                villager.hasTradeOffers()
+                hasTradeOffers
         );
     }
 
@@ -210,7 +290,7 @@ public final class McaFactionTradeService {
         if (player == null || !McaVampireStateService.isVampire(villager)) {
             return false;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> state.wasBittenByVampirePlayer()
                         && state.isBiteWasConversionCause()
                         && state.getLastVampirePlayerBiteUuid()
@@ -242,17 +322,11 @@ public final class McaFactionTradeService {
         };
     }
 
-    private static void openWrappedTrade(ServerPlayer player, VillagerEntityMCA villager) {
-        PlayerFaction faction = tradeFaction(player, villager);
-        McaVampireMerchantSession session = McaHunterTradeService.isHunterTradeVillager(villager)
-                ? McaVampireMerchantSession.createForHunter(player, villager, faction)
-                : McaWerewolfTradeService.isWerewolfTradeVillager(villager)
-                ? McaVampireMerchantSession.createForWerewolf(player, villager, faction)
-                : McaVampireMerchantSession.create(player, villager, faction);
-        new McaVampireMerchant(session).open();
-    }
-
-    private static PlayerFaction tradeFaction(Player player, VillagerEntityMCA villager) {
+    /**
+     * Uses the same faction classifier for the normal MCA opening flow and
+     * the lazy Cycle Trades session recovery path.
+     */
+    public static PlayerFaction resolveTradeFaction(Player player, VillagerEntityMCA villager) {
         if (McaHunterTradeService.isHunterTradeVillager(villager)) {
             return McaHunterTradeService.tradeFaction(player);
         }
