@@ -1,17 +1,20 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
+import com.guilh.mca_vampirism_compat.advancement.McaCompatAdvancements;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
+import com.guilh.mca_vampirism_compat.util.VampirismEffectCompat;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 import java.util.Map;
 import java.util.UUID;
@@ -21,6 +24,7 @@ public final class McaHunterBloodService {
     private static final ResourceLocation VAMPIRISM_POISON_ID = new ResourceLocation("vampirism", "poison");
     private static final ResourceLocation VANILLA_POISON_ID = new ResourceLocation("minecraft", "poison");
     private static final long BLOCK_LOG_COOLDOWN_TICKS = 100L;
+    private static final int MAX_TRACKED_BLOCK_LOGS = 512;
     private static final Map<UUID, Long> LAST_BLOCK_LOG_TICKS = new ConcurrentHashMap<>();
 
     private McaHunterBloodService() {
@@ -63,7 +67,7 @@ public final class McaHunterBloodService {
             return false;
         }
 
-        ResourceLocation effectId = ForgeRegistries.MOB_EFFECTS.getKey(effect);
+        ResourceLocation effectId = BuiltInRegistries.MOB_EFFECT.getKey(effect);
         McaVampirismCompat.debugLog(
                 "[HUNTER-BLOOD] poisonous blood target={} reason=MCA_HUNTER_ALIGNED",
                 target == null ? null : target.getUUID()
@@ -73,6 +77,9 @@ public final class McaHunterBloodService {
         }
 
         biter.addEffect(new MobEffectInstance(effect, durationTicks, amplifier), target);
+        if (biter instanceof net.minecraft.server.level.ServerPlayer player) {
+            McaAdvancementService.award(player, McaCompatAdvancements.HUNTER_BLOOD);
+        }
         McaVampirismCompat.debugLog(
                 "[HUNTER-BLOOD] toxicant applied by compat effect={} biter={} target={} duration={} amplifier={}",
                 effectId,
@@ -101,15 +108,15 @@ public final class McaHunterBloodService {
         if (target == null || target.level().isClientSide || !isHunterVampirismImmune(target)) {
             return;
         }
-        target.removeEffect(ModEffects.SANGUINARE.get());
-        target.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> state.clearInfection());
+        target.removeEffect(VampirismEffectCompat.sanguinare());
+        ModCapabilities.get(target).ifPresent(state -> state.clearInfection());
     }
 
     private static MobEffect resolveToxicantEffect() {
         try {
             return ModEffects.POISON.get();
         } catch (RuntimeException | LinkageError ignored) {
-            MobEffect vampirismPoison = ForgeRegistries.MOB_EFFECTS.getValue(VAMPIRISM_POISON_ID);
+            MobEffect vampirismPoison = BuiltInRegistries.MOB_EFFECT.get(VAMPIRISM_POISON_ID);
             if (vampirismPoison != null) {
                 return vampirismPoison;
             }
@@ -122,6 +129,7 @@ public final class McaHunterBloodService {
             return;
         }
         long gameTime = target.level().getGameTime();
+        pruneBlockLogs(gameTime);
         Long lastLog = LAST_BLOCK_LOG_TICKS.get(target.getUUID());
         if (lastLog != null && gameTime - lastLog < BLOCK_LOG_COOLDOWN_TICKS) {
             return;
@@ -135,5 +143,17 @@ public final class McaHunterBloodService {
                 "[HUNTER-BLOOD] vampire infection blocked target={} reason=POISONOUS_HUNTER_BLOOD",
                 target.getUUID()
         );
+    }
+
+    private static void pruneBlockLogs(long gameTime) {
+        if (LAST_BLOCK_LOG_TICKS.size() < MAX_TRACKED_BLOCK_LOGS) {
+            return;
+        }
+        LAST_BLOCK_LOG_TICKS.entrySet().removeIf(
+                entry -> gameTime - entry.getValue() >= BLOCK_LOG_COOLDOWN_TICKS
+        );
+        if (LAST_BLOCK_LOG_TICKS.size() >= MAX_TRACKED_BLOCK_LOGS) {
+            LAST_BLOCK_LOG_TICKS.clear();
+        }
     }
 }

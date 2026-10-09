@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "mca_vamp_compat:werewolf_specialist_altar",
+      "required": false
+    }
+  ]
+}

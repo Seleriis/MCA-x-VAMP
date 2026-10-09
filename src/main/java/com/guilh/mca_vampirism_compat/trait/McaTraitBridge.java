@@ -1,22 +1,24 @@
 package com.guilh.mca_vampirism_compat.trait;
 
-import com.guilh.mca_vampirism_compat.ai.McaVampireAi;
-import com.guilh.mca_vampirism_compat.appearance.McaVampireAppearanceHandler;
-import com.guilh.mca_vampirism_compat.attribute.McaVampireAttributeHandler;
-import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
-import com.guilh.mca_vampirism_compat.visual.McaVampireVisualData;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.Traits;
+import com.guilh.mca_vampirism_compat.service.McaWerewolvesCompat;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.Traits;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 
-import java.util.Locale;
+import java.util.List;
 
 public final class McaTraitBridge {
     private static final String VAMPIRE_TRAIT_ID = "vampirism_mca_compat:vampire";
     private static final String WEREWOLF_TRAIT_ID = "vampirism_mca_compat:werewolf";
     private static final String HUNTER_TRAIT_ID = "vampirism_mca_compat:hunter";
+    private static final String LEGACY_UPPER_VAMPIRE_TRAIT_ID = "VAMPIRISM_MCA_COMPAT:VAMPIRE";
+    private static final String LEGACY_UPPER_WEREWOLF_TRAIT_ID = "VAMPIRISM_MCA_COMPAT:WEREWOLF";
+    private static final String LEGACY_UPPER_HUNTER_TRAIT_ID = "VAMPIRISM_MCA_COMPAT:HUNTER";
     private static Traits.Trait vampireTrait;
     private static Traits.Trait werewolfTrait;
     private static Traits.Trait hunterTrait;
@@ -24,15 +26,26 @@ public final class McaTraitBridge {
     private McaTraitBridge() {
     }
 
+    /**
+     * Stable trait ids retained from the 1.20.1 save format.  The actual MCA
+     * registry is touched only during mod loading; this list is intentionally
+     * pure so migration checks do not need a running Minecraft registry.
+     */
+    public static List<String> legacyTraitIds() {
+        return List.of(VAMPIRE_TRAIT_ID, WEREWOLF_TRAIT_ID, HUNTER_TRAIT_ID);
+    }
+
     public static void registerTraits() {
         if (vampireTrait == null) {
-            vampireTrait = registerTrait(VAMPIRE_TRAIT_ID, 1.0F);
+            vampireTrait = registerTrait(VAMPIRE_TRAIT_ID);
         }
-        if (werewolfTrait == null) {
-            werewolfTrait = registerTrait(WEREWOLF_TRAIT_ID, 0.0F);
+        // MCA exposes registered traits in the editor. Do not offer a
+        // Werewolf faction when its optional backing addon is absent.
+        if (McaWerewolvesCompat.isAvailable() && werewolfTrait == null) {
+            werewolfTrait = registerTrait(WEREWOLF_TRAIT_ID);
         }
         if (hunterTrait == null) {
-            hunterTrait = registerTrait(HUNTER_TRAIT_ID, 0.0F);
+            hunterTrait = registerTrait(HUNTER_TRAIT_ID);
         }
     }
 
@@ -51,25 +64,26 @@ public final class McaTraitBridge {
     }
 
     public static void removeVampireTrait(VillagerEntityMCA villager) {
-        if (vampireTrait() != null && hasVampireTrait(villager)) {
-            villager.getTraits().removeTrait(vampireTrait());
-        }
+        removeTrait(villager, vampireTrait());
     }
 
     public static boolean hasWerewolfTrait(VillagerEntityMCA villager) {
-        return werewolfTrait() != null && villager.getTraits().hasTrait(werewolfTrait());
+        return McaWerewolvesCompat.isAvailable()
+                && werewolfTrait() != null
+                && villager.getTraits().hasTrait(werewolfTrait());
     }
 
     public static void addWerewolfTrait(VillagerEntityMCA villager) {
-        if (McaVampirismCompatConfig.enableMcaWerewolfTrait() && werewolfTrait() != null && !hasWerewolfTrait(villager)) {
+        if (McaWerewolvesCompat.isAvailable()
+                && McaVampirismCompatConfig.enableMcaWerewolfTrait()
+                && werewolfTrait() != null
+                && !hasWerewolfTrait(villager)) {
             villager.getTraits().addTrait(werewolfTrait());
         }
     }
 
     public static void removeWerewolfTrait(VillagerEntityMCA villager) {
-        if (werewolfTrait() != null && hasWerewolfTrait(villager)) {
-            villager.getTraits().removeTrait(werewolfTrait());
-        }
+        removeTrait(villager, werewolfTrait());
     }
 
     public static boolean hasHunterTrait(VillagerEntityMCA villager) {
@@ -83,9 +97,26 @@ public final class McaTraitBridge {
     }
 
     public static void removeHunterTrait(VillagerEntityMCA villager) {
-        if (hunterTrait() != null && hasHunterTrait(villager)) {
-            villager.getTraits().removeTrait(hunterTrait());
+        removeTrait(villager, hunterTrait());
+    }
+
+    public static void migrateLegacyTraitIds(VillagerEntityMCA villager) {
+        // MCA 7.7.1 only accepts valid ResourceLocation trait ids. Legacy
+        // upper-case keys are normalized before MCA reads NBT; capability
+        // reconciliation below remains the authority for the resulting state.
+        registerTraits();
+    }
+
+    /** Rewrites old upper-case trait keys before MCA decodes saved villager data. */
+    public static boolean normalizeLegacyTraitNbt(CompoundTag data) {
+        if (data == null) {
+            return false;
         }
+        boolean changed = normalizeTraitCompound(data.getCompound("Traits"));
+        if (data.contains("MCAData", Tag.TAG_COMPOUND)) {
+            changed |= normalizeTraitCompound(data.getCompound("MCAData").getCompound("Traits"));
+        }
+        return changed;
     }
 
     public static void syncVampireTraitWithCapability(VillagerEntityMCA villager) {
@@ -118,12 +149,45 @@ public final class McaTraitBridge {
         return hunterTrait;
     }
 
-    private static Traits.Trait registerTrait(String id, float inheritChance) {
-        String registryId = id.toUpperCase(Locale.ROOT);
-        Traits.Trait existing = Traits.Trait.valueOf(id);
-        if (existing != Traits.UNKNOWN) {
-            return existing;
+    private static Traits.Trait registerTrait(String id) {
+        ResourceLocation identifier = new ResourceLocation(id);
+        Traits.Trait existing = Traits.get(identifier).orElse(null);
+        if (existing != null) return existing;
+        // Inheritance is handled once, by McaVampireInheritanceHandler. Registering
+        // an MCA inherit chance here caused duplicate/bogus inherited faction traits.
+        return Traits.register(identifier, 0.0F, 0.0F, false);
+    }
+
+    private static boolean normalizeTraitCompound(CompoundTag traits) {
+        if (traits == null || traits.isEmpty()) {
+            return false;
         }
-        return Traits.registerTrait(registryId, 0.0F, inheritChance, false);
+        return normalizeTraitKey(traits, LEGACY_UPPER_VAMPIRE_TRAIT_ID, VAMPIRE_TRAIT_ID)
+                | normalizeTraitKey(traits, LEGACY_UPPER_WEREWOLF_TRAIT_ID, WEREWOLF_TRAIT_ID)
+                | normalizeTraitKey(traits, LEGACY_UPPER_HUNTER_TRAIT_ID, HUNTER_TRAIT_ID);
+    }
+
+    private static boolean normalizeTraitKey(CompoundTag traits, String legacyKey, String canonicalKey) {
+        if (!traits.contains(legacyKey)) {
+            return false;
+        }
+        if (!traits.contains(canonicalKey)) {
+            Tag value = traits.get(legacyKey);
+            if (value != null) {
+                traits.put(canonicalKey, value.copy());
+            }
+        }
+        traits.remove(legacyKey);
+        return true;
+    }
+
+    private static boolean hasTrait(VillagerEntityMCA villager, Traits.Trait trait) {
+        return trait != null && villager.getTraits().hasTrait(trait);
+    }
+
+    private static void removeTrait(VillagerEntityMCA villager, Traits.Trait trait) {
+        if (hasTrait(villager, trait)) {
+            villager.getTraits().removeTrait(trait);
+        }
     }
 }

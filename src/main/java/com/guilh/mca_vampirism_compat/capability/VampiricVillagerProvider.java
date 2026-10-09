@@ -9,16 +9,24 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 
-public class VampiricVillagerProvider implements ICapabilitySerializable<CompoundTag> {
-    // Keep the legacy namespace for saved villager capability data when the public mod id changes.
-    public static final ResourceLocation ID = new ResourceLocation(McaVampirismCompat.LEGACY_DATA_NAMESPACE, "vampiric_villager");
+/**
+ * Forge 1.20.1 capability provider.  The resource location deliberately
+ * retains the 1.0.3 namespace so existing ForgeCaps data keeps loading.
+ */
+public final class VampiricVillagerProvider implements ICapabilitySerializable<CompoundTag> {
+    public static final ResourceLocation ID = new ResourceLocation(
+            McaVampirismCompat.LEGACY_DATA_NAMESPACE,
+            "vampiric_villager"
+    );
 
     private final VampiricVillagerState state = new VampiricVillagerState();
     private final LazyOptional<VampiricVillagerState> optional = LazyOptional.of(() -> state);
 
     @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-        return cap == ModCapabilities.VAMPIRIC_VILLAGER ? optional.cast() : LazyOptional.empty();
+    public <T> LazyOptional<T> getCapability(Capability<T> capability, Direction side) {
+        return capability == ModCapabilities.VAMPIRIC_VILLAGER
+                ? optional.cast()
+                : LazyOptional.empty();
     }
 
     @Override
@@ -27,7 +35,11 @@ public class VampiricVillagerProvider implements ICapabilitySerializable<Compoun
     }
 
     @Override
-    public void deserializeNBT(CompoundTag nbt) {
-        state.deserializeNBT(nbt);
+    public void deserializeNBT(CompoundTag tag) {
+        state.deserializeNBT(tag);
+    }
+
+    public void invalidate() {
+        optional.invalidate();
     }
 }

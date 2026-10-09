@@ -6,7 +6,7 @@ import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 
 public final class McaSpecialStateNormalizer {
     private McaSpecialStateNormalizer() {
@@ -16,7 +16,7 @@ public final class McaSpecialStateNormalizer {
         if (villager == null || villager.level().isClientSide) {
             return false;
         }
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        return ModCapabilities.get(villager).map(state -> {
             boolean changed = false;
             changed |= normalizePostCureWindow(villager, state);
             changed |= normalizeCuringState(villager, state);
@@ -41,9 +41,9 @@ public final class McaSpecialStateNormalizer {
                 state.setConverted(false);
                 changed = true;
             }
-            if (state.isInfected() || state.wasSanguinareActive() || villager.hasEffect(ModEffects.SANGUINARE.get())) {
+            if (state.isInfected() || state.wasSanguinareActive() || villager.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())) {
                 state.clearPendingInfection();
-                villager.removeEffect(ModEffects.SANGUINARE.get());
+                villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
                 changed = true;
             }
             if (McaTraitBridge.hasVampireTrait(villager)) {
@@ -129,9 +129,9 @@ public final class McaSpecialStateNormalizer {
                 changed = true;
                 log(villager, "preservedManualHunterTrait");
             }
-            if (state.isInfected() || state.wasSanguinareActive() || villager.hasEffect(ModEffects.SANGUINARE.get())) {
+            if (state.isInfected() || state.wasSanguinareActive() || villager.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())) {
                 state.clearInfection();
-                villager.removeEffect(ModEffects.SANGUINARE.get());
+                villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
                 changed = true;
             }
             return changed;
@@ -167,10 +167,11 @@ public final class McaSpecialStateNormalizer {
         }
 
         if (!McaVampirismCompatConfig.defensiveModeUsesPitchfork()
-                && state.isOriginalMainHandItemSaved()) {
+                && state.isOriginalMainHandItemSaved()
+                && McaDefensiveVillagerService.isTemporaryDefenseOnly(villager, state)) {
             McaDefensiveVillagerService.restoreDefenseWeapon(villager);
             changed = true;
-            log(villager, "clearedInvalidDefensiveMode");
+            log(villager, "restoredDefenseOnlyWeapon");
         }
 
         return changed;
@@ -250,8 +251,8 @@ public final class McaSpecialStateNormalizer {
             McaTraitBridge.removeVampireTrait(villager);
             changed = true;
         }
-        if (villager.hasEffect(ModEffects.SANGUINARE.get())) {
-            villager.removeEffect(ModEffects.SANGUINARE.get());
+        if (villager.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())) {
+            villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
             changed = true;
         }
         if (changed) {

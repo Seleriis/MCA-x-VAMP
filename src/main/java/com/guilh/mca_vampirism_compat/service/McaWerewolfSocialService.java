@@ -5,7 +5,7 @@ import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.faction.PlayerFactionContext;
 import com.guilh.mca_vampirism_compat.social.McaSocialActionType;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class McaWerewolfSocialService {
@@ -84,27 +84,31 @@ public final class McaWerewolfSocialService {
     }
 
     private static SocialDecision vampireDecision(McaSocialActionType actionType) {
-        boolean blocked = actionType.isRomanticOrMarriage()
-                && McaVampirismCompatConfig.werewolfVillagersBlockVampireRomance();
+        boolean blocked = (actionType.isRomanticOrMarriage()
+                && McaVampirismCompatConfig.werewolfVillagersBlockVampireRomance())
+                || (actionType == McaSocialActionType.GIFT
+                && McaVampirismCompatConfig.werewolfVillagersBlockVampireTrading());
         return new SocialDecision(
                 blocked,
                 blocked ? vampireBlockMessage(actionType) : null,
                 PlayerFaction.VAMPIRE,
                 McaVampirismCompatConfig.werewolfVillagerVampireSocialPenalty(),
-                blocked ? "VAMPIRE_ROMANCE_BLOCKED" : "VAMPIRE",
+                blocked ? "VAMPIRE_FACTION_GIFT_OR_ROMANCE_BLOCKED" : "VAMPIRE",
                 false
         );
     }
 
     private static SocialDecision hunterDecision(McaSocialActionType actionType) {
-        boolean blocked = actionType.isRomanticOrMarriage()
-                && McaVampirismCompatConfig.werewolfVillagersBlockHunterRomance();
+        boolean blocked = (actionType.isRomanticOrMarriage()
+                && McaVampirismCompatConfig.werewolfVillagersBlockHunterRomance())
+                || (actionType == McaSocialActionType.GIFT
+                && McaVampirismCompatConfig.werewolfVillagersBlockHunterTrading());
         return new SocialDecision(
                 blocked,
                 blocked ? hunterBlockMessage(actionType) : null,
                 PlayerFaction.HUNTER,
                 McaVampirismCompatConfig.werewolfVillagerHunterSocialPenalty(),
-                blocked ? "HUNTER_ROMANCE_BLOCKED" : "HUNTER",
+                blocked ? "HUNTER_FACTION_GIFT_OR_ROMANCE_BLOCKED" : "HUNTER",
                 false
         );
     }

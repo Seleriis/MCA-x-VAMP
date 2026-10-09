@@ -1,12 +1,14 @@
 package com.guilh.mca_vampirism_compat;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.util.INBTSerializable;
 
 import java.util.Optional;
 import java.util.UUID;
 
-public class VampiricVillagerState {
+public class VampiricVillagerState implements INBTSerializable<CompoundTag> {
     private boolean infected;
     private boolean converted;
     private boolean sanguinareActive;
@@ -35,6 +37,7 @@ public class VampiricVillagerState {
     private boolean werewolfAppearanceApplied;
     private boolean werewolfTraitApplied;
     private boolean werewolfPartialForm;
+    private boolean factionInheritanceProcessed;
     private UUID source;
     private UUID lastAggressorUuid;
     private UUID lastVampirePlayerBiteUuid;
@@ -43,6 +46,7 @@ public class VampiricVillagerState {
     private boolean originalAppearanceSaved;
     private boolean vampireAppearanceApplied;
     private boolean vampireEyeIndexAssigned;
+    private boolean vampireNightScheduleApplied;
     private boolean wasBittenByVampirePlayer;
     private boolean biteWasConversionCause;
     private boolean curingVampire;
@@ -62,6 +66,11 @@ public class VampiricVillagerState {
     private float originalMelaninGene;
     private float originalHemoglobinGene;
     private float originalFaceGene;
+    private float originalEyeBrightnessGene;
+    private int originalEyeDye = -1;
+    private int originalEyeLeftDye = -1;
+    private int originalSkinDye = 0xFF000000;
+    private int appearanceSnapshotVersion;
     private long cureStartedTick = -1L;
     private long cureFinishTick = -1L;
     private long werewolfCureStartedTick = -1L;
@@ -75,9 +84,20 @@ public class VampiricVillagerState {
     private long werewolfBiteCooldownUntilTick = Long.MIN_VALUE;
     private long lastCureCompletedTick = Long.MIN_VALUE;
     private String originalCustomSkin = "";
+    private String originalMcaSchedule = "";
+    private String lastAppliedVampireSchedule = "";
     private String defensiveReason = "";
     private String lastCureType = "";
-    private ItemStack originalMainHandItem = ItemStack.EMPTY;
+    private String hunterWeaponSelection = "";
+    // Optional migration marker. Older saves intentionally omit it, which
+    // means their saved item belongs to the historical vanilla main hand.
+    private String hunterWeaponHand = "";
+    /*
+     * A null payload represents a deliberately saved empty hand.  Keeping it
+     * nullable also lets the NBT/state migration stay independent from the
+     * Minecraft item registry until an actual item must be restored.
+     */
+    private ItemStack originalMainHandItem;
     private UUID cureInitiatorUuid;
     private UUID werewolfCureInitiatorUuid;
     private UUID werewolfSourceUuid;
@@ -163,6 +183,22 @@ public class VampiricVillagerState {
         this.sanguinareActive = false;
         this.infectionStartTick = -1L;
         this.source = null;
+    }
+
+    public void markInheritedWerewolf(long gameTime) {
+        clearPendingInfection();
+        finishWerewolfConversion(gameTime);
+        this.werewolfAppearanceApplied = true;
+        this.werewolfTraitApplied = true;
+        this.werewolfPartialForm = true;
+    }
+
+    public boolean isFactionInheritanceProcessed() {
+        return factionInheritanceProcessed;
+    }
+
+    public void markFactionInheritanceProcessed() {
+        this.factionInheritanceProcessed = true;
     }
 
     public void clearInfection() {
@@ -519,20 +555,54 @@ public class VampiricVillagerState {
     }
 
     public ItemStack getOriginalMainHandItem() {
-        return originalMainHandItem.copy();
+        return originalMainHandItem == null ? ItemStack.EMPTY : originalMainHandItem.copy();
     }
 
     public void saveOriginalMainHandItem(ItemStack stack) {
         if (originalMainHandItemSaved) {
             return;
         }
-        originalMainHandItem = stack == null ? ItemStack.EMPTY : stack.copy();
+        originalMainHandItem = stack == null || stack.isEmpty() ? null : stack.copy();
         originalMainHandItemSaved = true;
     }
 
     public void clearOriginalMainHandItem() {
-        originalMainHandItem = ItemStack.EMPTY;
+        originalMainHandItem = null;
         originalMainHandItemSaved = false;
+    }
+
+    /**
+     * The real Hunter's weapon is chosen once and kept through MCA equipment
+     * refreshes, Easy Villagers capture and world reloads. An empty value is
+     * intentionally kept for old saves until their first reconciliation.
+     */
+    public String getHunterWeaponSelection() {
+        return hunterWeaponSelection;
+    }
+
+    public void setHunterWeaponSelection(String selection) {
+        hunterWeaponSelection = selection == null ? "" : selection;
+    }
+
+    public void clearHunterWeaponSelection() {
+        hunterWeaponSelection = "";
+    }
+
+    /**
+     * The MCA combat hand that owns the temporary Hunter weapon. This stays
+     * separate from the legacy OriginalMainHandItem key so existing saves can
+     * be migrated without changing their payload shape.
+     */
+    public String getHunterWeaponHand() {
+        return hunterWeaponHand;
+    }
+
+    public void setHunterWeaponHand(String hand) {
+        hunterWeaponHand = hand == null ? "" : hand;
+    }
+
+    public void clearHunterWeaponHand() {
+        hunterWeaponHand = "";
     }
 
     public boolean isOriginalAppearanceSaved() {
@@ -540,6 +610,22 @@ public class VampiricVillagerState {
     }
 
     public void saveOriginalAppearance(float skinGene, float melaninGene, float hemoglobinGene, float faceGene, String customSkin) {
+        saveOriginalAppearance(
+                skinGene,
+                melaninGene,
+                hemoglobinGene,
+                faceGene,
+                customSkin,
+                0.0F,
+                -1,
+                -1,
+                0xFF000000
+        );
+    }
+
+    public void saveOriginalAppearance(float skinGene, float melaninGene, float hemoglobinGene, float faceGene,
+                                       String customSkin, float eyeBrightnessGene, int eyeDye,
+                                       int eyeLeftDye, int skinDye) {
         if (originalAppearanceSaved) {
             return;
         }
@@ -548,11 +634,73 @@ public class VampiricVillagerState {
         this.originalHemoglobinGene = hemoglobinGene;
         this.originalFaceGene = faceGene;
         this.originalCustomSkin = customSkin == null ? "" : customSkin;
+        this.originalEyeBrightnessGene = eyeBrightnessGene;
+        this.originalEyeDye = eyeDye;
+        this.originalEyeLeftDye = eyeLeftDye;
+        this.originalSkinDye = skinDye;
+        this.appearanceSnapshotVersion = 3;
         this.originalAppearanceSaved = true;
+    }
+
+    public void upgradeNativeAppearanceSnapshot(float eyeBrightnessGene, int eyeDye, int eyeLeftDye, int skinDye) {
+        if (!originalAppearanceSaved || appearanceSnapshotVersion >= 2) {
+            return;
+        }
+        this.originalEyeBrightnessGene = eyeBrightnessGene;
+        this.originalEyeDye = eyeDye;
+        this.originalEyeLeftDye = eyeLeftDye;
+        this.originalSkinDye = skinDye;
+        this.appearanceSnapshotVersion = 3;
+    }
+
+    /**
+     * MCA 7.6.28 introduced an explicit skin dye that overrides the genetic
+     * skin palette. Version-two snapshots predate the real capture of that
+     * value, but they never changed it either. Capture the still-live value
+     * once before the vampire appearance clears it.
+     */
+    public void upgradeOriginalSkinDyeSnapshot(int skinDye) {
+        if (!originalAppearanceSaved || appearanceSnapshotVersion >= 3) {
+            return;
+        }
+        this.originalSkinDye = skinDye;
+        this.appearanceSnapshotVersion = 3;
     }
 
     public boolean isVampireAppearanceApplied() {
         return vampireAppearanceApplied;
+    }
+
+    public boolean isVampireNightScheduleApplied() {
+        return vampireNightScheduleApplied;
+    }
+
+    public String getOriginalMcaSchedule() {
+        return originalMcaSchedule;
+    }
+
+    public String getLastAppliedVampireSchedule() {
+        return lastAppliedVampireSchedule;
+    }
+
+    public void beginVampireNightSchedule(String originalSchedule, String appliedSchedule) {
+        vampireNightScheduleApplied = true;
+        originalMcaSchedule = originalSchedule == null ? "" : originalSchedule;
+        lastAppliedVampireSchedule = appliedSchedule == null ? "" : appliedSchedule;
+    }
+
+    public void updateOriginalMcaSchedule(String originalSchedule) {
+        originalMcaSchedule = originalSchedule == null ? "" : originalSchedule;
+    }
+
+    public void updateLastAppliedVampireSchedule(String appliedSchedule) {
+        lastAppliedVampireSchedule = appliedSchedule == null ? "" : appliedSchedule;
+    }
+
+    public void clearVampireNightSchedule() {
+        vampireNightScheduleApplied = false;
+        originalMcaSchedule = "";
+        lastAppliedVampireSchedule = "";
     }
 
     public void setVampireAppearanceApplied(boolean vampireAppearanceApplied) {
@@ -805,10 +953,35 @@ public class VampiricVillagerState {
         return originalFaceGene;
     }
 
+    public float getOriginalEyeBrightnessGene() {
+        return originalEyeBrightnessGene;
+    }
+
+    public int getOriginalEyeDye() {
+        return originalEyeDye;
+    }
+
+    public int getOriginalEyeLeftDye() {
+        return originalEyeLeftDye;
+    }
+
+    public int getOriginalSkinDye() {
+        return originalSkinDye;
+    }
+
+    public boolean hasOriginalSkinDyeSnapshot() {
+        return originalAppearanceSaved && appearanceSnapshotVersion >= 3;
+    }
+
+    public int getAppearanceSnapshotVersion() {
+        return appearanceSnapshotVersion;
+    }
+
     public String getOriginalCustomSkin() {
         return originalCustomSkin;
     }
 
+    @Override
     public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
         tag.putBoolean("Infected", infected);
@@ -835,12 +1008,14 @@ public class VampiricVillagerState {
         tag.putBoolean("WerewolfAppearanceApplied", werewolfAppearanceApplied);
         tag.putBoolean("WerewolfTraitApplied", werewolfTraitApplied);
         tag.putBoolean("WerewolfPartialForm", werewolfPartialForm);
+        tag.putBoolean("FactionInheritanceProcessed", factionInheritanceProcessed);
         tag.putLong("HunterAlignmentUntilTick", hunterAlignmentUntilTick);
         tag.putBoolean("WasBittenByVampirePlayer", wasBittenByVampirePlayer);
         tag.putBoolean("BiteWasConversionCause", biteWasConversionCause);
         tag.putBoolean("OriginalAppearanceSaved", originalAppearanceSaved);
         tag.putBoolean("VampireAppearanceApplied", vampireAppearanceApplied);
         tag.putBoolean("VampireEyeIndexAssigned", vampireEyeIndexAssigned);
+        tag.putBoolean("VampireNightScheduleApplied", vampireNightScheduleApplied);
         tag.putBoolean("CuringVampire", curingVampire);
         tag.putBoolean("CuringWerewolf", curingWerewolf);
         tag.putBoolean("CureHadWeakness", cureHadWeakness);
@@ -858,6 +1033,11 @@ public class VampiricVillagerState {
         tag.putFloat("OriginalMelaninGene", originalMelaninGene);
         tag.putFloat("OriginalHemoglobinGene", originalHemoglobinGene);
         tag.putFloat("OriginalFaceGene", originalFaceGene);
+        tag.putFloat("OriginalEyeBrightnessGene", originalEyeBrightnessGene);
+        tag.putInt("OriginalEyeDye", originalEyeDye);
+        tag.putInt("OriginalEyeLeftDye", originalEyeLeftDye);
+        tag.putInt("OriginalSkinDye", originalSkinDye);
+        tag.putInt("AppearanceSnapshotVersion", appearanceSnapshotVersion);
         tag.putLong("CureStartedTick", cureStartedTick);
         tag.putLong("CureFinishTick", cureFinishTick);
         tag.putLong("WerewolfCureStartedTick", werewolfCureStartedTick);
@@ -871,8 +1051,16 @@ public class VampiricVillagerState {
         tag.putLong("WerewolfBiteCooldownUntilTick", werewolfBiteCooldownUntilTick);
         tag.putLong("LastCureCompletedTick", lastCureCompletedTick);
         tag.putString("OriginalCustomSkin", originalCustomSkin);
+        tag.putString("OriginalMcaSchedule", originalMcaSchedule);
+        tag.putString("LastAppliedVampireSchedule", lastAppliedVampireSchedule);
         tag.putString("DefensiveReason", defensiveReason);
         tag.putString("LastCureType", lastCureType);
+        if (!hunterWeaponSelection.isEmpty()) {
+            tag.putString("HunterWeaponSelection", hunterWeaponSelection);
+        }
+        if (!hunterWeaponHand.isEmpty()) {
+            tag.putString("HunterWeaponHand", hunterWeaponHand);
+        }
         if (source != null) {
             tag.putUUID("Source", source);
         }
@@ -894,12 +1082,24 @@ public class VampiricVillagerState {
         if (werewolfSourceUuid != null) {
             tag.putUUID("WerewolfSourceUuid", werewolfSourceUuid);
         }
-        if (originalMainHandItemSaved) {
-            tag.put("OriginalMainHandItem", originalMainHandItem.save(new CompoundTag()));
-        }
+        /*
+         * An empty hand is a meaningful saved value: defensive villagers must
+         * put their temporary weapon away again. Preserve the boolean marker
+         * and omit only the optional item payload for an empty saved hand.
+         */
+        VampiricVillagerStateNbtCodec.writeOriginalMainHand(tag, originalMainHandItemSaved, originalMainHandItem);
         return tag;
     }
 
+    /**
+     * Compatibility bridge for callers shared with the 1.21 implementation.
+     * Forge 1.20.1 item NBT does not need a registry lookup provider.
+     */
+    public CompoundTag serializeNBT(Object ignoredRegistries) {
+        return serializeNBT();
+    }
+
+    @Override
     public void deserializeNBT(CompoundTag tag) {
         infected = tag.getBoolean("Infected");
         converted = tag.getBoolean("Converted");
@@ -929,12 +1129,14 @@ public class VampiricVillagerState {
         werewolfAppearanceApplied = tag.getBoolean("WerewolfAppearanceApplied");
         werewolfTraitApplied = tag.getBoolean("WerewolfTraitApplied");
         werewolfPartialForm = tag.getBoolean("WerewolfPartialForm");
+        factionInheritanceProcessed = tag.getBoolean("FactionInheritanceProcessed");
         hunterAlignmentUntilTick = tag.contains("HunterAlignmentUntilTick") ? tag.getLong("HunterAlignmentUntilTick") : Long.MIN_VALUE;
         wasBittenByVampirePlayer = tag.getBoolean("WasBittenByVampirePlayer");
         biteWasConversionCause = tag.getBoolean("BiteWasConversionCause");
         originalAppearanceSaved = tag.getBoolean("OriginalAppearanceSaved");
         vampireAppearanceApplied = tag.getBoolean("VampireAppearanceApplied");
         vampireEyeIndexAssigned = tag.getBoolean("VampireEyeIndexAssigned");
+        vampireNightScheduleApplied = tag.getBoolean("VampireNightScheduleApplied");
         curingVampire = tag.getBoolean("CuringVampire");
         curingWerewolf = tag.getBoolean("CuringWerewolf");
         boolean legacyCureHadWeakness = tag.getBoolean("CureHadWeakness");
@@ -952,6 +1154,13 @@ public class VampiricVillagerState {
         originalMelaninGene = tag.contains("OriginalMelaninGene") ? tag.getFloat("OriginalMelaninGene") : 0.0F;
         originalHemoglobinGene = tag.contains("OriginalHemoglobinGene") ? tag.getFloat("OriginalHemoglobinGene") : 0.0F;
         originalFaceGene = tag.contains("OriginalFaceGene") ? tag.getFloat("OriginalFaceGene") : 0.0F;
+        originalEyeBrightnessGene = tag.contains("OriginalEyeBrightnessGene") ? tag.getFloat("OriginalEyeBrightnessGene") : 0.0F;
+        originalEyeDye = tag.contains("OriginalEyeDye") ? tag.getInt("OriginalEyeDye") : -1;
+        originalEyeLeftDye = tag.contains("OriginalEyeLeftDye") ? tag.getInt("OriginalEyeLeftDye") : -1;
+        originalSkinDye = tag.contains("OriginalSkinDye") ? tag.getInt("OriginalSkinDye") : 0xFF000000;
+        appearanceSnapshotVersion = tag.contains("AppearanceSnapshotVersion")
+                ? tag.getInt("AppearanceSnapshotVersion")
+                : originalAppearanceSaved ? 1 : 0;
         cureStartedTick = tag.contains("CureStartedTick") ? tag.getLong("CureStartedTick") : -1L;
         cureFinishTick = tag.contains("CureFinishTick") ? tag.getLong("CureFinishTick") : -1L;
         werewolfCureStartedTick = tag.contains("WerewolfCureStartedTick") ? tag.getLong("WerewolfCureStartedTick") : -1L;
@@ -969,8 +1178,14 @@ public class VampiricVillagerState {
         werewolfBiteCooldownUntilTick = tag.contains("WerewolfBiteCooldownUntilTick") ? tag.getLong("WerewolfBiteCooldownUntilTick") : Long.MIN_VALUE;
         lastCureCompletedTick = tag.contains("LastCureCompletedTick") ? tag.getLong("LastCureCompletedTick") : Long.MIN_VALUE;
         originalCustomSkin = tag.contains("OriginalCustomSkin") ? tag.getString("OriginalCustomSkin") : "";
+        originalMcaSchedule = tag.contains("OriginalMcaSchedule") ? tag.getString("OriginalMcaSchedule") : "";
+        lastAppliedVampireSchedule = tag.contains("LastAppliedVampireSchedule")
+                ? tag.getString("LastAppliedVampireSchedule")
+                : "";
         defensiveReason = tag.contains("DefensiveReason") ? tag.getString("DefensiveReason") : "";
         lastCureType = tag.contains("LastCureType") ? tag.getString("LastCureType") : "";
+        hunterWeaponSelection = tag.contains("HunterWeaponSelection") ? tag.getString("HunterWeaponSelection") : "";
+        hunterWeaponHand = tag.contains("HunterWeaponHand") ? tag.getString("HunterWeaponHand") : "";
         source = tag.hasUUID("Source") ? tag.getUUID("Source") : null;
         lastAggressorUuid = tag.hasUUID("LastAggressorUuid") ? tag.getUUID("LastAggressorUuid") : null;
         lastVampirePlayerBiteUuid = tag.hasUUID("LastVampirePlayerBiteUuid")
@@ -980,7 +1195,7 @@ public class VampiricVillagerState {
         cureInitiatorUuid = tag.hasUUID("CureInitiatorUuid") ? tag.getUUID("CureInitiatorUuid") : null;
         werewolfCureInitiatorUuid = tag.hasUUID("WerewolfCureInitiatorUuid") ? tag.getUUID("WerewolfCureInitiatorUuid") : null;
         werewolfSourceUuid = tag.hasUUID("WerewolfSourceUuid") ? tag.getUUID("WerewolfSourceUuid") : null;
-        originalMainHandItem = tag.contains("OriginalMainHandItem") ? ItemStack.of(tag.getCompound("OriginalMainHandItem")) : ItemStack.EMPTY;
+        originalMainHandItem = VampiricVillagerStateNbtCodec.readOriginalMainHand(tag);
         aiGoalsAdded = false;
         defensiveGoalsAdded = false;
         hunterAiGoalsAdded = false;
@@ -1006,5 +1221,13 @@ public class VampiricVillagerState {
             werewolfCureInitiatorUuid = null;
         }
         updateLegacyCureProgressMirror();
+    }
+
+    /**
+     * Compatibility bridge for callers shared with the 1.21 implementation.
+     * Forge 1.20.1 item NBT does not need a registry lookup provider.
+     */
+    public void deserializeNBT(Object ignoredRegistries, CompoundTag tag) {
+        deserializeNBT(tag);
     }
 }

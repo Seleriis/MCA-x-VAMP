@@ -1,14 +1,15 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
+import com.guilh.mca_vampirism_compat.advancement.McaCompatAdvancements;
 import com.guilh.mca_vampirism_compat.attribute.McaSpecialVillagerAttributeService;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.guilh.mca_vampirism_compat.visual.McaWerewolfVisualData;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.Entity;
 
 public final class McaWerewolfStateService {
@@ -16,11 +17,14 @@ public final class McaWerewolfStateService {
     }
 
     public static boolean isWerewolf(Entity entity) {
+        if (!McaWerewolvesCompat.isAvailable()) {
+            return false;
+        }
         if (!(entity instanceof VillagerEntityMCA villager)) {
             return false;
         }
         boolean trait = McaTraitBridge.hasWerewolfTrait(villager);
-        boolean stateMarker = villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        boolean stateMarker = ModCapabilities.get(villager)
                 .map(state -> {
                     if (!state.isWerewolfConverted()
                             && state.wasCureRecentlyCompleted(
@@ -39,14 +43,17 @@ public final class McaWerewolfStateService {
     }
 
     public static boolean isWerewolfInfected(VillagerEntityMCA villager) {
-        return villager != null && villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return McaWerewolvesCompat.isAvailable() && villager != null && ModCapabilities.get(villager)
                 .map(state -> state.isWerewolfInfected())
                 .orElse(false);
     }
 
     public static void ensureWerewolfState(VillagerEntityMCA villager) {
+        if (!McaWerewolvesCompat.isAvailable()) {
+            return;
+        }
         normalizeWerewolfState(villager);
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             if (state.isCuringVampire() || state.isCuringWerewolf()) {
                 McaSpecialVillagerAttributeService.applyMovementSpeedForState(villager);
                 McaVampirismCompat.debugLog(
@@ -114,11 +121,15 @@ public final class McaWerewolfStateService {
     }
 
     public static void markConverted(VillagerEntityMCA villager) {
-        if (villager == null || villager.level().isClientSide) {
+        if (!McaWerewolvesCompat.isAvailable() || villager == null || villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
-            villager.removeEffect(ModEffects.SANGUINARE.get());
+        ModCapabilities.get(villager).ifPresent(state -> {
+            state.getWerewolfSourceUuid().ifPresent(playerId -> McaAdvancementService.awardOrQueue(
+                    ((net.minecraft.server.level.ServerLevel) villager.level()).getServer(),
+                    playerId,
+                    McaCompatAdvancements.WEREWOLF_CONVERSION));
+            villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
             state.finishWerewolfConversion(villager.level().getGameTime());
             state.clearPendingInfection();
             state.cancelVampireCure();
@@ -136,7 +147,7 @@ public final class McaWerewolfStateService {
         if (villager == null || villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> {
                     state.cancelWerewolfCure();
                     state.clearWerewolfState();
@@ -152,10 +163,10 @@ public final class McaWerewolfStateService {
     }
 
     public static void normalizeWerewolfState(VillagerEntityMCA villager) {
-        if (villager == null || villager.level().isClientSide) {
+        if (!McaWerewolvesCompat.isAvailable() || villager == null || villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             boolean werewolfTrait = McaTraitBridge.hasWerewolfTrait(villager);
             long gameTime = villager.level().getGameTime();
             if (McaVampireStateService.isVampire(villager) || state.isCuringVampire()) {
@@ -212,7 +223,7 @@ public final class McaWerewolfStateService {
 
             if (state.isWerewolfConverted()) {
                 if (state.isInfected() || state.wasSanguinareActive()) {
-                    villager.removeEffect(ModEffects.SANGUINARE.get());
+                    villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
                     state.clearPendingInfection();
                     logNormalize(villager, "CLEARED_VAMPIRE_INFECTION_ON_WEREWOLF");
                 }
@@ -224,12 +235,6 @@ public final class McaWerewolfStateService {
                     McaDefensiveVillagerService.clearDefense(villager, "normalized werewolf");
                     McaVillageFactionControlService.removeHunterVillageState(villager);
                     logNormalize(villager, "CLEARED_HUNTER_STATE_ON_WEREWOLF");
-                }
-                if (villager.getAgeState() != AgeState.ADULT && !McaVampirismCompatConfig.allowMcaChildWerewolfInfection()) {
-                    state.clearWerewolfState();
-                    McaTraitBridge.removeWerewolfTrait(villager);
-                    logNormalize(villager, "CLEARED_CHILD_WEREWOLF_BY_CONFIG");
-                    return;
                 }
                 if (!werewolfTrait && McaVampirismCompatConfig.enableMcaWerewolfTrait()) {
                     McaTraitBridge.addWerewolfTrait(villager);

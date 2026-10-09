@@ -1,6 +1,6 @@
 package com.guilh.mca_vampirism_compat.service;
 
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.LivingEntity;
 
 public final class McaWerewolfConversionService {

@@ -6,6 +6,7 @@ import com.guilh.mca_vampirism_compat.attribute.McaVampireAttributeHandler;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
+import com.guilh.mca_vampirism_compat.service.McaBloodValueRepairService;
 import com.guilh.mca_vampirism_compat.service.McaHunterBloodService;
 import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.service.McaVampireInfectionService;
@@ -14,11 +15,12 @@ import com.guilh.mca_vampirism_compat.trade.McaFactionTradeService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfStateService;
 import com.guilh.mca_vampirism_compat.service.VampireSkillIntegrationService;
 import com.guilh.mca_vampirism_compat.util.McaVillagerUtil;
+import de.teamlapen.vampirism.api.entity.IExtendedCreatureVampirism;
 import de.teamlapen.vampirism.api.entity.convertible.IConvertedCreature;
 import de.teamlapen.vampirism.api.entity.vampire.IVampire;
 import de.teamlapen.vampirism.entity.ExtendedCreature;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -66,7 +68,7 @@ public abstract class ExtendedCreatureMixin {
             return;
         }
         if (!canConvertMcaVillager()) {
-            entity.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> state.clearInfection());
+            ModCapabilities.get(entity).ifPresent(state -> state.clearInfection());
             McaVampirismCompat.debugLog("[STATE] conversion canceled by config/age entity={}", entity.getUUID());
             cir.setReturnValue(null);
             return;
@@ -74,7 +76,7 @@ public abstract class ExtendedCreatureMixin {
 
         if (entity instanceof VillagerEntityMCA villager) {
             McaVampireStateService.markConverted(villager, null);
-            villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state ->
+            ModCapabilities.get(villager).ifPresent(state ->
                     state.getLastVampirePlayerBiteUuid().ifPresent(playerUuid -> {
                         if (villager.level() instanceof ServerLevel serverLevel) {
                             ServerPlayer player = serverLevel.getServer().getPlayerList().getPlayer(playerUuid);
@@ -98,7 +100,9 @@ public abstract class ExtendedCreatureMixin {
                 McaVampirismCompat.debugLog("[BITE] ExtendedCreature.canBeBitten blocked entity={}", entity.getUUID());
             }
             cir.setReturnValue(false);
+            return;
         }
+        McaBloodValueRepairService.repairMcaBloodValue(entity, (IExtendedCreatureVampirism) (Object) this);
     }
 
     @Inject(method = "onBite", at = @At("HEAD"), cancellable = true)
@@ -108,7 +112,9 @@ public abstract class ExtendedCreatureMixin {
                 McaVampirismCompat.debugLog("[BITE] ExtendedCreature.onBite blocked entity={}", entity.getUUID());
             }
             cir.setReturnValue(0);
+            return;
         }
+        McaBloodValueRepairService.repairMcaBloodValue(entity, (IExtendedCreatureVampirism) (Object) this);
     }
 
     @Inject(method = "canBeInfected", at = @At("HEAD"), cancellable = true)

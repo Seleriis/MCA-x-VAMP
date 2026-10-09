@@ -3,7 +3,7 @@ package com.guilh.mca_vampirism_compat.service.faction.werewolf;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.faction.McaFactionCombatRules;
 import com.guilh.mca_vampirism_compat.util.McaWerewolfTargetUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.LivingEntity;
 
 public final class McaWerewolfCombatRules implements McaFactionCombatRules {
@@ -19,6 +19,7 @@ public final class McaWerewolfCombatRules implements McaFactionCombatRules {
             case MCA_VAMPIRE_VILLAGER -> 1;
             case HUNTER_PLAYER, HUNTER_MOB -> 0;
             case VAMPIRE_PLAYER, VAMPIRE_MOB -> 1;
+            case PROTECTED_AGGRESSOR -> 0;
             case NONE -> 100;
         };
     }

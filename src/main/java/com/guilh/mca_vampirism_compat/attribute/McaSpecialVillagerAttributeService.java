@@ -5,7 +5,7 @@ import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerClassifier;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerType;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class McaSpecialVillagerAttributeService {
+    // Preserve the UUID used by existing Forge 1.20.1 worlds.
     private static final UUID MOVEMENT_SPEED_UUID = UUID.fromString("dd2d0870-0f36-4ef2-8fbc-77d07e5b81f0");
 
     private McaSpecialVillagerAttributeService() {
@@ -30,7 +31,7 @@ public final class McaSpecialVillagerAttributeService {
         if (speed == null) {
             return;
         }
-        Optional<VampiricVillagerState> state = villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).resolve();
+        Optional<VampiricVillagerState> state = ModCapabilities.get(villager);
         AttributeModifier current = speed.getModifier(MOVEMENT_SPEED_UUID);
         if (!shouldHaveMovementModifier(type, multiplier)) {
             if (current != null) {
@@ -70,7 +71,7 @@ public final class McaSpecialVillagerAttributeService {
             speed.removeModifier(MOVEMENT_SPEED_UUID);
         }
         if (entity instanceof VillagerEntityMCA villager) {
-            villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+            ModCapabilities.get(villager)
                     .ifPresent(VampiricVillagerState::clearMovementSpeedModifierApplied);
         }
     }

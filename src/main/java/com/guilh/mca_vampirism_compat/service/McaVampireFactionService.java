@@ -4,10 +4,10 @@ import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.faction.PlayerFactionContext;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
-import de.teamlapen.vampirism.api.VampirismCapabilities;
+import de.teamlapen.vampirism.api.VampirismAPI;
 import de.teamlapen.vampirism.api.entity.factions.IFaction;
 import de.teamlapen.vampirism.util.Helper;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -303,7 +303,7 @@ public final class McaVampireFactionService {
     }
 
     private static String getCurrentFactionId(Player player) {
-        var handler = player.getCapability(VampirismCapabilities.FACTION_HANDLER_PLAYER).orElse(null);
+        var handler = VampirismAPI.getFactionPlayerHandler(player).orElse(null);
         if (handler == null) {
             return null;
         }
@@ -330,7 +330,10 @@ public final class McaVampireFactionService {
                     "CURRENT_FACTION_PLUS_WEREWOLF_FORM"
             );
         }
-        return new ClassificationResult(PlayerFaction.HUMAN, false, "CURRENT_FACTION_UNKNOWN");
+        // Addons can expose their own current faction. That is not proof that
+        // a player is human: Vampirism's helper and capability checks still
+        // know whether the player is a vampire or hunter.
+        return null;
     }
 
     private static ClassificationResult fallbackClassifyPlayer(Player player) {
@@ -386,7 +389,7 @@ public final class McaVampireFactionService {
 
     private static boolean safeHasVampireLevel(Player player) {
         try {
-            return player.getCapability(VampirismCapabilities.VAMPIRE_PLAYER)
+            return VampirismAPI.getVampirePlayer(player)
                     .map(vampire -> vampire.getLevel() > 0)
                     .orElse(false);
         } catch (RuntimeException | LinkageError exception) {
@@ -401,7 +404,7 @@ public final class McaVampireFactionService {
 
     private static boolean safeHasHunterLevel(Player player) {
         try {
-            return player.getCapability(VampirismCapabilities.HUNTER_PLAYER)
+            return VampirismAPI.getHunterPlayer(player)
                     .map(hunter -> hunter.getLevel() > 0)
                     .orElse(false);
         } catch (RuntimeException | LinkageError exception) {

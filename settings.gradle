@@ -17,9 +17,6 @@ dependencyResolutionManagement {
             url = 'https://maven.minecraftforge.net/'
         }
         mavenCentral()
-        flatDir {
-            dirs 'C:/Users/guilh/AppData/Roaming/.minecraft/mods'
-        }
     }
 }
 

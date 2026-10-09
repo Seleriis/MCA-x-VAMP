@@ -17,19 +17,29 @@ import com.guilh.mca_vampirism_compat.service.faction.werewolf.McaWerewolfCombat
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
 import com.guilh.mca_vampirism_compat.util.McaVampireTargetUtil;
 import com.guilh.mca_vampirism_compat.util.McaWerewolfTargetUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.ProfessionsMCA;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.fml.ModList;
 
-import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 
 public final class McaSpecialVillagerCombatService {
+    private static final String MCA_MOD_ID = "mca";
     private static final McaFactionCombatRules VAMPIRE_RULES = new McaVampireCombatRules();
     private static final McaFactionCombatRules HUNTER_RULES = new McaHunterCombatRules();
     private static final McaFactionCombatRules WEREWOLF_RULES = new McaWerewolfCombatRules();
+    private static final UUID HUNTER_NATIVE_ATTACK_DAMAGE_UUID =
+            UUID.fromString("61c9a750-d240-4c22-b60d-900869176a01");
 
     private McaSpecialVillagerCombatService() {
     }
@@ -73,6 +83,54 @@ public final class McaSpecialVillagerCombatService {
             return;
         }
         dropTarget(villager, dropReason == null ? "INVALID_OR_CURING" : dropReason);
+    }
+
+    /**
+     * Stops existing hostile targets as soon as a target's editor traits
+     * change, rather than waiting for the next autonomous AI scan.
+     */
+    public static int invalidateTargetingEditedVillager(VillagerEntityMCA changedVillager) {
+        if (changedVillager == null || changedVillager.level().isClientSide) {
+            return 0;
+        }
+        double range = Math.max(1.0D, McaVampirismCompatConfig.specialVillagerMaxChaseDistance());
+        List<VillagerEntityMCA> attackers = changedVillager.level().getEntitiesOfClass(
+                VillagerEntityMCA.class,
+                changedVillager.getBoundingBox().inflate(range),
+                attacker -> attacker != changedVillager
+                        && attacker.getTarget() == changedVillager
+                        && McaSpecialVillagerClassifier.isCombatCapableSpecial(attacker)
+        );
+        int cleared = 0;
+        for (VillagerEntityMCA attacker : attackers) {
+            String reason = targetDropReason(attacker, changedVillager);
+            if (reason == null) {
+                continue;
+            }
+            ModCapabilities.get(attacker).ifPresent(state -> {
+                if (state.isRetaliatingAgainst(changedVillager.getUUID(), attacker.level().getGameTime())) {
+                    state.clearRetaliation();
+                }
+            });
+            dropTarget(attacker, "TARGET_FACTION_CHANGED");
+            cleared++;
+        }
+        if (cleared > 0) {
+            McaVampirismCompat.debugLog(
+                    "[SPECIAL-AI] editor target invalidation changedVillager={} clearedAttackers={}",
+                    changedVillager.getUUID(),
+                    cleared
+            );
+        }
+        return cleared;
+    }
+
+    /** Prevents MCA tasks or another mod from immediately restoring an invalid faction target. */
+    public static boolean shouldRejectTargetAssignment(VillagerEntityMCA villager, LivingEntity target) {
+        return villager != null
+                && target != null
+                && McaSpecialVillagerClassifier.isCombatCapableSpecial(villager)
+                && targetDropReason(villager, target) != null;
     }
 
     public static void processCombatTick(VillagerEntityMCA villager) {
@@ -183,7 +241,7 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static void markVampireRetaliation(VillagerEntityMCA villager, LivingEntity attacker) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.markRetaliation(
                         attacker.getUUID(),
                         villager.level().getGameTime(),
@@ -198,7 +256,7 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static void markGuardMonsterRetaliation(VillagerEntityMCA villager, LivingEntity attacker) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.markRetaliation(
                         attacker.getUUID(),
                         villager.level().getGameTime(),
@@ -212,7 +270,7 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static void markWerewolfRetaliation(VillagerEntityMCA villager, LivingEntity attacker) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        ModCapabilities.get(villager)
                 .ifPresent(state -> state.markRetaliation(
                         attacker.getUUID(),
                         villager.level().getGameTime(),
@@ -328,12 +386,94 @@ public final class McaSpecialVillagerCombatService {
             return attacker.doHurtTarget(target);
         }
         float damage = attackDamageFor(type);
+        if (type == McaSpecialVillagerType.HUNTER) {
+            return performBoundedNativeHunterAttack(attacker, target, damage);
+        }
         return damage > 0.0F && target.hurt(attacker.damageSources().mobAttack(attacker), damage);
+    }
+
+    /**
+     * Runs the same native Mob attack flow as an MCA guard. The held
+     * Vampirism weapon remains visible and available to integrations, while a
+     * transient attribute modifier keeps its base damage at the compat config
+     * value instead of the pitchfork's player-facing value.
+     */
+    private static boolean performBoundedNativeHunterAttack(PathfinderMob attacker, LivingEntity target, float damage) {
+        if (damage <= 0.0F) {
+            return false;
+        }
+        AttributeInstance attackDamage = attacker.getAttribute(Attributes.ATTACK_DAMAGE);
+        if (attackDamage == null) {
+            return target.hurt(attacker.damageSources().mobAttack(attacker), damage);
+        }
+
+        AttributeModifier previous = attackDamage.getModifier(HUNTER_NATIVE_ATTACK_DAMAGE_UUID);
+        if (previous != null) {
+            attackDamage.removeModifier(HUNTER_NATIVE_ATTACK_DAMAGE_UUID);
+        }
+        double nativeBaseDamage = boundedNativeHunterAttackDamage(attacker, damage);
+        attackDamage.addTransientModifier(new AttributeModifier(
+                HUNTER_NATIVE_ATTACK_DAMAGE_UUID,
+                "MCA temporary native hunter attack damage",
+                nativeBaseDamage - attackDamage.getValue(),
+                AttributeModifier.Operation.ADDITION
+        ));
+        try {
+            InteractionHand hand = attacker instanceof VillagerEntityMCA villager
+                    ? villager.getDominantHand()
+                    : InteractionHand.MAIN_HAND;
+            attacker.swing(hand);
+            return attacker.doHurtTarget(target);
+        } finally {
+            attackDamage.removeModifier(HUNTER_NATIVE_ATTACK_DAMAGE_UUID);
+            if (previous != null) {
+                attackDamage.addTransientModifier(previous);
+            }
+        }
+    }
+
+    /**
+     * MCA 7.6.16 guards multiply their native attack attribute by three inside
+     * {@code VillagerEntityMCA#doHurtTarget}. MCA 7.6.28-beta.10 delegates to
+     * vanilla {@code Mob#doHurtTarget} instead, so it does not apply that
+     * multiplier. The compat configuration promises the final pre-armor
+     * Hunter value in both layouts.
+     */
+    private static double boundedNativeHunterAttackDamage(PathfinderMob attacker, float configuredDamage) {
+        if (attacker instanceof VillagerEntityMCA villager
+                && villager.getProfession() == ProfessionsMCA.GUARD.get()
+                && usesLegacyMcaGuardAttackMultiplier()) {
+            return configuredDamage / 3.0D;
+        }
+        return configuredDamage;
+    }
+
+    private static boolean usesLegacyMcaGuardAttackMultiplier() {
+        try {
+            return ModList.get()
+                    .getModContainerById(MCA_MOD_ID)
+                    .map(container -> usesLegacyMcaGuardAttackMultiplier(
+                            container.getModInfo().getVersion().toString()))
+                    .orElse(true);
+        } catch (RuntimeException | LinkageError ignored) {
+            // Keep the established 7.6.16 behavior if this is called during
+            // an unusual bootstrap/test path before Forge exposes ModList.
+            return true;
+        }
+    }
+
+    static boolean usesLegacyMcaGuardAttackMultiplier(String mcaVersion) {
+        // 7.6.28-beta.10 and the 7.7.x line use the modern attack layout
+        // without MCA 7.6.16's extra guard multiplier. Unknown versions keep
+        // the conservative legacy compensation until their native layout is
+        // known.
+        return mcaVersion == null
+                || (!mcaVersion.startsWith("7.6.28-beta.10") && !mcaVersion.startsWith("7.7."));
     }
 
     private static boolean registerDefensiveGoalsIfNeeded(VillagerEntityMCA villager) {
         PathfinderMob mob = (PathfinderMob) villager;
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).map(state -> {
+        return ModCapabilities.get(villager).map(state -> {
             if (state.areDefensiveGoalsAdded()) {
                 return false;
             }
@@ -348,6 +488,7 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static boolean isValidTargetFor(McaSpecialVillagerType type, VillagerEntityMCA villager, LivingEntity target) {
+        if (McaRelationshipCombatPolicy.blocksAutomaticAttack(villager,target)) return false;
         if (target == null || target == villager || !target.isAlive()) {
             return false;
         }
@@ -359,17 +500,22 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static LivingEntity findBestTarget(McaSpecialVillagerType type, VillagerEntityMCA villager, double range) {
-        return villager.level()
-                .getEntitiesOfClass(
-                        LivingEntity.class,
-                        villager.getBoundingBox().inflate(range, 4.0D, range),
-                        candidate -> isAutomaticTargetCandidate(type, villager, candidate))
-                .stream()
-                .min(Comparator
-                        .<LivingEntity>comparingInt(candidate -> targetPriorityScore(type, villager, candidate).categoryPriority())
-                        .thenComparingInt(candidate -> targetPriorityScore(type, villager, candidate).factionPriority())
-                        .thenComparingDouble(candidate -> villager.distanceToSqr(candidate)))
-                .orElse(null);
+        LivingEntity bestTarget = null;
+        TargetPriorityScore bestScore = null;
+        for (LivingEntity candidate : villager.level().getEntitiesOfClass(
+                LivingEntity.class,
+                villager.getBoundingBox().inflate(range, 4.0D, range),
+                candidate -> isAutomaticTargetCandidate(type, villager, candidate))) {
+            // The former stream comparator recalculated this full score several
+            // times for every candidate comparison. Calculate it once and keep
+            // the exact category, faction and distance ordering.
+            TargetPriorityScore score = targetPriorityScore(type, villager, candidate);
+            if (score.isPreferredOver(bestScore)) {
+                bestTarget = candidate;
+                bestScore = score;
+            }
+        }
+        return bestTarget;
     }
 
     private static boolean shouldReplaceCurrentTarget(McaSpecialVillagerType type, VillagerEntityMCA villager,
@@ -565,7 +711,7 @@ public final class McaSpecialVillagerCombatService {
             return false;
         }
         long gameTime = villager.level().getGameTime();
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> state.isRetaliatingAgainst(target.getUUID(), gameTime))
                 .orElse(false);
     }
@@ -580,21 +726,4 @@ public final class McaSpecialVillagerCombatService {
         };
     }
 
-    private record TargetPriorityScore(
-            int categoryPriority,
-            int factionPriority,
-            double distanceSqr,
-            Object reason,
-            String targetType
-    ) {
-        private boolean outranksIgnoringDistance(TargetPriorityScore other) {
-            return categoryPriority < other.categoryPriority
-                    || (categoryPriority == other.categoryPriority && factionPriority < other.factionPriority);
-        }
-
-        private int logScore() {
-            int distanceScore = (int) Math.min(99, Math.floor(Math.sqrt(Math.max(0.0D, distanceSqr))));
-            return categoryPriority * 1000 + factionPriority * 100 + distanceScore;
-        }
-    }
 }

@@ -10,8 +10,8 @@ import com.guilh.mca_vampirism_compat.service.McaVampireCureService;
 import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfStateService;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
@@ -24,6 +24,7 @@ public final class McaWerewolfTargetUtil {
     }
 
     public static TargetReason targetReason(VillagerEntityMCA werewolf, LivingEntity target) {
+        if (com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.blocksAutomaticAttack(werewolf,target)) return TargetReason.NONE;
         if (werewolf == null
                 || target == null
                 || target == werewolf
@@ -33,6 +34,7 @@ public final class McaWerewolfTargetUtil {
                 || werewolf.getAgeState() != AgeState.ADULT) {
             return TargetReason.NONE;
         }
+        if (com.guilh.mca_vampirism_compat.service.McaRelationshipCombatPolicy.protectedRetaliation(werewolf,target)) return TargetReason.PROTECTED_AGGRESSOR;
         if (target instanceof VillagerEntityMCA targetVillager) {
             if (targetVillager.getAgeState() != AgeState.ADULT || McaVampireCureService.isCuring(targetVillager)) {
                 return TargetReason.NONE;
@@ -84,7 +86,7 @@ public final class McaWerewolfTargetUtil {
 
     private static boolean isRetaliatingAgainst(VillagerEntityMCA werewolf, LivingEntity target) {
         long gameTime = werewolf.level().getGameTime();
-        return werewolf.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(werewolf)
                 .map(state -> state.isRetaliatingAgainst(target.getUUID(), gameTime))
                 .orElse(false);
     }
@@ -105,6 +107,7 @@ public final class McaWerewolfTargetUtil {
 
     public enum TargetReason {
         NONE,
+        PROTECTED_AGGRESSOR,
         VAMPIRE_PLAYER,
         HUNTER_PLAYER,
         VAMPIRE_MOB,

@@ -3,7 +3,7 @@ package com.guilh.mca_vampirism_compat.service.faction.hunter;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.faction.McaFactionCombatRules;
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.LivingEntity;
 
 public final class McaHunterCombatRules implements McaFactionCombatRules {
@@ -25,6 +25,7 @@ public final class McaHunterCombatRules implements McaFactionCombatRules {
             case MCA_WEREWOLF_VILLAGER -> 1;
             case RECENT_VAMPIRE_AGGRESSOR, VAMPIRE_PLAYER, VAMPIRE_MOB -> 0;
             case TRANSFORMED_WEREWOLF -> 1;
+            case PROTECTED_AGGRESSOR -> 0;
             case NONE -> 100;
         };
     }

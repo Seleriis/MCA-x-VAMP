@@ -1,6 +1,8 @@
 package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
+import com.guilh.mca_vampirism_compat.advancement.McaAdvancementService;
+import com.guilh.mca_vampirism_compat.advancement.McaCompatAdvancements;
 import com.guilh.mca_vampirism_compat.appearance.McaVampireAppearanceHandler;
 import com.guilh.mca_vampirism_compat.attribute.McaVampireAttributeHandler;
 import com.guilh.mca_vampirism_compat.attribute.McaSpecialVillagerAttributeService;
@@ -9,10 +11,10 @@ import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.faction.hunter.McaHunterAggressionPolicy;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
-import com.guilh.mca_vampirism_compat.visual.McaVampireVisualData;
+import com.guilh.mca_vampirism_compat.trade.McaVampireSpecialTradeService;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.VillagerLike;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerLike;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -35,7 +37,7 @@ public final class McaVampireStateService {
             return false;
         }
         boolean trait = McaTraitBridge.hasVampireTrait(villager);
-        return villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER)
+        return ModCapabilities.get(villager)
                 .map(state -> {
                     if (!state.isConverted()
                             && state.wasCureRecentlyCompleted(
@@ -44,14 +46,16 @@ public final class McaVampireStateService {
                             McaVampirismCompatConfig.postCureResyncBlockTicks())) {
                         return false;
                     }
-                    return state.isConverted() || state.isVampireAppearanceApplied() || trait;
+                    // Appearance is derived state, never faction authority. Treating
+                    // the old visual flag as vampirism made human newborns unbiteable.
+                    return state.isConverted() || trait;
                 })
                 .orElse(trait);
     }
 
     public static void ensureVampireState(VillagerEntityMCA villager) {
         normalizeVillagerState(villager);
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             if (state.isCuringVampire() || state.isCuringWerewolf()) {
                 McaSpecialVillagerAttributeService.applyMovementSpeedForState(villager);
                 McaVampirismCompat.debugLog(
@@ -64,8 +68,13 @@ public final class McaVampireStateService {
             boolean convertedBefore = state.isConverted();
             boolean appearanceBefore = state.isVampireAppearanceApplied();
 
-            boolean hasVampireMarker = convertedBefore || appearanceBefore || traitBefore;
+            boolean hasVampireMarker = convertedBefore || traitBefore;
             if (!hasVampireMarker) {
+                if (appearanceBefore) {
+                    McaVampireAppearanceHandler.restoreOriginalAppearance(villager);
+                    state.setVampireAppearanceApplied(false);
+                    logNormalize(villager, "CLEARED_ORPHAN_VAMPIRE_APPEARANCE");
+                }
                 return;
             }
             if (!convertedBefore && state.wasCureRecentlyCompleted(
@@ -75,10 +84,9 @@ public final class McaVampireStateService {
                 McaTraitBridge.removeVampireTrait(villager);
                 state.setVampireAppearanceApplied(false);
                 state.clearPendingInfection();
-                villager.removeEffect(ModEffects.SANGUINARE.get());
+                villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
                 McaVampireAttributeHandler.removeVampireAttributes(villager);
                 McaSpecialVillagerAttributeService.applyMovementSpeedForState(villager);
-                McaVampireVisualData.syncFromCapability(villager);
                 McaVampirismCompat.debugLog(
                         "[CURE] resync blocked type=VAMPIRE villager={} reason=POST_CURE_GRACE",
                         villager.getUUID()
@@ -94,7 +102,6 @@ public final class McaVampireStateService {
                 state.clearInfection();
                 McaTraitBridge.addVampireTrait(villager);
                 McaVampireAppearanceHandler.applyVampireAppearance(villager);
-                McaVampireVisualData.ensureEyeIndex(villager);
                 McaVampireAttributeHandler.applyVampireAttributes(villager);
                 McaVampireAi.registerGoalsIfNeeded(villager);
             }
@@ -117,21 +124,28 @@ public final class McaVampireStateService {
         if (villager == null || villager.level().isClientSide) {
             return;
         }
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             boolean vampireTrait = McaTraitBridge.hasVampireTrait(villager);
             boolean hunterTrait = McaTraitBridge.hasHunterTrait(villager);
             boolean converted = state.isConverted();
             boolean vampireAppearance = state.isVampireAppearanceApplied();
             long gameTime = villager.level().getGameTime();
 
+            if (!converted && !vampireTrait && vampireAppearance) {
+                McaVampireAppearanceHandler.restoreOriginalAppearance(villager);
+                state.setVampireAppearanceApplied(false);
+                vampireAppearance = false;
+                logNormalize(villager, "CLEARED_NON_AUTHORITATIVE_VAMPIRE_APPEARANCE");
+            }
+
             if (!converted && state.wasCureRecentlyCompleted(
                     gameTime,
                     McaVampireCureService.CureType.VAMPIRE.name(),
                     McaVampirismCompatConfig.postCureResyncBlockTicks())) {
                 boolean changed = false;
-                if (state.isInfected() || state.wasSanguinareActive() || villager.hasEffect(ModEffects.SANGUINARE.get())) {
+                if (state.isInfected() || state.wasSanguinareActive() || villager.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())) {
                     state.clearPendingInfection();
-                    villager.removeEffect(ModEffects.SANGUINARE.get());
+                    villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
                     changed = true;
                 }
                 if (vampireTrait) {
@@ -147,7 +161,6 @@ public final class McaVampireStateService {
                 }
                 if (changed) {
                     McaVampireAttributeHandler.removeVampireAttributes(villager);
-                    McaVampireVisualData.syncFromCapability(villager);
                     logNormalize(villager, "BLOCKED_VAMPIRE_RESYNC_POST_CURE");
                 }
             }
@@ -177,9 +190,9 @@ public final class McaVampireStateService {
             }
 
             if (converted) {
-                if (state.isInfected() || state.wasSanguinareActive() || villager.hasEffect(ModEffects.SANGUINARE.get())) {
+                if (state.isInfected() || state.wasSanguinareActive() || villager.hasEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare())) {
                     state.clearInfection();
-                    villager.removeEffect(ModEffects.SANGUINARE.get());
+                    villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
                     logNormalize(villager, "CLEARED_INFECTION_ON_CONVERTED");
                 }
                 if (!vampireTrait && McaVampirismCompatConfig.enableMcaVampireTrait()) {
@@ -271,10 +284,16 @@ public final class McaVampireStateService {
 
     public static void markConverted(VillagerEntityMCA villager, UUID source) {
         McaDefensiveVillagerService.clearDefense(villager, "converted");
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             state.finishConversion();
             if (source != null) {
                 state.setSource(source);
+            }
+            if (villager.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                // The editor and village capture can also call markConverted;
+                // only a recorded player conversion bite earns this progress.
+                state.getLastVampirePlayerBiteUuid().ifPresent(playerId -> McaAdvancementService.awardOrQueue(
+                        serverLevel.getServer(), playerId, McaCompatAdvancements.VAMPIRE_CONVERSION));
             }
             McaVampirismCompat.debugLog("[STATE] markConverted villager={} source={}", villager.getUUID(), source);
         });
@@ -283,8 +302,32 @@ public final class McaVampireStateService {
         McaVillageVampireThreatService.recordConversionThreat(villager);
     }
 
+    /**
+     * Removes every vampire-specific marker without creating the post-cure
+     * grace window. This is used by an explicit MCA editor change, which is an
+     * immediate administrative transformation rather than the gameplay cure.
+     */
+    public static void clearVampireState(VillagerEntityMCA villager, String reason) {
+        if (villager == null || villager.level().isClientSide) {
+            return;
+        }
+        McaVampireAppearanceHandler.restoreOriginalAppearance(villager);
+        McaVampireSpecialTradeService.removeForNoLongerVampire(villager);
+        ModCapabilities.get(villager).ifPresent(state -> state.clearVampirismAfterCure());
+        McaTraitBridge.removeVampireTrait(villager);
+        villager.removeEffect(com.guilh.mca_vampirism_compat.util.VampirismEffectCompat.sanguinare());
+        McaVampireAttributeHandler.removeVampireAttributes(villager);
+        McaSpecialVillagerAttributeService.applyMovementSpeedForState(villager);
+        McaVampireNightScheduleService.process(villager);
+        McaVampirismCompat.debugLog(
+                "[STATE] cleared vampire state villager={} reason={}",
+                villager.getUUID(),
+                reason
+        );
+    }
+
     public static void markInfected(VillagerEntityMCA villager, UUID source, long gameTime) {
-        villager.getCapability(ModCapabilities.VAMPIRIC_VILLAGER).ifPresent(state -> {
+        ModCapabilities.get(villager).ifPresent(state -> {
             state.startInfection(gameTime, source);
             McaVampirismCompat.debugLog("[STATE] markInfected villager={} source={} tick={}", villager.getUUID(), source, gameTime);
         });

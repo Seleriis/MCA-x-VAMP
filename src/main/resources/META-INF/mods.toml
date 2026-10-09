@@ -1,6 +1,7 @@
 modLoader="javafml"
 loaderVersion="[47,)"
 license="GPL-3.0-only"
+
 [[mixins]]
 config="${mod_id}.mixins.json"
 
@@ -8,12 +9,13 @@ config="${mod_id}.mixins.json"
 modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
-description='''Compatibility layer between MCA Reborn, Vampirism, Werewolves, Vampirism Integrations and Easy Villagers via mca-ev-compat. MCA villagers remain VillagerEntityMCA while gaining vampire, hunter and werewolf faction behavior, curing, trade/social rules, pickup permissions and MCA command restrictions.'''
+authors="guilh"
+description='''Compatibility layer for Minecraft Comes Alive Reborn and Vampirism on Forge 1.20.1. MCA villagers remain VillagerEntityMCA while gaining vampire, hunter and werewolf faction behavior, infection and cure handling, real-offer faction trading, social rules, village effects and optional Easy Villagers integration.'''
 
 [[dependencies.${mod_id}]]
 modId="forge"
 mandatory=true
-versionRange="[47,)"
+versionRange="[${forge_version},48)"
 ordering="NONE"
 side="BOTH"
 
@@ -27,20 +29,37 @@ side="BOTH"
 [[dependencies.${mod_id}]]
 modId="vampirism"
 mandatory=true
-versionRange="[1.10.15,)"
+versionRange="[${vampirism_version},1.11)"
 ordering="AFTER"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="mca"
 mandatory=true
-versionRange="[7.6.16,)"
+versionRange="[${mca_version},7.8)"
 ordering="AFTER"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="werewolves"
 mandatory=false
-versionRange="[2.0.2.7,)"
+versionRange="[${werewolves_version},2.1)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="easy_villagers"
+mandatory=false
+# Easy Villagers exposes its Minecraft-prefixed Forge version in metadata
+# (for example `1.20.1-1.1.39`), so preserve that prefix in the tested
+# inclusive range instead of using a plain `1.1.x` Maven range.
+versionRange="[1.20.1-${easy_villagers_min_version},1.20.1-${easy_villagers_max_version}]"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="mca_ev_compat"
+mandatory=false
+versionRange="[${mca_ev_compat_version},1.2)"
 ordering="AFTER"
 side="BOTH"
