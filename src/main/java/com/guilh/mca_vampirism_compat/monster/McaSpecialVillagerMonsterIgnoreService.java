@@ -53,7 +53,9 @@ public final class McaSpecialVillagerMonsterIgnoreService {
     }
 
     public static boolean shouldMonsterIgnore(Entity monster, Entity target) {
-        if (!isHostileMonster(monster)) {
+        // Every rule below protects an MCA villager target. Mobs chasing
+        // players or animals leave here without any faction lookup.
+        if (!(target instanceof VillagerEntityMCA) || !isHostileMonster(monster)) {
             return false;
         }
         if (McaGuardMonsterDefenseService.allowsMonsterTargetingSpecialGuard(monster, target)) {
@@ -82,21 +84,24 @@ public final class McaSpecialVillagerMonsterIgnoreService {
     }
 
     public static boolean isHostileMonster(Entity entity) {
-        if (!(entity instanceof LivingEntity)) {
+        // The cheap type test runs first so players, animals and villagers
+        // skip the faction lookups; the result is unchanged.
+        if (!(entity instanceof LivingEntity)
+                || !(entity instanceof Monster || entity instanceof Enemy)) {
             return false;
         }
-        if (McaVampireFactionService.isHunter(entity)
-                || McaVampireFactionService.isTransformedWerewolf(entity)
-                || McaVampireFactionService.isVampire(entity)
-                || isSpecialNonPanickingVillager(entity)) {
-            return false;
-        }
-        return entity instanceof Monster || entity instanceof Enemy;
+        return !McaVampireFactionService.isHunter(entity)
+                && !McaVampireFactionService.isTransformedWerewolf(entity)
+                && !McaVampireFactionService.isVampire(entity)
+                && !isSpecialNonPanickingVillager(entity);
     }
 
     public static boolean clearMonsterTargetIfNeeded(Mob mob) {
         LivingEntity target = mob.getTarget();
-        if (target == null) {
+        // Both rules need an MCA villager on one side. This runs for every
+        // targeting mob on every tick, so ordinary fights exit here.
+        if (target == null
+                || !(target instanceof VillagerEntityMCA || mob instanceof VillagerEntityMCA)) {
             return false;
         }
         if (shouldMonsterIgnore(mob, target)) {
@@ -174,7 +179,9 @@ public final class McaSpecialVillagerMonsterIgnoreService {
     }
 
     public static boolean shouldLogMonsterIgnore(Entity actor, Entity target, String action) {
-        if (actor == null) {
+        // Every caller only uses this to gate a debug log, so skip the key
+        // building when nothing would be written.
+        if (actor == null || !McaVampirismCompatConfig.enableDebugLogs()) {
             return false;
         }
         long gameTime = actor.level().getGameTime();
@@ -199,11 +206,17 @@ public final class McaSpecialVillagerMonsterIgnoreService {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void forceTrackedPanicFalseFromBrain(Object brain) {
         Entity entity = getVillagerBrainEntity(brain);
-        if (!shouldSuppressPanicFlag(entity) || !(entity instanceof CTrackedEntity tracked)) {
+        if (!(entity instanceof CTrackedEntity tracked)) {
             return;
         }
         CDataParameter panicking = getVillagerBrainPanickingParameter(brain);
-        if (panicking != null) {
+        // Runs after every brain think. Writing FALSE over FALSE changes
+        // nothing, so the faction classification is only needed while the
+        // villager is actually flagged as panicking.
+        if (panicking == null || !Boolean.TRUE.equals(tracked.getTrackedValue(panicking))) {
+            return;
+        }
+        if (shouldSuppressPanicFlag(entity)) {
             tracked.setTrackedValue(panicking, Boolean.FALSE);
         }
     }

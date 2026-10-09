@@ -29,6 +29,10 @@ public final class MissionHighlightClientState {
         return villagerId != null && HIGHLIGHTED.contains(villagerId);
     }
 
+    public static boolean isEmpty() {
+        return HIGHLIGHTED.isEmpty();
+    }
+
     public static void clear() {
         HIGHLIGHTED.clear();
     }

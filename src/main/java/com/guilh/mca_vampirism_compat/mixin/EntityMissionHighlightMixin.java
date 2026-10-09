@@ -12,6 +12,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class EntityMissionHighlightMixin {
     @Inject(method = "isCurrentlyGlowing", at = @At("HEAD"), cancellable = true)
     private void mcaVampCompat$showAcceptedMissionTargetOnlyLocally(CallbackInfoReturnable<Boolean> cir) {
+        // Queried for every rendered entity each frame; almost always nothing
+        // is highlighted, so leave before touching the entity.
+        if (MissionHighlightClientState.isEmpty()) {
+            return;
+        }
         Entity entity = (Entity) (Object) this;
         if (entity.level().isClientSide && MissionHighlightClientState.isHighlighted(entity.getUUID())) {
             cir.setReturnValue(true);
