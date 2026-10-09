@@ -1,3 +1,10 @@
+## 2.3.0 — candidato local para testes (2026-09-28; não publicado)
+
+- Atualiza a dependência mínima de Vampirism para 1.10.13; MCA Reborn permanece em 7.7.36-beta.3+1.21.1, a versão atual da linha 1.21.1.
+- Build NeoForge e 94 testes unitários concluídos (3 ignorados), sem falhas.
+- Os 32 GameTests obrigatórios passaram no perfil base MCA/Vampirism. Integrações opcionais não foram testadas em runtime nesta rodada.
+- JAR, fontes, arquivo do projeto, notas e checksums locais em `releases/2.3.0/`. Não publicado.
+
 ## 2.2.3 — 2026-09-16
 
 - Guia ampliado de 31 para 42 páginas, com instruções atuais sobre favores, recompensas, diário, prazos, profissões, família e Easy Villagers.

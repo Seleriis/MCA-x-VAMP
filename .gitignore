@@ -36,10 +36,3 @@ replay_pid*
 # Built jars and third-party jars
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
-
-# Release work and local fixtures
-run/
-local-mods*/
-.gradle*/
-.publication/
-*.zip

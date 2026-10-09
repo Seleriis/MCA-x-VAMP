@@ -29,7 +29,7 @@ side = "BOTH"
 [[dependencies.mca_vamp_compat]]
 modId = "vampirism"
 type = "required"
-versionRange = "[1.10.12,)"
+versionRange = "[1.10.13,)"
 ordering = "AFTER"
 side = "BOTH"
 
