@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.client;
 
 import com.guilh.mca_vampirism_compat.visual.McaVampireVisualData;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.resources.ResourceLocation;
 
 /** Resolves a stable Vampirism eye overlay for MCA 7.6 renderers. */

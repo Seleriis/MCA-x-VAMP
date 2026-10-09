@@ -4,7 +4,7 @@ import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.VampiricVillagerState;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 

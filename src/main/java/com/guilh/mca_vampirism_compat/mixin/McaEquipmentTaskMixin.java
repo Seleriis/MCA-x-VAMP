@@ -1,8 +1,8 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.service.McaDefensiveVillagerService;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.brain.tasks.EquipmentTask;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.brain.tasks.EquipmentTask;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = EquipmentTask.class, remap = false)
 public abstract class McaEquipmentTaskMixin {
     @Inject(
-            method = "run(Lnet/minecraft/server/level/ServerLevel;Lforge/net/mca/entity/VillagerEntityMCA;J)V",
+            method = "start(Lnet/minecraft/server/level/ServerLevel;Lforge/net/conczin/mca/entity/VillagerEntityMCA;J)V",
             at = @At("HEAD")
     )
     private void mcaVampirismCompat$prepareHunterWeaponBeforeEquipmentRefresh(
@@ -37,7 +37,7 @@ public abstract class McaEquipmentTaskMixin {
     }
 
     @Inject(
-            method = "equipBestWeapon(Lforge/net/mca/entity/VillagerEntityMCA;Lnet/minecraft/world/item/Item;)V",
+            method = "equipBestWeapon(Lforge/net/conczin/mca/entity/VillagerEntityMCA;Lnet/minecraft/world/item/Item;)V",
             at = @At("HEAD"),
             cancellable = true
     )
@@ -52,7 +52,7 @@ public abstract class McaEquipmentTaskMixin {
     }
 
     @Inject(
-            method = "equipBestRanged(Lforge/net/mca/entity/VillagerEntityMCA;Lnet/minecraft/world/item/Item;)V",
+            method = "equipBestRanged(Lforge/net/conczin/mca/entity/VillagerEntityMCA;Lnet/minecraft/world/item/Item;)V",
             at = @At("HEAD"),
             cancellable = true
     )
@@ -67,14 +67,14 @@ public abstract class McaEquipmentTaskMixin {
     }
 
     @Redirect(
-            method = "run(Lnet/minecraft/server/level/ServerLevel;Lforge/net/mca/entity/VillagerEntityMCA;J)V",
+            method = "start(Lnet/minecraft/server/level/ServerLevel;Lforge/net/conczin/mca/entity/VillagerEntityMCA;J)V",
             at = @At(
                     value = "INVOKE",
                     // MCA 7.6 is distributed with Forge runtime method names.
                     // The target owner is deliberately not remapped by this
                     // mixin, so inherited vanilla hand mutation must use its
                     // runtime name as well.
-                    target = "Lforge/net/mca/entity/VillagerEntityMCA;m_21008_(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/ItemStack;)V"
+                    target = "Lforge/net/conczin/mca/entity/VillagerEntityMCA;m_21008_(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/ItemStack;)V"
             )
     )
     private void mcaVampirismCompat$keepHunterHandDuringMcaClear(
@@ -90,10 +90,10 @@ public abstract class McaEquipmentTaskMixin {
     }
 
     @Redirect(
-            method = "run(Lnet/minecraft/server/level/ServerLevel;Lforge/net/mca/entity/VillagerEntityMCA;J)V",
+            method = "start(Lnet/minecraft/server/level/ServerLevel;Lforge/net/conczin/mca/entity/VillagerEntityMCA;J)V",
             at = @At(
                     value = "INVOKE",
-                    target = "Lforge/net/mca/entity/VillagerEntityMCA;m_8061_(Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/item/ItemStack;)V"
+                    target = "Lforge/net/conczin/mca/entity/VillagerEntityMCA;m_8061_(Lnet/minecraft/world/entity/EquipmentSlot;Lnet/minecraft/world/item/ItemStack;)V"
             )
     )
     private void mcaVampirismCompat$keepHunterSlotDuringMcaClear(

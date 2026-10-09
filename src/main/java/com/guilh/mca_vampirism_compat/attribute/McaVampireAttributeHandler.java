@@ -2,8 +2,8 @@ package com.guilh.mca_vampirism_compat.attribute;
 
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.util.McaVillagerUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;

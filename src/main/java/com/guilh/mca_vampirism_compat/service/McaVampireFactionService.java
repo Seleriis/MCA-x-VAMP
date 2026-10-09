@@ -7,7 +7,7 @@ import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import de.teamlapen.vampirism.api.VampirismAPI;
 import de.teamlapen.vampirism.api.entity.factions.IFaction;
 import de.teamlapen.vampirism.util.Helper;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;

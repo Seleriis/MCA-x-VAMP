@@ -1,9 +1,9 @@
 package com.guilh.mca_vampirism_compat.client;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
-import forge.net.mca.client.model.VillagerEntityModelMCA;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.Gender;
+import forge.net.conczin.mca.client.model.VillagerEntityModelMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.relationship.Gender;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;

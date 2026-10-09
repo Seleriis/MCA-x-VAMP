@@ -17,8 +17,8 @@ import com.guilh.mca_vampirism_compat.service.faction.werewolf.McaWerewolfCombat
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
 import com.guilh.mca_vampirism_compat.util.McaVampireTargetUtil;
 import com.guilh.mca_vampirism_compat.util.McaWerewolfTargetUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.ProfessionsMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.ProfessionsMCA;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -463,10 +463,12 @@ public final class McaSpecialVillagerCombatService {
     }
 
     static boolean usesLegacyMcaGuardAttackMultiplier(String mcaVersion) {
-        // 7.6.28-beta.10 is the first observed Forge 1.20.1 MCA build that
-        // delegates its villager attack to Mob. Unknown versions preserve the
-        // conservative legacy compensation until their native layout is known.
-        return mcaVersion == null || !mcaVersion.startsWith("7.6.28-beta.10");
+        // 7.6.28-beta.10 and the 7.7.x line use the modern attack layout
+        // without MCA 7.6.16's extra guard multiplier. Unknown versions keep
+        // the conservative legacy compensation until their native layout is
+        // known.
+        return mcaVersion == null
+                || (!mcaVersion.startsWith("7.6.28-beta.10") && !mcaVersion.startsWith("7.7."));
     }
 
     private static boolean registerDefensiveGoalsIfNeeded(VillagerEntityMCA villager) {

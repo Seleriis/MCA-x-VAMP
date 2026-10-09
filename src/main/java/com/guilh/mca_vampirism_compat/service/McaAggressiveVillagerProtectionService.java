@@ -3,8 +3,8 @@ package com.guilh.mca_vampirism_compat.service;
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.faction.hunter.McaHunterAggressionPolicy;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.Gender;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.relationship.Gender;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraftforge.fml.ModList;
 

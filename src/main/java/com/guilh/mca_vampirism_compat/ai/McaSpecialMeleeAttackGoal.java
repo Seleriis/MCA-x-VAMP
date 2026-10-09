@@ -6,7 +6,7 @@ import com.guilh.mca_vampirism_compat.service.McaCommandRespectService;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerCombatService;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerClassifier;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerType;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;

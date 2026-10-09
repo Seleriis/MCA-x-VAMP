@@ -52,7 +52,7 @@ import com.guilh.mca_vampirism_compat.util.McaVillagerUtil;
 import de.teamlapen.vampirism.api.event.BloodDrinkEvent;
 import de.teamlapen.vampirism.api.event.VampirismVillageEvent;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;

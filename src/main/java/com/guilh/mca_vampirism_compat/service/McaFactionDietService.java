@@ -2,7 +2,7 @@ package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import de.teamlapen.vampirism.fluids.BloodHelper;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;

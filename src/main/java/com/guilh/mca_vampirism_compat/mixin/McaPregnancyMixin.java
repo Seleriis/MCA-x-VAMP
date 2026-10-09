@@ -2,9 +2,9 @@ package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.inheritance.McaVampireInheritanceHandler;
 import com.guilh.mca_vampirism_compat.advancement.McaInheritanceAdvancementService;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.Pregnancy;
-import forge.net.mca.entity.ai.relationship.Gender;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.Pregnancy;
+import forge.net.conczin.mca.entity.ai.relationship.Gender;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,7 +19,7 @@ public abstract class McaPregnancyMixin {
     private VillagerEntityMCA mother;
 
     @Inject(
-            method = "createChild(Lforge/net/mca/entity/ai/relationship/Gender;Lforge/net/mca/entity/VillagerEntityMCA;)Lforge/net/mca/entity/VillagerEntityMCA;",
+            method = "createChild(Lforge/net/conczin/mca/entity/ai/relationship/Gender;Lforge/net/conczin/mca/entity/VillagerEntityMCA;)Lforge/net/conczin/mca/entity/VillagerEntityMCA;",
             at = @At("RETURN"),
             remap = false
     )

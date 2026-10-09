@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.service.McaVillageEffectBoundsService;
-import forge.net.mca.server.world.data.Village;
+import forge.net.conczin.mca.server.world.data.Village;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

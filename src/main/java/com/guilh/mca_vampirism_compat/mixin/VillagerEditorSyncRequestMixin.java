@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.service.McaEditorTraitSyncService;
-import forge.net.mca.network.c2s.VillagerEditorSyncRequest;
+import forge.net.conczin.mca.network.c2s.VillagerEditorSyncRequest;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;

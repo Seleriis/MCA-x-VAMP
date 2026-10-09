@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.mixin.client;
 
-import forge.net.mca.client.gui.InteractScreen;
-import forge.net.mca.entity.VillagerLike;
+import forge.net.conczin.mca.client.gui.InteractScreen;
+import forge.net.conczin.mca.entity.VillagerLike;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 

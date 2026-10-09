@@ -6,7 +6,7 @@ import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 
 public final class McaSpecialStateNormalizer {
     private McaSpecialStateNormalizer() {

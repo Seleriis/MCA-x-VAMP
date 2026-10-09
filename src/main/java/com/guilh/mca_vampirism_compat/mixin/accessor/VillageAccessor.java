@@ -1,6 +1,6 @@
 package com.guilh.mca_vampirism_compat.mixin.accessor;
 
-import forge.net.mca.server.world.data.Village;
+import forge.net.conczin.mca.server.world.data.Village;
 import net.minecraft.server.level.ServerLevel;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;

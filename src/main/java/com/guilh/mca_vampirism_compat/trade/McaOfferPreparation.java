@@ -1,8 +1,8 @@
 package com.guilh.mca_vampirism_compat.trade;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
-import com.guilh.mca_vampirism_compat.mixin.accessor.VillagerEntityMCATradeAccessor;
-import forge.net.mca.entity.VillagerEntityMCA;
+import com.guilh.mca_vampirism_compat.mixin.accessor.VillagerTradeAccessor;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.trading.MerchantOffers;
 
@@ -16,12 +16,13 @@ public final class McaOfferPreparation {
             return false;
         }
         try {
-            VillagerEntityMCATradeAccessor accessor = (VillagerEntityMCATradeAccessor) (Object) villager;
-            accessor.mcaVampCompat$prepareMcaOffers(player);
+            VillagerTradeAccessor accessor = (VillagerTradeAccessor) (Object) villager;
+            accessor.mcaVampCompat$resetSpecialPrices();
+            accessor.mcaVampCompat$updateSpecialPrices(player);
             return true;
         } catch (RuntimeException exception) {
             McaVampirismCompat.LOGGER.warn(
-                    "[MCA Reborn x Vampirism Compat] Could not prepare MCA 7.6.16 offers while cycling trades for {}",
+                    "[MCA Reborn x Vampirism Compat] Could not prepare MCA 7.7.1 offers while cycling trades for {}",
                     villager.getUUID(),
                     exception
             );

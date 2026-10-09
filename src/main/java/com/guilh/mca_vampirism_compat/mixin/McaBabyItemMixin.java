@@ -2,8 +2,8 @@ package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.inheritance.McaBabyInheritancePayload;
 import com.guilh.mca_vampirism_compat.advancement.McaInheritanceAdvancementService;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.item.BabyItem;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.item.BabyItem;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;

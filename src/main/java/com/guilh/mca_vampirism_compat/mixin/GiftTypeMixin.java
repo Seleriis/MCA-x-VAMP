@@ -1,8 +1,8 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.service.McaFactionGiftService;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.interaction.gifts.GiftType;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.interaction.gifts.GiftType;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;

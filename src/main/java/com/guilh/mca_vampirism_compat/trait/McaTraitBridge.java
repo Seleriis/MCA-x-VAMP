@@ -3,17 +3,22 @@ package com.guilh.mca_vampirism_compat.trait;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolvesCompat;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.Traits;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.Traits;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 
 import java.util.List;
-import java.util.Locale;
 
 public final class McaTraitBridge {
     private static final String VAMPIRE_TRAIT_ID = "vampirism_mca_compat:vampire";
     private static final String WEREWOLF_TRAIT_ID = "vampirism_mca_compat:werewolf";
     private static final String HUNTER_TRAIT_ID = "vampirism_mca_compat:hunter";
+    private static final String LEGACY_UPPER_VAMPIRE_TRAIT_ID = "VAMPIRISM_MCA_COMPAT:VAMPIRE";
+    private static final String LEGACY_UPPER_WEREWOLF_TRAIT_ID = "VAMPIRISM_MCA_COMPAT:WEREWOLF";
+    private static final String LEGACY_UPPER_HUNTER_TRAIT_ID = "VAMPIRISM_MCA_COMPAT:HUNTER";
     private static Traits.Trait vampireTrait;
     private static Traits.Trait werewolfTrait;
     private static Traits.Trait hunterTrait;
@@ -96,19 +101,22 @@ public final class McaTraitBridge {
     }
 
     public static void migrateLegacyTraitIds(VillagerEntityMCA villager) {
-        // MCA 7.7.36 only accepts valid ResourceLocation trait ids. Legacy
-        // upper-case keys are rewritten before MCA reads NBT; capability
+        // MCA 7.7.1 only accepts valid ResourceLocation trait ids. Legacy
+        // upper-case keys are normalized before MCA reads NBT; capability
         // reconciliation below remains the authority for the resulting state.
         registerTraits();
     }
 
-    /**
-     * MCA 7.6 stores the legacy upper-case keys used by the 1.0.3 release.
-     * They are deliberately left untouched so a 1.20.1 world upgrades in
-     * place rather than losing its existing faction traits.
-     */
-    public static boolean normalizeLegacyTraitNbt(net.minecraft.nbt.CompoundTag data) {
-        return false;
+    /** Rewrites old upper-case trait keys before MCA decodes saved villager data. */
+    public static boolean normalizeLegacyTraitNbt(CompoundTag data) {
+        if (data == null) {
+            return false;
+        }
+        boolean changed = normalizeTraitCompound(data.getCompound("Traits"));
+        if (data.contains("MCAData", Tag.TAG_COMPOUND)) {
+            changed |= normalizeTraitCompound(data.getCompound("MCAData").getCompound("Traits"));
+        }
+        return changed;
     }
 
     public static void syncVampireTraitWithCapability(VillagerEntityMCA villager) {
@@ -142,14 +150,35 @@ public final class McaTraitBridge {
     }
 
     private static Traits.Trait registerTrait(String id) {
-        String registryId = id.toUpperCase(Locale.ROOT);
-        Traits.Trait existing = Traits.Trait.valueOf(id);
-        if (existing != Traits.UNKNOWN) {
-            return existing;
-        }
+        ResourceLocation identifier = new ResourceLocation(id);
+        Traits.Trait existing = Traits.get(identifier).orElse(null);
+        if (existing != null) return existing;
         // Inheritance is handled once, by McaVampireInheritanceHandler. Registering
         // an MCA inherit chance here caused duplicate/bogus inherited faction traits.
-        return Traits.registerTrait(registryId, 0.0F, 0.0F, false);
+        return Traits.register(identifier, 0.0F, 0.0F, false);
+    }
+
+    private static boolean normalizeTraitCompound(CompoundTag traits) {
+        if (traits == null || traits.isEmpty()) {
+            return false;
+        }
+        return normalizeTraitKey(traits, LEGACY_UPPER_VAMPIRE_TRAIT_ID, VAMPIRE_TRAIT_ID)
+                | normalizeTraitKey(traits, LEGACY_UPPER_WEREWOLF_TRAIT_ID, WEREWOLF_TRAIT_ID)
+                | normalizeTraitKey(traits, LEGACY_UPPER_HUNTER_TRAIT_ID, HUNTER_TRAIT_ID);
+    }
+
+    private static boolean normalizeTraitKey(CompoundTag traits, String legacyKey, String canonicalKey) {
+        if (!traits.contains(legacyKey)) {
+            return false;
+        }
+        if (!traits.contains(canonicalKey)) {
+            Tag value = traits.get(legacyKey);
+            if (value != null) {
+                traits.put(canonicalKey, value.copy());
+            }
+        }
+        traits.remove(legacyKey);
+        return true;
     }
 
     private static boolean hasTrait(VillagerEntityMCA villager, Traits.Trait trait) {

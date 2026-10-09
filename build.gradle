@@ -119,10 +119,6 @@ dependencies {
     // Required at runtime and intentionally not bundled into this addon jar.
     implementation fg.deobf(localModule('Vampirism', vampirism_file_version))
     implementation fg.deobf(localModule('minecraft-comes-alive', mca_file_version))
-    // MCA's public entity registries expose Architectury RegistrySupplier.
-    // This is an MCA runtime dependency, not something bundled by this addon.
-    implementation fg.deobf(localModule('architectury', architectury_file_version))
-
     // Optional integrations are compiled for the supported matrix, then added to
     // development runs only when their compatProfile requests them.
     compileOnly fg.deobf(localModule('Werewolves', werewolves_file_version))

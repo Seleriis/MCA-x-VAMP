@@ -4,7 +4,7 @@ import com.guilh.mca_vampirism_compat.service.faction.McaFactionCombatRules;
 import com.guilh.mca_vampirism_compat.service.McaHunterAlignmentService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfStateService;
 import com.guilh.mca_vampirism_compat.util.McaVampireTargetUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.LivingEntity;
 
 public final class McaVampireCombatRules implements McaFactionCombatRules {

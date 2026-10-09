@@ -9,7 +9,7 @@ import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.guilh.mca_vampirism_compat.visual.McaWerewolfVisualData;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.Entity;
 
 public final class McaWerewolfStateService {

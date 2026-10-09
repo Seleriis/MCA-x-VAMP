@@ -3,9 +3,9 @@ package com.guilh.mca_vampirism_compat.service;
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.Chore;
-import forge.net.mca.entity.ai.MoveState;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.Chore;
+import forge.net.conczin.mca.entity.ai.MoveState;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 

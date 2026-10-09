@@ -13,8 +13,8 @@ import com.guilh.mca_vampirism_compat.service.faction.hunter.McaHunterAggression
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.guilh.mca_vampirism_compat.trade.McaVampireSpecialTradeService;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.VillagerLike;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerLike;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 

@@ -1,3 +1,11 @@
+## 1.3.0 — candidato local para testes (2026-09-28; não publicado)
+
+- Atualiza o alvo Forge para MCA Reborn 7.7.1-beta.3 e Vampirism 1.10.17.
+- Migra imports e alvos de mixin para o pacote `forge.net.conczin.mca` e adapta registros de traits, comércio, equipamento e ataque às APIs atuais da MCA.
+- Mantém a versão antiga 1.2.3 destinada à MCA 7.6.x; faça backup do mundo antes de trocar para MCA 7.7.1.
+- Build Forge concluído; 92 testes unitários (10 ignorados) e 37 GameTests obrigatórios aprovados no perfil base MCA/Vampirism. Integrações opcionais não foram testadas em runtime nesta rodada.
+- JAR, fontes, arquivo do projeto, notas e checksums locais em `releases/1.3.0/`. Não publicado.
+
 ## 1.2.3 — 2026-09-16
 
 - Guia ampliado de 31 para 42 páginas, com instruções atuais sobre favores, recompensas, diário, prazos, profissões, família e Easy Villagers.

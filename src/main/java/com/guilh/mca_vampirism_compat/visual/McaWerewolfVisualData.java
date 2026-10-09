@@ -3,7 +3,7 @@ package com.guilh.mca_vampirism_compat.visual;
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 
 public final class McaWerewolfVisualData {
     private McaWerewolfVisualData() {

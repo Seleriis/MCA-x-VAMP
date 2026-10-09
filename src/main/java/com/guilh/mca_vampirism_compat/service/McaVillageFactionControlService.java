@@ -7,8 +7,8 @@ import com.guilh.mca_vampirism_compat.service.faction.hunter.McaHunterAggression
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import de.teamlapen.vampirism.api.entity.factions.IFaction;
 import de.teamlapen.vampirism.api.world.ITotem;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.Villager;

@@ -19,13 +19,30 @@ class McaTraitBridgeTest {
     }
 
     @Test
-    void keepsLegacyUppercaseTraitKeysForMca76() {
+    void normalizesLegacyUppercaseTraitKeysForMca77() {
         CompoundTag traits = new CompoundTag();
         traits.putBoolean("VAMPIRISM_MCA_COMPAT:VAMPIRE", true);
         CompoundTag data = new CompoundTag();
         data.put("Traits", traits);
 
-        assertEquals(false, McaTraitBridge.normalizeLegacyTraitNbt(data));
-        assertEquals(true, data.getCompound("Traits").getBoolean("VAMPIRISM_MCA_COMPAT:VAMPIRE"));
+        assertEquals(true, McaTraitBridge.normalizeLegacyTraitNbt(data));
+        assertEquals(true, data.getCompound("Traits").getBoolean("vampirism_mca_compat:vampire"));
+        assertEquals(false, data.getCompound("Traits").contains("VAMPIRISM_MCA_COMPAT:VAMPIRE"));
+    }
+
+    @Test
+    void normalizesLegacyTraitsInsideMcaEditorData() {
+        CompoundTag mcaTraits = new CompoundTag();
+        mcaTraits.putBoolean("VAMPIRISM_MCA_COMPAT:HUNTER", true);
+        CompoundTag mcaData = new CompoundTag();
+        mcaData.put("Traits", mcaTraits);
+        CompoundTag data = new CompoundTag();
+        data.put("MCAData", mcaData);
+
+        assertEquals(true, McaTraitBridge.normalizeLegacyTraitNbt(data));
+        assertEquals(true, data.getCompound("MCAData").getCompound("Traits")
+                .getBoolean("vampirism_mca_compat:hunter"));
+        assertEquals(false, data.getCompound("MCAData").getCompound("Traits")
+                .contains("VAMPIRISM_MCA_COMPAT:HUNTER"));
     }
 }

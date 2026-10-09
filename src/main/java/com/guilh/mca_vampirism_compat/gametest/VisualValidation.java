@@ -2,7 +2,7 @@ package com.guilh.mca_vampirism_compat.gametest;
 
 import com.guilh.mca_vampirism_compat.network.MissionJournalPayload;
 import com.guilh.mca_vampirism_compat.book.OccultArtsBook;
-import forge.net.mca.client.gui.ExtendedBookScreen;
+import forge.net.conczin.mca.client.gui.ExtendedBookScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.Screen;

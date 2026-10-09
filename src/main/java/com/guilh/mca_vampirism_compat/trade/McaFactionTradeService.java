@@ -14,7 +14,7 @@ import com.guilh.mca_vampirism_compat.service.McaWerewolfTradeService;
 import com.guilh.mca_vampirism_compat.social.McaFactionContextualDialogueService;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -73,11 +73,11 @@ public final class McaFactionTradeService {
 
     /**
      * Gates MCA's dialogue action before {@code VillagerCommandHandler} calls
-     * its vanilla {@code beginTradeWith} invoker.
+     * vanilla {@code Villager.startTrading}.
      *
-     * <p>That route deliberately bypasses MCA's {@code copiedBeginTradeWith}
-     * method, so it must be checked here instead of relying on the merchant
-     * mixin alone.</p>
+     * <p>The command route is guarded by the native
+     * {@code Villager.startTrading} hook, while this helper remains available
+     * for callers that need to gate MCA's dialogue option directly.</p>
      */
     public static boolean shouldCancelMcaDialogueTrade(ServerPlayer player, VillagerEntityMCA villager) {
         if (player == null || villager == null || player.level().isClientSide || !shouldHandleMcaTrade(villager)) {

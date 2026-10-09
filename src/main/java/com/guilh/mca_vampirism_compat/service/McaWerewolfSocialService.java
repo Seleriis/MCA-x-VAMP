@@ -5,7 +5,7 @@ import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.faction.PlayerFactionContext;
 import com.guilh.mca_vampirism_compat.social.McaSocialActionType;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class McaWerewolfSocialService {

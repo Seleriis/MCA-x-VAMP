@@ -10,7 +10,7 @@ import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfSocialService;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;

@@ -1,8 +1,8 @@
 package com.guilh.mca_vampirism_compat.network;
 
 import com.guilh.mca_vampirism_compat.mixin.client.InteractScreenAccessor;
-import forge.net.mca.client.gui.InteractScreen;
-import forge.net.mca.entity.VillagerLike;
+import forge.net.conczin.mca.client.gui.InteractScreen;
+import forge.net.conczin.mca.entity.VillagerLike;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;

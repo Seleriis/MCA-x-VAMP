@@ -5,7 +5,7 @@ import com.guilh.mca_vampirism_compat.easyvillagers.McaEvCompatBridge;
 import com.guilh.mca_vampirism_compat.network.EasyVillagersCycleStatePayload;
 import com.guilh.mca_vampirism_compat.network.ModNetwork;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MerchantMenu;

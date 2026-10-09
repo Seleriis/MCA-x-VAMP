@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.item;
 
 import com.guilh.mca_vampirism_compat.book.OccultArtsBook;
-import forge.net.mca.item.ExtendedWrittenBookItem;
+import forge.net.conczin.mca.item.ExtendedWrittenBookItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;

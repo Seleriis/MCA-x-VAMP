@@ -42,14 +42,14 @@ import de.teamlapen.vampirism.api.entity.player.vampire.IVampirePlayer;
 import de.teamlapen.vampirism.core.ModBlocks;
 import de.teamlapen.vampirism.entity.ExtendedCreature;
 import de.teamlapen.vampirism.entity.player.vampire.VampirePlayer;
-import forge.net.mca.entity.EquipmentSet;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.Traits;
-import forge.net.mca.entity.ai.brain.tasks.EquipmentTask;
-import forge.net.mca.entity.ai.relationship.AgeState;
-import forge.net.mca.entity.interaction.VillagerCommandHandler;
-import forge.net.mca.ProfessionsMCA;
-import forge.net.mca.entity.EntitiesMCA;
+import forge.net.conczin.mca.entity.EquipmentSet;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.Traits;
+import forge.net.conczin.mca.entity.ai.brain.tasks.EquipmentTask;
+import forge.net.conczin.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.entity.interaction.VillagerCommandHandler;
+import forge.net.conczin.mca.ProfessionsMCA;
+import forge.net.conczin.mca.entity.EntitiesMCA;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.NonNullList;
@@ -800,7 +800,8 @@ public final class McaVampCompatGameTests {
                         == net.minecraft.world.InteractionResult.CONSUME,
                 "The empty-hand MCA interaction gate must reject a Vampire before the merchant helper runs"
         );
-        villager.beginTradeWith(vampire);
+        ((com.guilh.mca_vampirism_compat.mixin.accessor.VillagerTradeAccessor) (Object) villager)
+                .mcaVampCompat$startTrading(vampire);
 
         helper.assertTrue(vampire.containerMenu == vampire.inventoryMenu,
                 "MCA's direct trade entry must not bypass Hunter refusal for a Vampire");
@@ -1141,14 +1142,14 @@ public final class McaVampCompatGameTests {
 
             // This is the same MCA behavior that clears a hand during an equipment refresh.
             EquipmentTask task = new EquipmentTask(ignored -> true, ignored -> EquipmentSet.GUARD_0);
-            Method run = EquipmentTask.class.getDeclaredMethod(
-                    "run",
+            Method start = EquipmentTask.class.getDeclaredMethod(
+                    "start",
                     ServerLevel.class,
                     VillagerEntityMCA.class,
                     long.class
             );
-            run.setAccessible(true);
-            run.invoke(task, helper.getLevel(), villager, helper.getLevel().getGameTime());
+            start.setAccessible(true);
+            start.invoke(task, helper.getLevel(), villager, helper.getLevel().getGameTime());
 
             helper.assertTrue(ItemStack.isSameItemSameTags(
                             villager.getItemInHand(InteractionHand.MAIN_HAND), weapon),
@@ -1244,14 +1245,14 @@ public final class McaVampCompatGameTests {
         ItemStack expectedWeaponAfterRuntimeUpdate = villager.getItemInHand(weaponHand).copy();
         try {
             EquipmentTask task = new EquipmentTask(ignored -> true, ignored -> EquipmentSet.GUARD_0);
-            Method run = EquipmentTask.class.getDeclaredMethod(
-                    "run",
+            Method start = EquipmentTask.class.getDeclaredMethod(
+                    "start",
                     ServerLevel.class,
                     VillagerEntityMCA.class,
                     long.class
             );
-            run.setAccessible(true);
-            run.invoke(task, helper.getLevel(), villager, helper.getLevel().getGameTime());
+            start.setAccessible(true);
+            start.invoke(task, helper.getLevel(), villager, helper.getLevel().getGameTime());
         } catch (ReflectiveOperationException exception) {
             helper.fail("Could not execute the MCA Forge equipment refresh: " + exception);
             return;

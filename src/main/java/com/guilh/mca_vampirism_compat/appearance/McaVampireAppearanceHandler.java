@@ -5,9 +5,9 @@ import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.service.McaVampireCureService;
 import com.guilh.mca_vampirism_compat.util.McaVillagerUtil;
 import com.guilh.mca_vampirism_compat.visual.McaVampireVisualData;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.VillagerLike;
-import forge.net.mca.entity.ai.Genetics;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerLike;
+import forge.net.conczin.mca.entity.ai.Genetics;
 
 public final class McaVampireAppearanceHandler {
     private static final float MELANIN_ONE_TONE_STEP = 0.16F;

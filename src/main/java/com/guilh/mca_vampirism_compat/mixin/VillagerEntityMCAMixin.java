@@ -7,7 +7,7 @@ import com.guilh.mca_vampirism_compat.service.McaNativeWerewolfProtectionService
 import com.guilh.mca_vampirism_compat.service.McaSpecialistProfessionService;
 import com.guilh.mca_vampirism_compat.visual.McaVampireVisualData;
 import com.guilh.mca_vampirism_compat.visual.McaWerewolfVisualData;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.npc.VillagerData;
 import org.spongepowered.asm.mixin.Mixin;

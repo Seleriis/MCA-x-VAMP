@@ -6,7 +6,7 @@ import com.guilh.mca_vampirism_compat.trade.McaFactionTradeSession;
 import com.guilh.mca_vampirism_compat.trade.McaFactionTradeService;
 import com.guilh.mca_vampirism_compat.trade.McaNativeTradeCycleSession;
 import com.guilh.mca_vampirism_compat.trade.MerchantMenuTradeAccess;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.trading.Merchant;

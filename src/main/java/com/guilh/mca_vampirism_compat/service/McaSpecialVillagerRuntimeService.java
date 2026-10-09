@@ -8,7 +8,7 @@ import com.guilh.mca_vampirism_compat.growth.McaVampireGrowthHandler;
 import com.guilh.mca_vampirism_compat.monster.McaSpecialVillagerMonsterIgnoreService;
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import de.teamlapen.vampirism.core.ModEffects;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.effect.MobEffectInstance;
 
 public final class McaSpecialVillagerRuntimeService {

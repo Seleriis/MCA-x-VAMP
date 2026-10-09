@@ -1,6 +1,6 @@
 package com.guilh.mca_vampirism_compat.appearance;
 
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 
 import java.lang.reflect.Method;
 import java.util.Map;

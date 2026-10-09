@@ -8,8 +8,8 @@ import com.guilh.mca_vampirism_compat.service.faction.hunter.McaHunterAggression
 import com.guilh.mca_vampirism_compat.trait.McaTraitBridge;
 import com.guilh.mca_vampirism_compat.util.McaHunterTargetUtil;
 import com.guilh.mca_vampirism_compat.util.VampirismUtil;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;

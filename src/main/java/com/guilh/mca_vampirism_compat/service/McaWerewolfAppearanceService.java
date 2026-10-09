@@ -2,7 +2,7 @@ package com.guilh.mca_vampirism_compat.service;
 
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.visual.McaWerewolfVisualData;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 
 public final class McaWerewolfAppearanceService {
     private McaWerewolfAppearanceService() {

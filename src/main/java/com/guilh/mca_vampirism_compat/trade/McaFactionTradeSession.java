@@ -9,7 +9,7 @@ import com.guilh.mca_vampirism_compat.service.McaHunterTradeService;
 import com.guilh.mca_vampirism_compat.service.McaTradeContextService;
 import com.guilh.mca_vampirism_compat.service.McaVampireStateService;
 import com.guilh.mca_vampirism_compat.service.McaWerewolfTradeService;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MerchantMenu;

@@ -8,7 +8,6 @@
   "mixins": [
     "accessor.TotemBlockEntityAccessor",
     "accessor.VillageAccessor",
-    "accessor.VillagerEntityMCATradeAccessor",
     "accessor.VillagerTradeAccessor",
     "AbstractVillagerTradeMixin",
     "DialoguesMixin",

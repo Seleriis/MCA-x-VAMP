@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.book;
 
-import forge.net.mca.client.book.pages.TextPage;
-import forge.net.mca.client.gui.ExtendedBookScreen;
+import forge.net.conczin.mca.client.book.pages.TextPage;
+import forge.net.conczin.mca.client.gui.ExtendedBookScreen;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;

@@ -1,9 +1,20 @@
 # MCA Reborn x Vampirism Compat
 
-**Current prerelease: 1.2.3 for Minecraft 1.20.1.** See [release notes](RELEASE_NOTES.md), [installation](UPDATE_GUIDE.md) and [validation limits](VALIDATION.md).
+## Código por versão de Minecraft
 
-Branches: [1.20.1 Forge](https://github.com/Seleriis/MCA-x-VAMP/tree/1.20.1-forge) · [1.21.1 NeoForge](https://github.com/Seleriis/MCA-x-VAMP/tree/1.21.1-neoforge). `main` follows the 1.20.1 Forge line.
+A branch `main` acompanha o projeto Forge para Minecraft 1.20.1. Os projetos atuais estão nestas branches:
 
+| Minecraft | Loader | Versão do compat | Código-fonte |
+|---|---|---|---|
+| 1.20.1 | Forge | 1.3.0 | [1.20.1-forge](https://github.com/Seleriis/MCA-x-VAMP/tree/1.20.1-forge) |
+| 1.21.1 | NeoForge | 2.3.0 | [1.21.1-neoforge](https://github.com/Seleriis/MCA-x-VAMP/tree/1.21.1-neoforge) |
+
+
+## 1.3.0 — local test candidate, not published
+
+This source targets MCA Reborn 7.7.1-beta.3 and Vampirism 1.10.17. The Forge build and JUnit suite completed successfully with Java 17: 92 tests, 10 skipped, no failures. The dedicated-server GameTest run passed all 37 required tests with the core MCA/Vampirism profile. Optional integrations were not included in that runtime test. The local package, sources and project archive are in [releases/1.3.0](../releases/1.3.0/).
+
+MCA 7.7.1 changed the Forge Java package and several APIs, so the source migrates MCA imports, mixin targets, trade handling, equipment hooks and trait registration. The older 1.2.3 package is for MCA 7.6.x and cannot be used with MCA 7.7.1; back up worlds before switching MCA versions. This local test candidate has not been published.
 
 Compatibility addon for Minecraft 1.20.1, Java 17 and Forge 47.4.20 that integrates MCA Reborn villagers with Vampirism, Werewolves and Easy Villagers while keeping MCA villagers as real `VillagerEntityMCA` entities.
 
@@ -39,7 +50,7 @@ This mod adds vampire, hunter and werewolf faction behavior to MCA Reborn villag
 
 ## Book of Occult Arts
 
-The non-stackable guide uses MCA's native book screen and contains a title page plus 41 guide pages in Brazilian Portuguese, European Portuguese and English. Each player receives it once after entering an active Vampire-, Hunter- or Werewolf-controlled village. The discovery also reveals its replacement recipe: a normal book, a vampire fang and garlic.
+The non-stackable guide uses MCA's native book screen and contains a title page plus 30 guide pages in Brazilian Portuguese, European Portuguese and English. Each player receives it once after entering an active Vampire-, Hunter- or Werewolf-controlled village. The discovery also reveals its replacement recipe: a normal book, a vampire fang and garlic.
 
 Automatic delivery can be disabled without disabling the item or recipe:
 
@@ -227,7 +238,7 @@ MCA villagers converted to Vampires use Vampirism's native one-in-three special-
 
 `mcaVillageEffectsFollowMcaBounds=true` makes vampire fog and compat-owned special-village effects use the complete editable MCA village footprint when the faction totem is inside that village; there is no artificial horizontal size cap. `mcaVillageFogBorderMarginBlocks=4` keeps Vampire fog four blocks beyond that border while Hunter control, Occult Arts discovery and the outline stay on the exact MCA area. Capture, raids, POIs and spawning remain controlled by Vampirism's own village area.
 
-`enableOccultVillageMissions=true` lets an eligible adult MCA resident in an active special village offer a favor through MCA's normal conversation menu. Choose **Need any help?** to hear the request, then accept it in that same conversation; the deadline begins only after acceptance. Speak with the same resident again to check progress or give up the favor. There are no automatic chat invitations or player mission commands. A player has one request per village totem during `occultVillageMissionCooldownTicks` (24,000 ticks by default); canceled and expired requests begin the normal cooldown without a reward. The Missions section of the Book of Occult Arts lists accepted requests and lets the player choose which resident to outline. Successful help awards the reward recorded on the request (3, 5 or 8 hearts by default) only with the resident who asked; old requests retain five hearts. Hunter villages can instead let an infected human resident ask directly for confirmed milk treatment. Missions are never created for enemies, do not affect trade or capture, and are stored separately from villager data. Supply quantities are chosen once per request and remain fixed: Crimson Reserve requests 2–4 full Vampirism Blood Bottles (`vampirism:blood_bottle`) from anywhere in the inventory, while Garlic and Raw Mutton requests use 4–10 items.
+`enableOccultVillageMissions=true` lets an eligible adult MCA resident in an active special village offer a favor through MCA's normal conversation menu. Choose **Could you use a hand?** to hear the request, then accept it in that same conversation; the deadline begins only after acceptance. Speak with the same resident again to check progress or give up the favor. There are no automatic chat invitations or player mission commands. A player has one request per village totem during `occultVillageMissionCooldownTicks` (24,000 ticks by default); canceled and expired requests begin the normal cooldown without a reward. The Missions section of the Book of Occult Arts lists accepted requests and lets the player choose which resident to outline. Successful help awards the reward recorded on the request (3, 5 or 8 hearts by default) only with the resident who asked; old requests retain five hearts. Hunter villages can instead let an infected human resident ask directly for confirmed milk treatment. Missions are never created for enemies, do not affect trade or capture, and are stored separately from villager data. Supply quantities are chosen once per request and remain fixed: Crimson Reserve requests 2–4 full Vampirism Blood Bottles (`vampirism:blood_bottle`) from anywhere in the inventory, while Garlic and Raw Mutton requests use 4–10 items.
 
 ## Administrative Commands
 
@@ -251,8 +262,8 @@ The current Forge 1.20.1 release omits settings that have no active implementati
 - Minecraft 1.20.1
 - Forge 47.4.20
 - Java 17
-- MCA Reborn 7.6.16+1.20.1 or 7.6.28-beta.10+1.20.1
-- Vampirism 1.20.1-1.10.15 or 1.20.1-1.10.16
+- MCA Reborn 7.7.1-beta.3+1.20.1 (source target; not runtime-tested yet)
+- Vampirism 1.20.1-1.10.17 (source target; not runtime-tested yet)
 
 Optional:
 
@@ -269,7 +280,7 @@ Optional:
 - MCA trait ids still use the legacy `vampirism_mca_compat` namespace to preserve existing villager data.
 - The public mod id is `mca_vamp_compat`.
 - Release versioning is platform-specific: `1.x` is Forge 1.20.1; `2.x` belongs to Minecraft 1.21.1 / NeoForge.
-- The final jar name is `mca-vamp-compat-1.20.1-1.2.3.jar`.
+- The source target jar name is `mca-vamp-compat-1.20.1-1.3.0.jar`; it has not been generated.
 
 ## Arts Occultes Progress
 
@@ -309,10 +320,8 @@ O mod adiciona trocas e interações sociais por facção, cura, herança, permi
 
 This repository does not version third-party mod jars. Before building, create a local `local-mods/` folder in the project root and stage these 1.20.1 development dependencies from their official project pages:
 
-- `Vampirism-1.20.1-1.10.15.jar` and `Vampirism-1.20.1-1.10.16.jar`
-- `minecraft-comes-alive-7.6.16+1.20.1-universal.jar` and
-  `minecraft-comes-alive-7.6.28-beta.10+1.20.1-universal.jar`
-- `architectury-9.2.14-forge.jar` (required by MCA Reborn)
+- `Vampirism-1.20.1-1.10.17.jar`
+- `minecraft-comes-alive-7.7.1-beta.3+1.20.1-universal.jar`
 - `Werewolves-1.20.1-2.0.2.7.jar`
 - `easy-villagers-forge-1.20.1-1.1.39.jar` (the compatibility tests also cover 1.1.23)
 - `mca-ev-compat-1.20.1-1.1.0.jar`
@@ -340,7 +349,7 @@ gradlew.bat runGameTests -PcompatProfile=extended
 Run the additional installed-version matrix explicitly:
 
 ```bat
-gradlew.bat test runGameTests -PcompatProfile=base -Pmca_file_version=7.6.28-beta.10+1.20.1-universal -Pvampirism_file_version=1.20.1-1.10.16
+gradlew.bat test runGameTests -PcompatProfile=base -Pmca_file_version=7.7.1-beta.3+1.20.1-universal -Pvampirism_file_version=1.20.1-1.10.17
 ```
 
 The supported Easy Villagers range is checked both at 1.1.23 and 1.1.39. The
@@ -351,13 +360,13 @@ regular optional integrations.
 The distributable jar is generated at:
 
 ```text
-build/libs/mca-vamp-compat-1.20.1-1.2.3.jar
+build/libs/mca-vamp-compat-1.20.1-1.3.0.jar
 ```
 
 The complete release bundle, including sources, notes and SHA-256 hashes, is generated at:
 
 ```text
-build/release/mca-vamp-compat-1.20.1-1.2.3/
+build/release/mca-vamp-compat-1.20.1-1.3.0/
 ```
 
 ## Release Notes
@@ -369,16 +378,16 @@ the repository root.
 
 ## Runtime Marker
 
-Current implementation marker:
+Expected marker for the unbuilt 1.3.0 source target:
 
 ```text
-BUILD_MARKER = 1.2.3-forge-1.20.1-mca-7.6.16+7.6.28-beta.10-vampirism-1.10.15+1.10.16
+BUILD_MARKER = 1.3.0-forge-1.20.1-mca-7.7.1-beta.3-vampirism-1.10.17
 ```
 
 The log should show:
 
 ```text
-[MCA Reborn x Vampirism Compat] BUILD_MARKER = 1.2.3-forge-1.20.1-mca-7.6.16+7.6.28-beta.10-vampirism-1.10.15+1.10.16
+[MCA Reborn x Vampirism Compat] BUILD_MARKER = 1.3.0-forge-1.20.1-mca-7.7.1-beta.3-vampirism-1.10.17
 ```
 
 ## Feedback and Bug Reports

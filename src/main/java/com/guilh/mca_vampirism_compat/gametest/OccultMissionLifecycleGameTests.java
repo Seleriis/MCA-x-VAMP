@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.mission;
 
-import forge.net.mca.entity.EntitiesMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.entity.EntitiesMCA;
+import forge.net.conczin.mca.entity.ai.relationship.AgeState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.*;
 import net.minecraft.nbt.CompoundTag;

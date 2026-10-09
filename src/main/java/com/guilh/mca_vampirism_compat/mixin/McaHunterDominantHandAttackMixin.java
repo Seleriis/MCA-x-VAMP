@@ -1,7 +1,7 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.service.McaDefensiveVillagerService;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,7 +20,7 @@ public abstract class McaHunterDominantHandAttackMixin {
             method = "m_7327_",
             at = @At(
                     value = "INVOKE",
-                    target = "Lforge/net/mca/entity/VillagerEntityMCA;m_21205_()Lnet/minecraft/world/item/ItemStack;"
+                    target = "Lforge/net/conczin/mca/entity/VillagerEntityMCA;m_21205_()Lnet/minecraft/world/item/ItemStack;"
             ),
             // MCA 7.6.28 delegates this method to Mob instead of keeping its
             // own attack body. Keep the legacy hook optional so that API

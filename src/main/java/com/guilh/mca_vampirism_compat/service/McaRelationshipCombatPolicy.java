@@ -1,11 +1,11 @@
 package com.guilh.mca_vampirism_compat.service;
 import com.guilh.mca_vampirism_compat.capability.ModCapabilities;
 import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
-import forge.net.mca.Config;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.relationship.AgeState;
-import forge.net.mca.server.world.data.FamilyTree;
-import forge.net.mca.server.world.data.FamilyTreeNode;
+import forge.net.conczin.mca.Config;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.relationship.AgeState;
+import forge.net.conczin.mca.server.world.data.FamilyTree;
+import forge.net.conczin.mca.server.world.data.FamilyTreeNode;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;

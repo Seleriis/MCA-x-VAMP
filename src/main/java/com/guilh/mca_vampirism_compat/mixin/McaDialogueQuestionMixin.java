@@ -1,8 +1,8 @@
 package com.guilh.mca_vampirism_compat.mixin;
 
 import com.guilh.mca_vampirism_compat.mission.OccultVillageMissionService;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.resources.data.dialogue.Question;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.resources.data.dialogue.Question;
 import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

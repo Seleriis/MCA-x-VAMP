@@ -5,9 +5,9 @@ import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.faction.PlayerFactionContext;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
-import forge.net.mca.entity.VillagerEntityMCA;
-import forge.net.mca.entity.ai.Chore;
-import forge.net.mca.entity.ai.MoveState;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.ai.Chore;
+import forge.net.conczin.mca.entity.ai.MoveState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 

@@ -10,7 +10,7 @@ import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerClassifier;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerType;
 import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
-import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;

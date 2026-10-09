@@ -1,8 +1,8 @@
 package com.guilh.mca_vampirism_compat.book;
 
 import com.guilh.mca_vampirism_compat.McaVampirismCompat;
-import forge.net.mca.client.book.Book;
-import forge.net.mca.client.book.pages.CenteredTextPage;
+import forge.net.conczin.mca.client.book.Book;
+import forge.net.conczin.mca.client.book.pages.CenteredTextPage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
