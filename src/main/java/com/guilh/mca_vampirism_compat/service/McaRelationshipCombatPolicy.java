@@ -21,7 +21,8 @@ public final class McaRelationshipCombatPolicy {
         return direct(a,b.id()) || direct(b,a.id()) || shared(a.father(),b.father()) || shared(a.father(),b.mother())
                 || shared(a.mother(),b.father()) || shared(a.mother(),b.mother());
     }
-    private static boolean shared(UUID a, UUID b) { return a!=null && a.equals(b) && !a.equals(new UUID(0L,0L)); }
+    private static final UUID EMPTY_ID = new UUID(0L,0L);
+    private static boolean shared(UUID a, UUID b) { return a!=null && a.equals(b) && !a.equals(EMPTY_ID); }
     private static boolean direct(FamilyLink node, UUID target) {
         return node.married() && shared(node.partner(),target) || shared(node.father(),target)
                 || shared(node.mother(),target) || node.children().contains(target);

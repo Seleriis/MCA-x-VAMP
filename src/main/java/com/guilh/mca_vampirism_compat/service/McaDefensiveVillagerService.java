@@ -198,6 +198,14 @@ public final class McaDefensiveVillagerService {
                 || McaWerewolfStateService.isWerewolf(villager)) {
             return false;
         }
+        return hasActiveDefensiveMode(villager);
+    }
+
+    /**
+     * The defensive-mode check of {@link #isDefensiveVillager} once Vampire and
+     * Werewolf exclusions have already been ruled out by the caller.
+     */
+    static boolean hasActiveDefensiveMode(VillagerEntityMCA villager) {
         return ModCapabilities.get(villager)
                 .map(state -> state.isDefensiveMode()
                         && McaHunterAggressionPolicy.canEnterDefensiveAggressiveMode(
