@@ -1,8 +1,24 @@
-## Validação e limites
+# Validação — MCA × Vamp 2.3.1 (atualizado em 28/10/2026)
 
-O build desta versão passou, com 93 testes JUnit aprovados, 1 ignorados e nenhuma falha ou erro. JAR auditado quanto a versão, Java alvo, recursos/fontes e ausência do capturador de testes.
-O cliente concluiu 177 capturas nesta linha: todas as páginas do guia nos três idiomas e cenários do diário nas escalas 1, 2 e 4. Nenhum texto de página ultrapassou sua área. As missões da captura usam dados fictícios; não equivalem a conversar com um NPC em um mundo conectado.
+## Combinação utilizada
 
-Antes de classificar como estável, falta a rodada final de missões em mundo real, persistência após reinício/descarregamento e servidor dedicado com os JARs finais e as combinações anunciadas. A matriz anterior e os GameTests históricos não foram integralmente repetidos nesta revisão.
+MCA 7.7.36-beta.3+1.21.1; Vampirism 1.10.13; Easy Villagers 1.21.1-1.1.42; MCA × EV 2.2.7; Werewolves 2.0.3.3; Bloodlines 3.0.9; NeoForge 21.1.234; Java 21.
 
-Os arquivos `-sources.jar` e `-project.zip` contêm fontes; instale somente o JAR principal na pasta `mods`. Dependências de terceiros e mundos de teste não são redistribuídos. `SHA256SUMS.txt` permite conferir os downloads.
+## Resultados
+
+- Build e compilação dos GameTests concluídos em 27/10/2026.
+- JUnit em 27/10/2026: 97 encontrados e aprovados, 0 falhas, erros ou testes ignorados. Os três testes de contrato do MCA × EV passaram.
+- GameTests: 32 obrigatórios aprovados no perfil all em 28/10/2026.
+- Inicialização de produção em 28/10/2026 com o JAR entregue: aprovada, com mensagem Done.
+- Criação de morador MCA, inspect, resync e save-all flush: aprovados no servidor de produção.
+- Encerramento normal por stop: código 0.
+
+As execuções de 28/10 utilizaram os JARs de distribuição, sem alteração de código nesta rodada.
+
+## Evidências e limites
+
+Evidências em 1.21.1/testing/2.3.1/2026-10-28/. Resultados anteriores de JUnit em testing/2.3.1/build/test-results/test; hashes de dependências em testing/2.3.1/dependencies.json. O [relatório conjunto](RELATORIO_TESTES_2026-10-28.md) acompanha o código e o pré-lançamento. Os logs completos foram preservados no workspace local.
+
+Não houve erro de nível ERROR/FATAL ou erro de ligação pesquisado nos logs de runtime revisados. Há avisos das bibliotecas e dos mods opcionais, registrados no relatório. Essa validação cobre as combinações acima; não repete toda a matriz histórica.
+
+Aparência, interface e FPS em cliente gráfico continuam na lista TESTES_MANUAIS.md. Nenhum mundo pessoal foi usado.

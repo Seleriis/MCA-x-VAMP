@@ -394,10 +394,13 @@ public final class McaSpecialVillagerCombatService {
     }
 
     private static boolean isValidTargetFor(McaSpecialVillagerType type, VillagerEntityMCA villager, LivingEntity target) {
-        if (McaRelationshipCombatPolicy.blocksAutomaticAttack(villager,target)) return false;
         if (target == null || target == villager || !target.isAlive()) {
             return false;
         }
+        // The family-tree lookup is the costliest check here; only run it for
+        // live candidates. Both checks reject, so the order does not change
+        // the result.
+        if (McaRelationshipCombatPolicy.blocksAutomaticAttack(villager,target)) return false;
         if (McaSpecialVillagerMonsterIgnoreService.isHostileMonster(target)) {
             return McaGuardMonsterDefenseService.canSpecialGuardTarget(villager, target);
         }

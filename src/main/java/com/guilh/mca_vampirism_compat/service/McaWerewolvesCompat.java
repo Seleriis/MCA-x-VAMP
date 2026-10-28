@@ -12,12 +12,25 @@ import net.neoforged.fml.ModList;
 public final class McaWerewolvesCompat {
     public static final String MOD_ID = "werewolves";
 
+    // NeoForge's mod list is fixed after startup; cache only a completed lookup.
+    private static volatile Boolean available;
+
     private McaWerewolvesCompat() {
     }
 
     public static boolean isAvailable() {
+        Boolean cached = available;
+        if (cached != null) {
+            return cached;
+        }
         try {
-            return ModList.get().isLoaded(MOD_ID);
+            ModList modList = ModList.get();
+            if (modList == null) {
+                return false;
+            }
+            boolean loaded = modList.isLoaded(MOD_ID);
+            available = loaded;
+            return loaded;
         } catch (RuntimeException ignored) {
             // Pure unit tests do not construct NeoForge's ModList. Treat that
             // environment exactly like an optional addon that is absent.

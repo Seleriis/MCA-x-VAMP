@@ -25,8 +25,8 @@ import org.slf4j.Logger;
 public class McaVampirismCompat {
     public static final String MOD_ID = "mca_vamp_compat";
     public static final String LEGACY_DATA_NAMESPACE = "mca_vampirism_compat";
-    public static final String VERSION = "2.3.0";
-    public static final String BUILD_MARKER = "2.3.0-neoforge-1.21.1-mca-7.7.36-vampirism-1.10.13";
+    public static final String VERSION = "2.3.1";
+    public static final String BUILD_MARKER = "2.3.1-neoforge-1.21.1-mca-7.7.36-beta.3-vampirism-1.10.13-mcaev-2.2.7";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public McaVampirismCompat(IEventBus modBus, ModContainer modContainer) {

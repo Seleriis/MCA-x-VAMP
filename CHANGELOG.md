@@ -1,3 +1,13 @@
+## 2.3.1 — atualização de compatibilidade (2026-10-27)
+
+- Pré-lançamento no GitHub: v2.3.1-1.21.1.
+- Validação adicional em 28/10/2026: inicialização com JAR de produção, comandos básicos, salvamento e encerramento normal aprovados; detalhes em VALIDATION.md.
+- Atualiza as dependências de compilação e validação para MCA Reborn 7.7.36-beta.3, Vampirism 1.10.13 e MCA × EV 2.2.7.
+- Acrescenta verificação dos contratos de captura, restauração, colocação e reprodução do MCA × EV, incluindo os pontos usados para preservar os estados de facção.
+- Mantém as otimizações locais existentes e os formatos salvos.
+- Permite escolher uma saída de compilação nova com compat_build_dir, evitando artefatos antigos bloqueados pelo OneDrive.
+- Resultado dos testes e limitações registrados em VALIDATION.md; pacote em releases/2.3.1/.
+
 ## 2.3.0 — candidato local para testes (2026-09-28; não publicado)
 
 - Atualiza a dependência mínima de Vampirism para 1.10.13; MCA Reborn permanece em 7.7.36-beta.3+1.21.1, a versão atual da linha 1.21.1.

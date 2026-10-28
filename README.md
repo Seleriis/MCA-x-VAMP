@@ -1,12 +1,12 @@
 # MCA Reborn x Vampirism Compat
 
-## 2.3.0 — local test candidate, not published
+## 2.3.1 — GitHub pre-release
 
-The source targets MCA Reborn 7.7.36-beta.3 and Vampirism 1.10.13. The NeoForge build and JUnit suite completed successfully with Java 21: 94 tests, 3 skipped, no failures. The dedicated-server GameTest run passed all 32 required tests with the core MCA/Vampirism profile. Optional integrations were not included in that runtime test. The local package, sources and project archive are in [releases/2.3.0](../releases/2.3.0/).
-
-MCA is already at the latest listed 1.21.1 build; this update advances Vampirism from 1.10.12 to 1.10.13. The previous local package remains 2.2.3. This test candidate has not been published.
+Targets MCA Reborn 7.7.36-beta.3, Vampirism 1.10.13 and MCA x Easy Villagers 2.2.7. MCA remains on the latest available 1.21.1 build. See VALIDATION.md for the results and [the GitHub pre-release](https://github.com/Seleriis/MCA-x-VAMP/releases/tag/v2.3.1-1.21.1) for the package.
 
 Compatibility addon for Minecraft 1.21.1, Java 21 and NeoForge 21.1.234+ that integrates MCA Reborn villagers with Vampirism, Werewolves and Easy Villagers while keeping MCA villagers as real `VillagerEntityMCA` entities.
+
+Automated server validation is recorded in VALIDATION.md. Client appearance, interface and FPS checks remain in TESTES_MANUAIS.md.
 
 ## Overview
 
@@ -254,14 +254,14 @@ Version 2.0.9 removed settings that had no active implementation, including the 
 - NeoForge 21.1.234+
 - Java 21
 - MCA Reborn 7.7.36-beta.3+1.21.1 (exact required version)
-- Vampirism 1.21-1.10.13 (source target; not runtime-tested yet)
+- Vampirism 1.21-1.10.13
 
 Optional:
 
 - Werewolves
 - Vampirism Integrations, optional; if installed, its MCA blood values are used. If it is absent, this mod provides a safe runtime fallback for MCA villager blood.
 - Easy Villagers
-- mca-ev-compat, recommended when Easy Villagers is installed
+- mca-ev-compat 2.2.7, the reference companion when Easy Villagers is installed
 - VampiricAgeing
 - GodlyVampirism
 
@@ -270,7 +270,7 @@ Optional:
 - Java packages still use the historical internal package name `com.guilh.mca_vampirism_compat`; this is internal and not the public mod id.
 - MCA trait ids still use the legacy `vampirism_mca_compat` namespace to preserve existing villager data.
 - The public mod id is `mca_vamp_compat`.
-- The source target jar name is `mca-vamp-compat-1.21.1-2.3.0.jar`; it has not been generated.
+- The source target jar name is `mca-vamp-compat-1.21.1-2.3.1.jar`.
 
 ## Arts Occultes Progress
 
@@ -314,7 +314,7 @@ This repository does not version third-party mod jars. Before building, create a
 - `mca-neoforge-7.7.36-beta.3+1.21.1.jar`
 - `Werewolves-1.21-2.0.3.3.jar`
 - `easy-villagers-neoforge-1.21.1-1.1.42.jar`
-- `mca-ev-compat-1.21.1-2.2.0.jar`
+- `mca-ev-compat-1.21.1-2.2.7.jar`
 - `bloodlines-1.21-3.0.9.jar` (only for the `bloodlines` or `all` validation profile; 1.21-2.0.7 remains runtime-compatible)
 
 Werewolves, Easy Villagers and mca-ev-compat remain optional at runtime, but their development jars are needed to compile and test the optional compatibility hooks. The `local-mods/` folder, generated JARs and local test worlds are intentionally ignored by Git.
@@ -341,20 +341,22 @@ gradlew.bat test runGameTests -PcompatProfile=bloodlines -Pbloodlines_version=1.
 ```
 
 The default `all` profile validates Bloodlines 3.0.9 together with Easy
-Villagers 1.1.42, MCA x Easy Villagers Compat 2.2.0 and Werewolves 2.0.3.3;
+Villagers 1.1.42, MCA x Easy Villagers Compat 2.2.7 and Werewolves 2.0.3.3;
 the final command verifies the supported Bloodlines 2.0.7 minimum separately.
 
 The distributable jar is generated at:
 
 ```text
-build/libs/mca-vamp-compat-1.21.1-2.3.0.jar
+build/libs/mca-vamp-compat-1.21.1-2.3.1.jar
 ```
 
 The complete release bundle, including sources, notes and SHA-256 hashes, is generated at:
 
 ```text
-build/release/mca-vamp-compat-1.21.1-2.3.0/
+build/release/mca-vamp-compat-1.21.1-2.3.1/
 ```
+
+A fresh build directory can be selected with -Pcompat_build_dir=<path>; -Prun_dir=<path> selects a fresh runtime directory. The current validation uses ../testing/2.3.1/.
 
 ## Release Notes
 
@@ -365,16 +367,16 @@ the repository root.
 
 ## Runtime Marker
 
-Expected marker for the unbuilt 2.3.0 source target:
+Build marker:
 
 ```text
-BUILD_MARKER = 2.3.0-neoforge-1.21.1-mca-7.7.36-vampirism-1.10.13
+BUILD_MARKER = 2.3.1-neoforge-1.21.1-mca-7.7.36-beta.3-vampirism-1.10.13-mcaev-2.2.7
 ```
 
 The log should show:
 
 ```text
-[MCA Reborn x Vampirism Compat] BUILD_MARKER = 2.3.0-neoforge-1.21.1-mca-7.7.36-vampirism-1.10.13
+[MCA Reborn x Vampirism Compat] BUILD_MARKER = 2.3.1-neoforge-1.21.1-mca-7.7.36-beta.3-vampirism-1.10.13-mcaev-2.2.7
 ```
 
 ## Feedback and Bug Reports

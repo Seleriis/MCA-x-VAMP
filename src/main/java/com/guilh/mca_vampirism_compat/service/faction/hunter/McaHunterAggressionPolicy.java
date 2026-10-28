@@ -115,6 +115,11 @@ public final class McaHunterAggressionPolicy {
     }
 
     private static void logDecision(String action, VillagerEntityMCA villager, HunterSource source, String denyReason) {
+        // Reached from faction classification on every tick; build the
+        // throttle key only when the debug log would actually be written.
+        if (!McaVampirismCompatConfig.enableDebugLogs()) {
+            return;
+        }
         if (villager != null) {
             long gameTime = villager.level().getGameTime();
             String key = action + "|" + source + "|" + villager.getUUID() + "|" + denyReason;

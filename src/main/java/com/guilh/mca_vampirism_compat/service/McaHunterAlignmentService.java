@@ -23,6 +23,14 @@ public final class McaHunterAlignmentService {
                 && McaVampirismCompatConfig.werewolfVillagersImmuneToHunterConversion())) {
             return false;
         }
+        return hasHunterSource(villager);
+    }
+
+    /**
+     * The Hunter evidence checked by {@link #isHunterAligned} once Vampire and
+     * Werewolf exclusions have already been ruled out by the caller.
+     */
+    static boolean hasHunterSource(VillagerEntityMCA villager) {
         return hasHunterTrait(villager) || isVillageHunter(villager) || isDefensiveHunter(villager);
     }
 

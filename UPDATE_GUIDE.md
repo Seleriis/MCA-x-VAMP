@@ -1,11 +1,13 @@
 # Atualização — MCA × EV e MCA × Vamp
 
+Combinações de referência desta atualização: MCA × EV 1.1.9 na 1.20.1 e 2.2.7 na 1.21.1. Resultados atuais em VALIDATION.md.
+
 | Minecraft | Plataforma / Java | Pacote MCA × Vamp local | Alvo das fontes MCA × Vamp |
 |---|---|---:|---|
-| 1.20.1 | Forge / Java 17 | 1.3.0 (MCA 7.7.1-beta.3; Vampirism 1.10.17) | 1.3.0 (testado localmente; não publicado) |
-| 1.21.1 | NeoForge / Java 21 | 2.3.0 (MCA 7.7.36-beta.3; Vampirism 1.10.13) | 2.3.0 (testado localmente; não publicado) |
+| 1.20.1 | Forge / Java 17 | 1.3.1 (MCA 7.7.1-beta.5; Vampirism 1.10.17) | 1.3.1 (pré-lançamento no GitHub) |
+| 1.21.1 | NeoForge / Java 21 | 2.3.1 (MCA 7.7.36-beta.3; Vampirism 1.10.13) | 2.3.1 (pré-lançamento no GitHub) |
 
-Os pacotes 1.3.0 e 2.3.0 foram compilados e testados localmente; ainda não foram publicados. Na 1.20.1, MCA 7.7.1 é incompatível com o JAR antigo 1.2.3; faça backup do mundo antes de trocar a versão do MCA.
+Os pacotes 1.3.1 e 2.3.1 estão disponíveis como pré-lançamentos no GitHub. O registro dos testes já realizados está em VALIDATION.md; as próximas verificações serão feitas pelo usuário com TESTES_MANUAIS.md. Na 1.20.1, MCA 7.7.1 é incompatível com o JAR antigo 1.2.3; faça backup do mundo antes de trocar a versão do MCA.
 
 1. Encerre o jogo e o servidor. Guarde uma cópia do mundo e das configurações antes da atualização.
 2. Substitua o JAR anterior de cada addon pela versão correspondente ao Minecraft e ao loader utilizados. Mantenha apenas uma versão de cada addon na pasta `mods`.

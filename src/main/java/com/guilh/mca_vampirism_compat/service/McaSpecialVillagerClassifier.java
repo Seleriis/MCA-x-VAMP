@@ -25,10 +25,13 @@ public final class McaSpecialVillagerClassifier {
         if (McaWerewolfStateService.isWerewolf(villager)) {
             return McaSpecialVillagerType.WEREWOLF;
         }
-        if (McaHunterAlignmentService.isMcaHunterVillager(villager)) {
+        // Vampire and Werewolf are already ruled out above, so skip the public
+        // wrappers that would repeat both lookups. classify runs several times
+        // per special villager per tick.
+        if (McaHunterAlignmentService.hasHunterSource(villager)) {
             return McaSpecialVillagerType.HUNTER;
         }
-        if (McaDefensiveVillagerService.isDefensiveVillager(villager)) {
+        if (McaDefensiveVillagerService.hasActiveDefensiveMode(villager)) {
             return McaSpecialVillagerType.DEFENSIVE;
         }
         if (villager.getAgeState() != AgeState.ADULT) {

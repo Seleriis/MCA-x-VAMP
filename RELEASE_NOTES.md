@@ -1,7 +1,13 @@
-# MCA × Vamp 2.3.0 — pacote local para teste
+# MCA × Vamp 2.3.1 — Minecraft 1.21.1
 
-Compatibilidade alvo: Minecraft 1.21.1, NeoForge 21.1.234, Java 21, MCA Reborn 7.7.36-beta.3 e Vampirism 1.10.13.
+Combinação de referência: MCA Reborn 7.7.36-beta.3, Vampirism 1.10.13 e MCA × EV 2.2.7.
 
-Build NeoForge, 94 testes unitários (3 ignorados) e 32 GameTests obrigatórios passaram no perfil base MCA/Vampirism. As integrações opcionais não foram incluídas na execução de servidor. Este pacote está pronto para revisão local e não foi publicado.
+A atualização recompila o addon com as dependências atuais e verifica os pontos de integração que preservam captura, restauração e herança de facção nos blocos do Easy Villagers. Os dados salvos e as otimizações existentes são mantidos.
 
-Consulte [CHANGELOG.md](CHANGELOG.md) e [UPDATE_GUIDE.md](UPDATE_GUIDE.md) antes de testar.
+Instale apenas um JAR do MCA × Vamp para a sua versão de Minecraft. Na 1.20.1, use MCA 7.7.1-beta.5; na 1.21.1, use MCA 7.7.36-beta.3. Consulte VALIDATION.md para os testes executados nesta entrega.
+
+Pré-lançamento no GitHub: [v2.3.1-1.21.1](https://github.com/Seleriis/MCA-x-VAMP/releases/tag/v2.3.1-1.21.1).
+
+O pacote é candidato para seus testes manuais. Consulte TESTES_MANUAIS.md e o registro das verificações anteriores em VALIDATION.md.
+
+Validação de 28/10/2026: inicialização de produção e comandos básicos aprovados. Os 32 GameTests do perfil all passaram. A validação visual e de FPS permanece manual.

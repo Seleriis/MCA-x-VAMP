@@ -126,7 +126,7 @@ public final class McaHunterBloodService {
     }
 
     private static void logBlockedInfection(LivingEntity target) {
-        if (target == null) {
+        if (target == null || !McaVampirismCompatConfig.enableDebugLogs()) {
             return;
         }
         long gameTime = target.level().getGameTime();

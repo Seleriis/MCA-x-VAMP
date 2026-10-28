@@ -10,6 +10,10 @@ base {
     archivesName = "mca-vamp-compat-${minecraft_version}"
 }
 
+if (findProperty('compat_build_dir')) {
+    layout.buildDirectory.set(file(findProperty('compat_build_dir')))
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -57,11 +61,11 @@ neoForge {
             systemProperty 'mca.visualOutput', file(findProperty('visualOutput') ?: '../.implementation/visual/mca-vamp-compat').absolutePath
             programArguments.addAll('--width', '1280', '--height', '960')
             client()
-            gameDirectory = project.file("run/client-${compatProfile}")
+            gameDirectory = project.file(findProperty('run_dir') ?: "run/client-${compatProfile}")
         }
         server {
             server()
-            gameDirectory = project.file("run/server-${compatProfile}")
+            gameDirectory = project.file(findProperty('run_dir') ?: "run/server-${compatProfile}")
             programArgument '--nogui'
         }
         gameTestServer {
@@ -69,7 +73,7 @@ neoForge {
             systemProperty 'mca.shelterCandidate', (findProperty('shelterCandidate') ?: 'false').toString()
             systemProperty 'mca.shelterOutput', file(findProperty('shelterOutput') ?: '../.implementation/shelter/mca-vamp-compat.csv').absolutePath
             type = 'gameTestServer'
-            gameDirectory = project.file("run/gametest-${compatProfile}")
+            gameDirectory = project.file(findProperty('run_dir') ?: "run/gametest-${compatProfile}")
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
         }
     }
@@ -112,6 +116,7 @@ tasks.named('sourcesJar') {
 
 tasks.named('test', Test) {
     useJUnitPlatform()
+    systemProperty 'mca.compat.requireMcaEvApi', (compatProfile in ['both', 'all']).toString()
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -155,6 +160,12 @@ jar {
     }
 }
 
+tasks.register('runGameTests') {
+    group = 'verification'
+    description = "Runs NeoForge GameTests for compatProfile=${compatProfile}."
+    dependsOn 'runGameTestServer'
+}
+
 def releaseDirectory = layout.buildDirectory.dir(
         "release/mca-vamp-compat-${minecraft_version}-${project.version}"
 )
@@ -171,6 +182,8 @@ tasks.register('releaseBundle', Sync) {
     from('CHANGELOG.md')
     from('RELEASE_NOTES.md')
     from('CURSEFORGE_DESCRIPTION.md')
+    from('UPDATE_GUIDE.md')
+    from('VALIDATION.md')
 
     doLast {
         File outputDirectory = releaseDirectory.get().asFile
