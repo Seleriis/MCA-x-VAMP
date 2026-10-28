@@ -6,17 +6,17 @@ A branch `main` acompanha o projeto Forge para Minecraft 1.20.1. Os projetos atu
 
 | Minecraft | Loader | Versão do compat | Código-fonte |
 |---|---|---|---|
-| 1.20.1 | Forge | 1.3.0 | [1.20.1-forge](https://github.com/Seleriis/MCA-x-VAMP/tree/1.20.1-forge) |
-| 1.21.1 | NeoForge | 2.3.0 | [1.21.1-neoforge](https://github.com/Seleriis/MCA-x-VAMP/tree/1.21.1-neoforge) |
+| 1.20.1 | Forge | 1.3.1 | [1.20.1-forge](https://github.com/Seleriis/MCA-x-VAMP/tree/1.20.1-forge) |
+| 1.21.1 | NeoForge | 2.3.1 | [1.21.1-neoforge](https://github.com/Seleriis/MCA-x-VAMP/tree/1.21.1-neoforge) |
 
 
-## 1.3.0 — local test candidate, not published
+## 1.3.1 — GitHub pre-release
 
-This source targets MCA Reborn 7.7.1-beta.3 and Vampirism 1.10.17. The Forge build and JUnit suite completed successfully with Java 17: 92 tests, 10 skipped, no failures. The dedicated-server GameTest run passed all 37 required tests with the core MCA/Vampirism profile. Optional integrations were not included in that runtime test. The local package, sources and project archive are in [releases/1.3.0](../releases/1.3.0/).
-
-MCA 7.7.1 changed the Forge Java package and several APIs, so the source migrates MCA imports, mixin targets, trade handling, equipment hooks and trait registration. The older 1.2.3 package is for MCA 7.6.x and cannot be used with MCA 7.7.1; back up worlds before switching MCA versions. This local test candidate has not been published.
+Targets MCA Reborn 7.7.1-beta.5, Vampirism 1.10.17 and MCA x Easy Villagers 1.1.9. The source and validation configuration use the current Forge artifacts. See VALIDATION.md for the results and [the GitHub pre-release](https://github.com/Seleriis/MCA-x-VAMP/releases/tag/v1.3.1-1.20.1) for the package.
 
 Compatibility addon for Minecraft 1.20.1, Java 17 and Forge 47.4.20 that integrates MCA Reborn villagers with Vampirism, Werewolves and Easy Villagers while keeping MCA villagers as real `VillagerEntityMCA` entities.
+
+Automated server validation is recorded in VALIDATION.md. Client appearance, interface and FPS checks remain in TESTES_MANUAIS.md.
 
 ## Overview
 
@@ -262,15 +262,15 @@ The current Forge 1.20.1 release omits settings that have no active implementati
 - Minecraft 1.20.1
 - Forge 47.4.20
 - Java 17
-- MCA Reborn 7.7.1-beta.3+1.20.1 (source target; not runtime-tested yet)
-- Vampirism 1.20.1-1.10.17 (source target; not runtime-tested yet)
+- MCA Reborn 7.7.1-beta.5+1.20.1
+- Vampirism 1.20.1-1.10.17
 
 Optional:
 
 - Werewolves 1.20.1-2.0.2.7
 - Vampirism Integrations, optional; if installed, its MCA blood values are used. If it is absent, this mod provides a safe runtime fallback for MCA villager blood.
 - Easy Villagers 1.20.1-1.1.23 through 1.20.1-1.1.39
-- mca-ev-compat 1.0.2 or 1.1.0, optional companion for the captured-villager, Trader and Cycle Trades bridge
+- mca-ev-compat 1.1.9 is the reference optional companion for the captured-villager, Trader and Cycle Trades bridge
 - VampiricAgeing
 - GodlyVampirism
 
@@ -280,7 +280,7 @@ Optional:
 - MCA trait ids still use the legacy `vampirism_mca_compat` namespace to preserve existing villager data.
 - The public mod id is `mca_vamp_compat`.
 - Release versioning is platform-specific: `1.x` is Forge 1.20.1; `2.x` belongs to Minecraft 1.21.1 / NeoForge.
-- The source target jar name is `mca-vamp-compat-1.20.1-1.3.0.jar`; it has not been generated.
+- The source target jar name is `mca-vamp-compat-1.20.1-1.3.1.jar`.
 
 ## Arts Occultes Progress
 
@@ -318,17 +318,19 @@ O mod adiciona trocas e interações sociais por facção, cura, herança, permi
 
 ## Build
 
-This repository does not version third-party mod jars. Before building, create a local `local-mods/` folder in the project root and stage these 1.20.1 development dependencies from their official project pages:
+This repository does not version third-party mod jars. Before building, create the folder selected by `local_mods_dir` (`local-mods-validation/` in this snapshot) in the project root and stage these 1.20.1 development dependencies from their official project pages:
 
 - `Vampirism-1.20.1-1.10.17.jar`
-- `minecraft-comes-alive-7.7.1-beta.3+1.20.1-universal.jar`
+- `minecraft-comes-alive-7.7.1-beta.5+1.20.1-universal.jar`
 - `Werewolves-1.20.1-2.0.2.7.jar`
 - `easy-villagers-forge-1.20.1-1.1.39.jar` (the compatibility tests also cover 1.1.23)
-- `mca-ev-compat-1.20.1-1.1.0.jar`
+- `mca-ev-compat-1.20.1-1.1.9.jar`
 - `vampirism_integrations-1.20.1-1.8.2.jar`, `vampiricageing-1.20.1-1.3.26.jar`
   and `GodlyVampirism-1.20.1-1.10.0.jar` (only for the `extended` profile)
 
 Werewolves, Easy Villagers and mca-ev-compat remain optional at runtime, but their development jars are needed to compile and test the optional compatibility hooks. The faction capture/Trader bridge activates only when both Easy Villagers and mca-ev-compat are present; otherwise it degrades to a safe no-op. The 1.20.1 integration deliberately excludes Inventory Viewer support. The `local-mods/` folder, generated JARs and local test worlds are intentionally ignored by Git.
+
+This workspace selects local-mods-validation through local_mods_dir. For Forge userdev GameTests, mca_fixture_dir may select the test-only MCA jar with mapped mixin selectors; the official MCA jar remains the production dependency. These dependencies are never bundled.
 
 From the project root:
 
@@ -349,25 +351,27 @@ gradlew.bat runGameTests -PcompatProfile=extended
 Run the additional installed-version matrix explicitly:
 
 ```bat
-gradlew.bat test runGameTests -PcompatProfile=base -Pmca_file_version=7.7.1-beta.3+1.20.1-universal -Pvampirism_file_version=1.20.1-1.10.17
+gradlew.bat test runGameTests -PcompatProfile=base -Pmca_file_version=7.7.1-beta.5+1.20.1-universal -Pvampirism_file_version=1.20.1-1.10.17
 ```
 
 The supported Easy Villagers range is checked both at 1.1.23 and 1.1.39. The
-`all` profile contains MCA x Easy Villagers Compat 1.1.0; `extended` covers
+`all` profile contains MCA x Easy Villagers Compat 1.1.9; `extended` covers
 Vampirism Integrations, VampiricAgeing and GodlyVampirism in addition to the
 regular optional integrations.
 
 The distributable jar is generated at:
 
 ```text
-build/libs/mca-vamp-compat-1.20.1-1.3.0.jar
+build/libs/mca-vamp-compat-1.20.1-1.3.1.jar
 ```
 
 The complete release bundle, including sources, notes and SHA-256 hashes, is generated at:
 
 ```text
-build/release/mca-vamp-compat-1.20.1-1.3.0/
+build/release/mca-vamp-compat-1.20.1-1.3.1/
 ```
+
+A fresh build directory can be selected with -Pcompat_build_dir=<path>; -Prun_dir=<path> selects a fresh runtime directory. The current validation uses ../testing/1.3.1/.
 
 ## Release Notes
 
@@ -378,16 +382,16 @@ the repository root.
 
 ## Runtime Marker
 
-Expected marker for the unbuilt 1.3.0 source target:
+Build marker:
 
 ```text
-BUILD_MARKER = 1.3.0-forge-1.20.1-mca-7.7.1-beta.3-vampirism-1.10.17
+BUILD_MARKER = 1.3.1-forge-1.20.1-mca-7.7.1-beta.5-vampirism-1.10.17-mcaev-1.1.9
 ```
 
 The log should show:
 
 ```text
-[MCA Reborn x Vampirism Compat] BUILD_MARKER = 1.3.0-forge-1.20.1-mca-7.7.1-beta.3-vampirism-1.10.17
+[MCA Reborn x Vampirism Compat] BUILD_MARKER = 1.3.1-forge-1.20.1-mca-7.7.1-beta.5-vampirism-1.10.17-mcaev-1.1.9
 ```
 
 ## Feedback and Bug Reports

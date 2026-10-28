@@ -1,3 +1,13 @@
+## 1.3.1 — atualização de compatibilidade (2026-10-27)
+
+- Pré-lançamento no GitHub: v1.3.1-1.20.1.
+- Validação adicional em 28/10/2026: inicialização com JAR de produção, comandos básicos, salvamento e encerramento normal aprovados; detalhes em VALIDATION.md.
+- Atualiza as dependências de compilação e validação para MCA Reborn 7.7.1-beta.5, Vampirism 1.10.17 e MCA × EV 1.1.9.
+- Acrescenta verificação dos contratos de captura, restauração, colocação e reprodução do MCA × EV, incluindo os pontos usados para preservar os estados de facção.
+- Mantém as otimizações locais existentes e os formatos salvos.
+- Permite escolher uma saída de compilação nova com compat_build_dir, evitando artefatos antigos bloqueados pelo OneDrive.
+- Resultado dos testes e limitações registrados em VALIDATION.md; pacote em releases/1.3.1/.
+
 ## 1.3.0 — candidato local para testes (2026-09-28; não publicado)
 
 - Atualiza o alvo Forge para MCA Reborn 7.7.1-beta.3 e Vampirism 1.10.17.

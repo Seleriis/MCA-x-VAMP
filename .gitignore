@@ -20,7 +20,7 @@ crash-reports/
 .project
 
 # Local mod jars and investigation artifacts
-local-mods/
+local-mods*/
 reobf-libs/
 cp-test/
 
@@ -36,3 +36,6 @@ replay_pid*
 # Built jars and third-party jars
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
+
+# Local synchronization records
+GITHUB_SYNC_*.md

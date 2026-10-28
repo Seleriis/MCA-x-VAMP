@@ -10,6 +10,10 @@ base {
     archivesName = mod_archive_base
 }
 
+if (findProperty('compat_build_dir')) {
+    layout.buildDirectory.set(file(findProperty('compat_build_dir')))
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
@@ -50,7 +54,7 @@ minecraft {
 
     runs {
         configureEach {
-            workingDirectory project.file("run/${name}-${compatProfile}")
+            workingDirectory project.file(findProperty('run_dir') ?: "run/${name}-${compatProfile}")
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'info'
 
@@ -95,7 +99,9 @@ minecraft.runs.gameTestServer {
 
 repositories {
     // Test-only MCA beta fixture with embedded SRG mixin selectors mapped for userdev.
-    flatDir { dirs '../.implementation/beta-userdev' }
+    if (findProperty('mca_fixture_dir')) {
+        flatDir { dirs file(findProperty('mca_fixture_dir')) }
+    }
     maven {
         name = 'MinecraftForge'
         url = 'https://maven.minecraftforge.net/'
@@ -170,6 +176,7 @@ tasks.named('sourcesJar') {
 
 tasks.named('test', Test) {
     useJUnitPlatform()
+    systemProperty 'mca.compat.requireMcaEvApi', includeEasyVillagers.toString()
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -349,6 +356,8 @@ tasks.register('releaseBundle', Sync) {
     from('CHANGELOG.md')
     from('RELEASE_NOTES.md')
     from('CURSEFORGE_DESCRIPTION.md')
+    from('UPDATE_GUIDE.md')
+    from('VALIDATION.md')
 
     doLast {
         File outputDirectory = releaseDirectory.get().asFile
