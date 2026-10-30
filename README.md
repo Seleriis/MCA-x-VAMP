@@ -318,7 +318,7 @@ O mod adiciona trocas e interações sociais por facção, cura, herança, permi
 
 ## Build
 
-This repository does not version third-party mod jars. Before building, create the folder selected by `local_mods_dir` (`local-mods-validation/` in this snapshot) in the project root and stage these 1.20.1 development dependencies from their official project pages:
+This repository does not version third-party mod jars. Before building, create a `local-mods/` folder in the project root and stage these 1.20.1 development dependencies from their official project pages:
 
 - `Vampirism-1.20.1-1.10.17.jar`
 - `minecraft-comes-alive-7.7.1-beta.5+1.20.1-universal.jar`
@@ -330,7 +330,7 @@ This repository does not version third-party mod jars. Before building, create t
 
 Werewolves, Easy Villagers and mca-ev-compat remain optional at runtime, but their development jars are needed to compile and test the optional compatibility hooks. The faction capture/Trader bridge activates only when both Easy Villagers and mca-ev-compat are present; otherwise it degrades to a safe no-op. The 1.20.1 integration deliberately excludes Inventory Viewer support. The `local-mods/` folder, generated JARs and local test worlds are intentionally ignored by Git.
 
-This workspace selects local-mods-validation through local_mods_dir. For Forge userdev GameTests, mca_fixture_dir may select the test-only MCA jar with mapped mixin selectors; the official MCA jar remains the production dependency. These dependencies are never bundled.
+To keep the jars in another folder, pass `-Plocal_mods_dir=<path>` or set `local_mods_dir` in your user-level `~/.gradle/gradle.properties`. For Forge userdev GameTests, mca_fixture_dir may select the test-only MCA jar with mapped mixin selectors; the official MCA jar remains the production dependency. These dependencies are never bundled.
 
 From the project root:
 
