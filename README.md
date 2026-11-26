@@ -2,8 +2,6 @@
 
 ## Código por versão de Minecraft
 
-A branch `main` acompanha o projeto Forge para Minecraft 1.20.1. Os projetos atuais estão nestas branches:
-
 | Minecraft | Loader | Versão do compat | Código-fonte |
 |---|---|---|---|
 | 1.20.1 | Forge | 1.3.1 | [1.20.1-forge](https://github.com/Seleriis/MCA-x-VAMP/tree/1.20.1-forge) |
