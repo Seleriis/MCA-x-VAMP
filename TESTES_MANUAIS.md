@@ -8,7 +8,7 @@ Combinação preparada para Minecraft 1.20.1:
 - Easy Villagers 1.20.1-1.1.39
 - MCA × EV 1.1.9
 
-Os testes automatizados e de inicialização em servidor foram concluídos conforme VALIDATION.md. Esta lista permanece para conferir o cliente gráfico e o seu próprio modpack.
+Os resultados automatizados e de inicialização em servidor de 27 e 28/10/2026 estão em [VALIDATION.md](VALIDATION.md). Eles se referem à versão 1.3.1 distribuída. As verificações desta alteração estão na seção de avisos abaixo.
 
 Use uma cópia do seu mundo e mantenha apenas um JAR de cada mod na pasta mods. Faça estas verificações na combinação de versões indicada acima.
 
@@ -26,5 +26,11 @@ Use uma cópia do seu mundo e mantenha apenas um JAR de cada mod na pasta mods. 
 - [ ] Se usar proteção de família e amigos no combate, conferir o comportamento com a opção desligada e ligada, inclusive defesa após uma agressão.
 - [ ] Olhar para vários blocos com moradores: observar FPS e conferir se o log repete erro de item inválido ou outra mensagem.
 - [ ] Se usar Werewolves ou Bloodlines, repetir a abertura do mundo e as interações principais com esses mods. Também conferir uma instalação sem os opcionais.
+
+## Avisos de bloqueio — verificações pendentes nesta alteração
+
+- [ ] Na combinação Forge 1.20.1 acima, repetir rapidamente a captura proibida do mesmo morador com o Easy Villagers. O primeiro aviso aparece, as tentativas seguintes são silenciadas por 40 ticks e uma nova tentativa volta a avisar após esse intervalo.
+- [ ] Repetir com um comando de controle bloqueado, como seguir ou ficar. Uma tentativa de captura e uma de comando devem mostrar seus próprios avisos.
+- [ ] Em jogo solo, sair para o menu após um aviso e abrir outro mundo. A primeira tentativa bloqueada deve mostrar o aviso normalmente. Se houver um servidor dedicado de teste, repetir após reiniciá-lo.
 
 Ao relatar um problema, anote as versões usadas, a ação que causou o erro e se ocorreu no cliente ou servidor. Guarde latest.log e o crash report, quando houver.

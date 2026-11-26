@@ -10,19 +10,14 @@ import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerClassifier;
 import com.guilh.mca_vampirism_compat.service.McaSpecialVillagerType;
 import com.guilh.mca_vampirism_compat.service.McaVampireFactionService;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
+import com.guilh.mca_vampirism_compat.util.McaFactionMessageCooldown;
 import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 public final class McaFactionPickupPermissionService {
-    private static final long MESSAGE_COOLDOWN_TICKS = 40L;
-    private static final int MAX_TRACKED_MESSAGE_COOLDOWNS = 512;
-    private static final Map<String, Long> LAST_MESSAGE_TICKS = new HashMap<>();
+    private static final McaFactionMessageCooldown MESSAGE_COOLDOWN = new McaFactionMessageCooldown();
 
     private McaFactionPickupPermissionService() {
     }
@@ -193,14 +188,9 @@ public final class McaFactionPickupPermissionService {
         if (player == null || !McaVampirismCompatConfig.showPickupBlockedMessage()) {
             return;
         }
-        long gameTime = villager.level().getGameTime();
-        pruneMessageCooldowns(gameTime);
-        String key = player.getUUID() + "|" + villager.getUUID() + "|" + reason.name();
-        Long lastTick = LAST_MESSAGE_TICKS.get(key);
-        if (lastTick != null && gameTime - lastTick < MESSAGE_COOLDOWN_TICKS) {
+        if (!MESSAGE_COOLDOWN.tryAcquire(player, villager, reason)) {
             return;
         }
-        LAST_MESSAGE_TICKS.put(key, gameTime);
         player.displayClientMessage(Component.translatable(messageKey(reason)), true);
     }
 
@@ -218,27 +208,10 @@ public final class McaFactionPickupPermissionService {
         if (!McaVampirismCompatConfig.showPickupBlockedMessage()) {
             return;
         }
-        long gameTime = villager.level().getGameTime();
-        pruneMessageCooldowns(gameTime);
-        String key = player.getUUID() + "|" + villager.getUUID() + "|" + failure.name();
-        Long lastTick = LAST_MESSAGE_TICKS.get(key);
-        if (lastTick != null && gameTime - lastTick < MESSAGE_COOLDOWN_TICKS) {
+        if (!MESSAGE_COOLDOWN.tryAcquire(player, villager, failure)) {
             return;
         }
-        LAST_MESSAGE_TICKS.put(key, gameTime);
         player.displayClientMessage(Component.translatable(messageKey(failure)), true);
-    }
-
-    private static void pruneMessageCooldowns(long gameTime) {
-        if (LAST_MESSAGE_TICKS.size() < MAX_TRACKED_MESSAGE_COOLDOWNS) {
-            return;
-        }
-        LAST_MESSAGE_TICKS.entrySet().removeIf(
-                entry -> gameTime - entry.getValue() >= MESSAGE_COOLDOWN_TICKS
-        );
-        if (LAST_MESSAGE_TICKS.size() >= MAX_TRACKED_MESSAGE_COOLDOWNS) {
-            LAST_MESSAGE_TICKS.clear();
-        }
     }
 
     private static String messageKey(PickupBlockReason reason) {

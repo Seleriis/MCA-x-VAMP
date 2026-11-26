@@ -5,21 +5,18 @@ import com.guilh.mca_vampirism_compat.config.McaVampirismCompatConfig;
 import com.guilh.mca_vampirism_compat.faction.PlayerFaction;
 import com.guilh.mca_vampirism_compat.faction.PlayerFactionContext;
 import com.guilh.mca_vampirism_compat.util.McaCompatMessages;
+import com.guilh.mca_vampirism_compat.util.McaFactionMessageCooldown;
 import forge.net.conczin.mca.entity.VillagerEntityMCA;
 import forge.net.conczin.mca.entity.ai.Chore;
 import forge.net.conczin.mca.entity.ai.MoveState;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 
 public final class McaFactionCommandPermissionService {
-    private static final long MESSAGE_COOLDOWN_TICKS = 40L;
-    private static final int MAX_TRACKED_MESSAGE_COOLDOWNS = 512;
-    private static final Map<String, Long> LAST_MESSAGE_TICKS = new HashMap<>();
+    private static final McaFactionMessageCooldown MESSAGE_COOLDOWN = new McaFactionMessageCooldown();
 
     private McaFactionCommandPermissionService() {
     }
@@ -161,27 +158,10 @@ public final class McaFactionCommandPermissionService {
         if (player == null || villager == null || !McaVampirismCompatConfig.showCommandBlockedMessage()) {
             return;
         }
-        long gameTime = villager.level().getGameTime();
-        pruneMessageCooldowns(gameTime);
-        String key = player.getUUID() + "|" + villager.getUUID() + "|" + reason.name();
-        Long lastTick = LAST_MESSAGE_TICKS.get(key);
-        if (lastTick != null && gameTime - lastTick < MESSAGE_COOLDOWN_TICKS) {
+        if (!MESSAGE_COOLDOWN.tryAcquire(player, villager, reason)) {
             return;
         }
-        LAST_MESSAGE_TICKS.put(key, gameTime);
         player.displayClientMessage(Component.translatable(messageKey(reason)), true);
-    }
-
-    private static void pruneMessageCooldowns(long gameTime) {
-        if (LAST_MESSAGE_TICKS.size() < MAX_TRACKED_MESSAGE_COOLDOWNS) {
-            return;
-        }
-        LAST_MESSAGE_TICKS.entrySet().removeIf(
-                entry -> gameTime - entry.getValue() >= MESSAGE_COOLDOWN_TICKS
-        );
-        if (LAST_MESSAGE_TICKS.size() >= MAX_TRACKED_MESSAGE_COOLDOWNS) {
-            LAST_MESSAGE_TICKS.clear();
-        }
     }
 
     private static String messageKey(CommandBlockReason reason) {

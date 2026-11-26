@@ -6,6 +6,7 @@
 *.json text eol=lf
 *.toml text eol=lf
 *.md text eol=lf
+gradlew text eol=lf
 *.bat text eol=crlf
 
 # Do not attempt line-ending conversion for binary assets and the Gradle wrapper.

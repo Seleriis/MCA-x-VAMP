@@ -332,11 +332,14 @@ Werewolves, Easy Villagers and mca-ev-compat remain optional at runtime, but the
 
 To keep the jars in another folder, pass `-Plocal_mods_dir=<path>` or set `local_mods_dir` in your user-level `~/.gradle/gradle.properties`. For Forge userdev GameTests, mca_fixture_dir may select the test-only MCA jar with mapped mixin selectors; the official MCA jar remains the production dependency. These dependencies are never bundled.
 
-From the project root:
+Build with Java 17 from the project root:
 
-```bat
-gradlew.bat clean test build releaseBundle
-```
+| Platform | Compile and package |
+|---|---|
+| Windows (PowerShell) | `.\gradlew.bat assemble` |
+| Linux / macOS | `./gradlew assemble` |
+
+Run `gradlew.bat releaseBundle` on Windows or `./gradlew releaseBundle` on Linux/macOS to run the unit suite and collect the release files.
 
 Before creating a release bundle, run Forge GameTests independently for each available dependency profile:
 
