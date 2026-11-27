@@ -1,0 +1,26 @@
+{
+  "answers": [
+    {
+      "name": "occult_favor_offer",
+      "priority": 100,
+      "results": [
+        {
+          "actions": {
+            "next": "occult_favor_pending"
+          }
+        }
+      ]
+    },
+    {
+      "name": "occult_favor_status",
+      "priority": 100,
+      "results": [
+        {
+          "actions": {
+            "next": "occult_favor_active"
+          }
+        }
+      ]
+    }
+  ]
+}

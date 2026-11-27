@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "vampirism:injection_garlic",
+    { "id": "vampirism:injection_sanguinare", "required": false }
+  ]
+}

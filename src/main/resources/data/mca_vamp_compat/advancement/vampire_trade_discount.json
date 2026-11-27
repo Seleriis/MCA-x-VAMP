@@ -1,0 +1,1 @@
+{"parent":"mca_vamp_compat:vampire_conversion","display":{"title":{"translate":"advancement.mca_vamp_compat.vampire_trade.title"},"description":{"translate":"advancement.mca_vamp_compat.vampire_trade.description"},"icon":{"id":"minecraft:emerald"},"frame":"task","show_toast":true,"announce_to_chat":true,"hidden":false},"criteria":{"completed":{"trigger":"minecraft:impossible"}}}

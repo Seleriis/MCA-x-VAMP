@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "#werewolves:raw_food", "required": false },
+    { "id": "#werewolves:cooked_food", "required": false },
+    "minecraft:rabbit_stew"
+  ]
+}

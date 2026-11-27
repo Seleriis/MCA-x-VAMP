@@ -1,0 +1,25 @@
+{
+  "silent": true,
+  "answers": [
+    {
+      "name": "accept",
+      "results": [
+        {
+          "actions": {
+            "next": "occult_favor_active"
+          }
+        }
+      ]
+    },
+    {
+      "name": "decline",
+      "results": [
+        {
+          "actions": {
+            "next": "main"
+          }
+        }
+      ]
+    }
+  ]
+}
