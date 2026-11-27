@@ -1,0 +1,41 @@
+# Gradle and build output
+.gradle/
+.gradle-*/
+build/
+run/
+out/
+bin/
+tmp/
+logs/
+crash-reports/
+
+# Local assistant/editor metadata
+.agents/
+.codex/
+.idea/
+.vscode/
+.settings/
+*.iml
+.classpath
+.project
+
+# Local mod jars and investigation artifacts
+local-mods*/
+reobf-libs/
+cp-test/
+
+# Generated/local files
+*.log
+*.tmp
+*.bak
+*.old
+*.class
+hs_err_pid*
+replay_pid*
+
+# Built jars and third-party jars
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local synchronization records
+GITHUB_SYNC_*.md

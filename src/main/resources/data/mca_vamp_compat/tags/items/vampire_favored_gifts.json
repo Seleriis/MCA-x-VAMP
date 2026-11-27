@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "vampirism:blood_bottle",
+    "vampirism:vampire_blood_bottle",
+    { "id": "#vampirism:pure_blood", "required": false },
+    { "id": "#vampirism:heart", "required": false },
+    { "id": "vampirism:human_heart", "required": false },
+    "vampirism:vampire_fang"
+  ]
+}

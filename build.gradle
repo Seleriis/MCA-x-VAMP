@@ -1,0 +1,382 @@
+plugins {
+    id 'net.minecraftforge.gradle' version '6.0.53'
+    id 'org.spongepowered.mixin' version '0.7.38'
+}
+
+group = mod_group_id
+version = mod_version
+
+base {
+    archivesName = mod_archive_base
+}
+
+if (findProperty('compat_build_dir')) {
+    layout.buildDirectory.set(file(findProperty('compat_build_dir')))
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withSourcesJar()
+}
+
+def localModsDirectory = file(findProperty('local_mods_dir') ?: 'local-mods')
+def compatProfile = providers.gradleProperty('compatProfile').orElse('all').get()
+def supportedCompatProfiles = ['base', 'werewolves', 'easy', 'all', 'extended']
+
+if (!supportedCompatProfiles.contains(compatProfile)) {
+    throw new GradleException("Unsupported compatProfile '${compatProfile}'. Use one of: ${supportedCompatProfiles.join(', ')}")
+}
+
+def includeWerewolves = compatProfile in ['werewolves', 'all', 'extended']
+def includeEasyVillagers = compatProfile in ['easy', 'all', 'extended']
+def includeExtendedVampirismAddons = compatProfile == 'extended'
+def localModule = { String artifact, String artifactVersion -> "local:${artifact}:${artifactVersion}" }
+
+sourceSets {
+    main {
+        java.exclude '**/gametest/**'
+        resources.exclude 'data/mca_vamp_compat/structures/gametest/**'
+    }
+    gameTest {
+        java.srcDir 'src/main/java'
+        java.include '**/gametest/**'
+        resources.srcDir 'src/main/resources'
+        resources.include 'data/mca_vamp_compat/structures/gametest/**'
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+
+    runs {
+        configureEach {
+            workingDirectory project.file(findProperty('run_dir') ?: "run/${name}-${compatProfile}")
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'info'
+
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        client {
+            property 'mca.visualValidation', (findProperty('visualValidation') ?: 'false').toString()
+            property 'mca.visualOutput', file(findProperty('visualOutput') ?: '../.implementation/visual/mca-vamp-compat-1.20.1-port').absolutePath
+            args '--width', '1280', '--height', '960'
+        }
+
+        server {
+            args '--nogui'
+        }
+
+        gameTestServer {
+            property 'mca.shelterBenchmark', (findProperty('shelterBenchmark') ?: 'false').toString()
+            property 'mca.shelterCandidate', (findProperty('shelterCandidate') ?: 'false').toString()
+            property 'mca.shelterOutput', file(findProperty('shelterOutput') ?: '../.implementation/shelter/mca-vamp-compat-1.20.1-port.csv').absolutePath
+            property 'forge.enabledGameTestNamespaces', mod_id
+        }
+
+        data {
+            workingDirectory project.file("run/data-${compatProfile}")
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+        }
+    }
+}
+
+minecraft.runs.gameTestServer {
+    mods {
+        "${mod_id}" {
+            source sourceSets.gameTest
+        }
+    }
+}
+
+repositories {
+    // Test-only MCA beta fixture with embedded SRG mixin selectors mapped for userdev.
+    if (findProperty('mca_fixture_dir')) {
+        flatDir { dirs file(findProperty('mca_fixture_dir')) }
+    }
+    maven {
+        name = 'MinecraftForge'
+        url = 'https://maven.minecraftforge.net/'
+    }
+    flatDir {
+        dirs localModsDirectory
+    }
+    mavenCentral()
+}
+
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
+    // Required at runtime and intentionally not bundled into this addon jar.
+    implementation fg.deobf(localModule('Vampirism', vampirism_file_version))
+    implementation fg.deobf(localModule('minecraft-comes-alive', mca_file_version))
+    // Optional integrations are compiled for the supported matrix, then added to
+    // development runs only when their compatProfile requests them.
+    compileOnly fg.deobf(localModule('Werewolves', werewolves_file_version))
+    compileOnly fg.deobf(localModule('easy-villagers-forge', easy_villagers_file_version))
+    compileOnly fg.deobf(localModule('mca-ev-compat', mca_ev_compat_file_version))
+
+    if (includeWerewolves) {
+        runtimeOnly fg.deobf(localModule('Werewolves', werewolves_file_version))
+    }
+    if (includeEasyVillagers) {
+        runtimeOnly fg.deobf(localModule('easy-villagers-forge', easy_villagers_file_version))
+        runtimeOnly fg.deobf(localModule('mca-ev-compat', mca_ev_compat_file_version))
+    }
+    if (includeExtendedVampirismAddons) {
+        runtimeOnly fg.deobf(localModule('vampirism_integrations', vampirism_integrations_file_version))
+        runtimeOnly fg.deobf(localModule('vampiricageing', vampiricageing_file_version))
+        runtimeOnly fg.deobf(localModule('GodlyVampirism', godly_vampirism_file_version))
+    }
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+configurations.named('testRuntimeOnly') {
+    // Unit tests cover compatibility utilities that may load optional hook types.
+    extendsFrom configurations.compileOnly
+}
+
+sourceSets {
+    main {
+        resources.srcDir 'src/generated/resources'
+    }
+    test {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
+tasks.configureEach {
+    if (name == 'runGameTestServer') {
+        dependsOn 'gameTestClasses'
+    }
+}
+
+tasks.named('sourcesJar') {
+    from sourceSets.gameTest.allSource
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    systemProperty 'mca.compat.requireMcaEvApi', includeEasyVillagers.toString()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+processResources {
+    def replaceProperties = [
+            mod_id                : mod_id,
+            mod_name              : mod_name,
+            mod_version           : mod_version,
+            minecraft_version     : minecraft_version,
+            forge_version         : forge_version,
+            vampirism_version     : vampirism_version,
+            mca_version           : mca_version,
+            werewolves_version    : werewolves_version,
+            easy_villagers_min_version: easy_villagers_min_version,
+            easy_villagers_max_version: easy_villagers_max_version,
+            easy_villagers_version: easy_villagers_version,
+            mca_ev_compat_version : mca_ev_compat_version
+    ]
+    inputs.properties replaceProperties
+    filesMatching('META-INF/mods.toml') {
+        expand replaceProperties
+    }
+    // A copied NeoForge descriptor must never be shipped with the Forge build.
+    exclude 'META-INF/neoforge.mods.toml'
+}
+
+jar {
+    exclude 'com/guilh/mca_vampirism_compat/gametest/**'
+    exclude 'data/mca_vamp_compat/structures/gametest/**'
+    // MixinGradle is the only source of the generated refmap. Keeping one
+    // generated entry avoids stale source mappings in production jars.
+    duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes([
+                'Specification-Title'    : mod_id,
+                'Specification-Vendor'   : 'guilh',
+                'Specification-Version'  : '1',
+                'Implementation-Title'   : mod_name,
+                'Implementation-Version' : project.version,
+                'Implementation-Vendor'  : 'guilh',
+                'MixinConfigs'           : "${mod_id}.mixins.json"
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')
+
+// MixinGradle adds the generated refmap while packaging the production jar.
+// Forge userdev runs load classes/resources from build/resources rather than
+// that jar, so mirror that generated entry into the userdev output only after
+// the jar exists. This keeps the source tree free of a stale static refmap.
+def generatedRefmapForRuns = layout.buildDirectory.file("resources/main/${mod_id}.refmap.json")
+tasks.register('syncGeneratedMixinRefmapForRuns') {
+    group = 'build setup'
+    description = 'Copies MixinGradle\'s packaged refmap into Forge userdev resources.'
+    dependsOn tasks.named('jar')
+    inputs.file(tasks.named('jar').flatMap { it.archiveFile })
+
+    doLast {
+        File artifact = tasks.named('jar').get().archiveFile.get().asFile
+        def refmaps = zipTree(artifact).matching {
+            include "${mod_id}.refmap.json"
+        }.files
+        if (refmaps.size() != 1) {
+            throw new GradleException("Expected exactly one generated refmap in ${artifact.name}, found ${refmaps.size()}")
+        }
+        File destination = generatedRefmapForRuns.get().asFile
+        destination.parentFile.mkdirs()
+        destination.bytes = refmaps.first().bytes
+    }
+}
+
+['runClient', 'runServer', 'runGameTestServer'].each { runTaskName ->
+    tasks.configureEach {
+        if (name == runTaskName) {
+            dependsOn tasks.named('syncGeneratedMixinRefmapForRuns')
+        }
+    }
+}
+
+tasks.register('verifyProductionMixinContract') {
+    group = 'verification'
+    description = 'Verifies the packaged MerchantMenu mixin and its generated Forge 1.20.1 SRG contract.'
+    dependsOn tasks.named('jar')
+
+    doLast {
+        File artifact = tasks.named('jar').get().archiveFile.get().asFile
+        if (!artifact.isFile()) {
+            throw new GradleException("Production jar was not generated: ${artifact}")
+        }
+
+        java.util.jar.JarFile compatJar = new java.util.jar.JarFile(artifact)
+        try {
+            List<java.util.jar.JarEntry> refmaps = compatJar.entries()
+                    .findAll { !it.directory && it.name == "${mod_id}.refmap.json" }
+            if (refmaps.size() != 1) {
+                throw new GradleException("Expected exactly one generated refmap in ${artifact.name}, found ${refmaps.size()}")
+            }
+
+            String refmap = compatJar.getInputStream(refmaps.first()).getText('UTF-8')
+            if (!refmap.contains('"playTradeSound"') || !refmap.contains('m_40077_')) {
+                throw new GradleException('MerchantMenu playTradeSound mapping is missing from the generated refmap')
+            }
+            if (!refmap.contains('"<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/item/trading/Merchant;)V"')) {
+                throw new GradleException('MerchantMenu constructor capture mapping is missing from the generated refmap')
+            }
+            if (!refmap.contains('"setItemSlot"') || !refmap.contains('m_8061_')) {
+                throw new GradleException('Mob#setItemSlot mapping is missing from the generated refmap')
+            }
+            if (refmap.contains('"trader"') || refmap.contains('"tradeContainer"')) {
+                throw new GradleException('Generated refmap still exposes a private MerchantMenu field shadow')
+            }
+
+            java.util.jar.JarEntry mixinEntry = compatJar.getJarEntry(
+                    'com/guilh/mca_vampirism_compat/mixin/MerchantMenuMixin.class'
+            )
+            if (mixinEntry == null) {
+                throw new GradleException('MerchantMenuMixin is missing from the production jar')
+            }
+            String mixinBytes = new String(compatJar.getInputStream(mixinEntry).readAllBytes(), 'ISO-8859-1')
+            if (mixinBytes.contains('org/spongepowered/asm/mixin/Shadow')) {
+                throw new GradleException('MerchantMenuMixin production class still contains a @Shadow dependency')
+            }
+        } finally {
+            compatJar.close()
+        }
+
+        String srgJarProperty = findProperty('srg_minecraft_jar') as String
+        if (srgJarProperty == null || srgJarProperty.isBlank()) {
+            throw new GradleException('Pass -Psrg_minecraft_jar=<client-1.20.1-...-srg.jar> to verify the Forge runtime target')
+        }
+        File srgJar = file(srgJarProperty)
+        if (!srgJar.isFile()) {
+            throw new GradleException("Forge 1.20.1 SRG client jar not found: ${srgJar}")
+        }
+        java.util.jar.JarFile minecraftJar = new java.util.jar.JarFile(srgJar)
+        try {
+            java.util.jar.JarEntry merchantMenu = minecraftJar.getJarEntry(
+                    'net/minecraft/world/inventory/MerchantMenu.class'
+            )
+            if (merchantMenu == null) {
+                throw new GradleException('Forge SRG client jar does not contain MerchantMenu')
+            }
+            String targetBytes = new String(minecraftJar.getInputStream(merchantMenu).readAllBytes(), 'ISO-8859-1')
+            ['f_40027_', 'f_40028_', 'm_40077_'].each { requiredMember ->
+                if (!targetBytes.contains(requiredMember)) {
+                    throw new GradleException("Forge 1.20.1 MerchantMenu is missing expected SRG member ${requiredMember}")
+                }
+            }
+        } finally {
+            minecraftJar.close()
+        }
+    }
+}
+
+tasks.register('runGameTests') {
+    group = 'verification'
+    description = "Runs Forge GameTests for compatProfile=${compatProfile}."
+    dependsOn 'runGameTestServer'
+}
+
+def releaseDirectory = layout.buildDirectory.dir("release/${mod_archive_base}-${project.version}")
+
+tasks.register('releaseBundle', Sync) {
+    group = 'build'
+    description = 'Builds the distributable jar, sources, release notes and SHA-256 manifest.'
+    dependsOn tasks.named('build')
+    into releaseDirectory
+    from tasks.named('jar')
+    from tasks.named('sourcesJar')
+    from('LICENSE')
+    from('README.md')
+    from('CHANGELOG.md')
+    from('RELEASE_NOTES.md')
+    from('CURSEFORGE_DESCRIPTION.md')
+    from('UPDATE_GUIDE.md')
+    from('VALIDATION.md')
+
+    doLast {
+        File outputDirectory = releaseDirectory.get().asFile
+        List<File> jars = outputDirectory
+                .listFiles()
+                .findAll { it.name.endsWith('.jar') }
+                .sort { it.name }
+        File checksumManifest = new File(outputDirectory, 'SHA256SUMS.txt')
+        checksumManifest.setText(
+                jars.collect { artifact ->
+                    byte[] digest = java.security.MessageDigest
+                            .getInstance('SHA-256')
+                            .digest(artifact.bytes)
+                    String checksum = digest.collect { String.format('%02x', it) }.join()
+                    "${checksum}  ${artifact.name}"
+                }.join(System.lineSeparator()) + System.lineSeparator(),
+                'UTF-8'
+        )
+    }
+}
+
+if (findProperty("visualValidation") == "true") { minecraft.runs.client { mods { "${mod_id}" { source sourceSets.gameTest } } }; tasks.configureEach { if (name == "runClient") dependsOn "gameTestClasses" } }

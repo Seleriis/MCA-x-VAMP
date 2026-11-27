@@ -1,0 +1,33 @@
+{
+  "display": {
+    "background": "mca_vamp_compat:textures/gui/advancements/occult_arts_background.png",
+    "title": {
+      "translate": "advancement.mca_vamp_compat.discover_occult_village"
+    },
+    "description": {
+      "translate": "advancement.mca_vamp_compat.discover_occult_village.description"
+    },
+    "icon": {
+      "item": "mca_vamp_compat:book_occult_arts"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "discovered": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "discovered"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "mca_vamp_compat:book_occult_arts"
+    ]
+  }
+}

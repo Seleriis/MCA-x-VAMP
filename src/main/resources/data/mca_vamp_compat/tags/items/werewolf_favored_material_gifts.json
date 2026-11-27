@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "werewolves:liver", "required": false },
+    { "id": "werewolves:werewolf_tooth", "required": false },
+    { "id": "werewolves:pelt", "required": false },
+    { "id": "werewolves:dark_pelt", "required": false },
+    { "id": "werewolves:white_pelt", "required": false }
+  ]
+}

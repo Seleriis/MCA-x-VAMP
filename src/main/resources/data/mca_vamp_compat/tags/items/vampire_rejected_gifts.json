@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "vampirism:item_garlic",
+    { "id": "vampirism:purified_garlic", "required": false },
+    "minecraft:milk_bucket"
+  ]
+}

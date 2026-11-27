@@ -1,0 +1,25 @@
+{
+  "silent": true,
+  "answers": [
+    {
+      "name": "progress",
+      "results": [
+        {
+          "actions": {
+            "next": "occult_favor_active"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel",
+      "results": [
+        {
+          "actions": {
+            "next": "main"
+          }
+        }
+      ]
+    }
+  ]
+}
